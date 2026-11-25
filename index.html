@@ -54,7 +54,7 @@ const buildings=[
  {name:'Café',emoji:'☕',color:'#d69b62',kind:'cafe'},
  {name:'Werkhalle',emoji:'🏭',color:'#8d9997',kind:'factory'}
 ];
-function makeCity(){for(let y=0;y<N;y++)for(let x=0;x<N;x++){let road=(x%3===0||y%3===0);let edge=x===0||y===0||x===N-1||y===N-1;let type=(x*7+y*11)%6;let plot=!road&&!edge;let district=Math.floor(x/10)+Math.floor(y/10)*5;let kind=(type+district)%6;tiles.push({x,y,road,plot,building:plot?(kind===5?null:buildings[kind]):null,price:900+((x*73+y*91)%8)*180,traffic:35+((x*19+y*13)%60),rent:120+((x*31+y*17)%100),id:y*N+x});}}
+function makeCity(){for(let y=0;y<N;y++)for(let x=0;x<N;x++){let road=(x%3===0||y%3===0);let edge=x===0||y===0||x===N-1||y===N-1;let type=(x*7+y*11)%buildings.length;let plot=!road&&!edge;let district=Math.floor(x/10)+Math.floor(y/10)*5;let kind=(type+district)%buildings.length;tiles.push({x,y,road,plot,building:plot?(kind===5?null:buildings[kind]):null,price:900+((x*73+y*91)%8)*180,traffic:35+((x*19+y*13)%60),rent:120+((x*31+y*17)%100),id:y*N+x});}}
 makeCity();
 function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);if(!cam.ready){cam.x=N/2;cam.y=N/2;cam.zoom=1.12;cam.ready=true;}clampCamera();draw();}
 addEventListener('resize',resize);
