@@ -43,12 +43,16 @@ let W=0,H=0,dpr=1,cam={x:5.2,y:5.2,zoom:1},drag=null,pinch=null,selected=null,ac
 const state={company:'',money:5000,day:1,owned:null,shop:null,customers:0,revenue:0,started:false};
 const N=61,T=52,tiles=[];
 const buildings=[
- {name:'Wohnhaus',emoji:'🏠',color:'#c77d58',kind:'home'},
- {name:'Bürogebäude',emoji:'🏢',color:'#8da4ad',kind:'office'},
- {name:'Schule',emoji:'🏫',color:'#d8b76c',kind:'school'},
- {name:'Supermarkt',emoji:'🏬',color:'#9eaa75',kind:'market'},
+ {name:'Stadthaus',emoji:'🏠',color:'#d18b65',kind:'home'},
+ {name:'Altbau',emoji:'🏘️',color:'#c77b62',kind:'oldhome'},
+ {name:'Wohnblock',emoji:'🏢',color:'#c6a47c',kind:'apartments'},
+ {name:'Büroturm',emoji:'🏙️',color:'#83a8b7',kind:'office'},
+ {name:'Schule',emoji:'🏫',color:'#dfbd75',kind:'school'},
+ {name:'Supermarkt',emoji:'🏬',color:'#a7b77c',kind:'market'},
  {name:'Park',emoji:'🌳',color:'#4e895c',kind:'park'},
- {name:'Ladenlokal',emoji:'🏪',color:'#b77d9b',kind:'shop'}
+ {name:'Ladenlokal',emoji:'🏪',color:'#bd819a',kind:'shop'},
+ {name:'Café',emoji:'☕',color:'#d69b62',kind:'cafe'},
+ {name:'Werkhalle',emoji:'🏭',color:'#8d9997',kind:'factory'}
 ];
 function makeCity(){for(let y=0;y<N;y++)for(let x=0;x<N;x++){let road=(x%3===0||y%3===0);let edge=x===0||y===0||x===N-1||y===N-1;let type=(x*7+y*11)%6;let plot=!road&&!edge;let district=Math.floor(x/10)+Math.floor(y/10)*5;let kind=(type+district)%6;tiles.push({x,y,road,plot,building:plot?(kind===5?null:buildings[kind]):null,price:900+((x*73+y*91)%8)*180,traffic:35+((x*19+y*13)%60),rent:120+((x*31+y*17)%100),id:y*N+x});}}
 makeCity();
@@ -74,40 +78,74 @@ ctx.strokeStyle='#285d3d';ctx.lineWidth=2;ctx.stroke();ctx.restore();
 function drawBuilding(tile,time){
 let p=screen(tile.x,tile.y),z=cam.zoom,b=tile.building;if(!b)return;
 if(tile===state.owned)b={name:state.company,emoji:'🍕',color:'#ed8a42',kind:'pizza'};
-if(b.kind==='park'){drawTree(p.x-7*z,p.y-5*z,z);drawTree(p.x+17*z,p.y+1*z,.78*z);return;}
-const h=(b.kind==='office'?76:b.kind==='school'?51:b.kind==='pizza'?53:b.kind==='market'?43:39)*z;
-const w=(b.kind==='office'?34:32)*z,d=26*z,base=p.y-5*z,ink='#57413a';
-ctx.fillStyle='#263d3655';ctx.beginPath();ctx.ellipse(p.x,base+9*z,43*z,17*z,0,0,Math.PI*2);ctx.fill();
-const left=shade(b.color,-35),right=shade(b.color,-8),roof=shade(b.color,26);
-const gradL=ctx.createLinearGradient(p.x-w,base-h,p.x,base);gradL.addColorStop(0,shade(b.color,4));gradL.addColorStop(1,left);
-const gradR=ctx.createLinearGradient(p.x,base-h,p.x+w,base);gradR.addColorStop(0,shade(b.color,18));gradR.addColorStop(1,right);
-poly([{x:p.x-w,y:base},{x:p.x,y:base+d*.48},{x:p.x,y:base-h+d*.48},{x:p.x-w,y:base-h}],gradL,ink);
-poly([{x:p.x,y:base+d*.48},{x:p.x+w,y:base},{x:p.x+w,y:base-h},{x:p.x,y:base-h+d*.48}],gradR,ink);
-if(b.kind==='office'){
-poly([{x:p.x-w-3*z,y:base-h},{x:p.x,y:base-h-d*.58},{x:p.x+w+3*z,y:base-h},{x:p.x,y:base-h+d*.48}], '#607d8c',ink);
-}else if(b.kind==='school'){
-poly([{x:p.x-w-4*z,y:base-h+3*z},{x:p.x,y:base-h-d*.65},{x:p.x+w+4*z,y:base-h+3*z},{x:p.x,y:base-h+d*.5}], '#d85d4c',ink);
-}else{
-poly([{x:p.x-w-3*z,y:base-h},{x:p.x,y:base-h-d*.62},{x:p.x+w+3*z,y:base-h},{x:p.x,y:base-h+d*.5}],roof,ink);
+const seed=tile.id*9301+17,rand=n=>{let v=Math.sin(seed+n*127.1)*43758.5453;return v-Math.floor(v);};
+if(b.kind==='park'){
+  // kleine Stadtparks statt leerer grüner Felder
+  const s=.72+rand(1)*.45;drawTree(p.x-10*z,p.y-7*z,s*z);drawTree(p.x+16*z,p.y+1*z,.72*z);
+  ctx.strokeStyle='#e8d5a2';ctx.lineWidth=5*z;ctx.beginPath();ctx.moveTo(p.x-25*z,p.y+5*z);ctx.lineTo(p.x+25*z,p.y-5*z);ctx.stroke();
+  ctx.fillStyle='#e7d8a8';ctx.beginPath();ctx.arc(p.x-3*z,p.y-5*z,3*z,0,Math.PI*2);ctx.fill();return;
 }
-const rows=b.kind==='office'?3:2,cols=2;
+const kind=b.kind;
+let floors=kind==='office'?4+Math.floor(rand(2)*5):kind==='apartments'?3+Math.floor(rand(2)*3):kind==='factory'?1:kind==='school'?2:kind==='market'?2:kind==='pizza'?2:1+Math.floor(rand(2)*2);
+let h=(kind==='office'?floors*17:kind==='apartments'?floors*13:kind==='factory'?31:kind==='school'?48:kind==='market'?42:kind==='pizza'?50:kind==='cafe'?35:kind==='oldhome'?42+floors*7:34+floors*8)*z;
+let w=(kind==='office'?24+rand(3)*8:kind==='factory'?31+rand(3)*8:kind==='school'?30+rand(3)*8:25+rand(3)*12)*z;
+let d=(kind==='office'?19+rand(4)*7:kind==='factory'?27:17+rand(4)*10)*z;
+let base=p.y-4*z,ink='#59463e',left=shade(b.color,-34),right=shade(b.color,-12),roof=shade(b.color,24);
+ctx.fillStyle='#263d3655';ctx.beginPath();ctx.ellipse(p.x,base+8*z,w*1.05, d*.58,0,0,Math.PI*2);ctx.fill();
+const leftGrad=ctx.createLinearGradient(p.x-w,base-h,p.x,base);leftGrad.addColorStop(0,shade(b.color,7));leftGrad.addColorStop(1,left);
+const rightGrad=ctx.createLinearGradient(p.x,base-h,p.x+w,base);rightGrad.addColorStop(0,shade(b.color,18));rightGrad.addColorStop(1,right);
+poly([{x:p.x-w,y:base},{x:p.x,y:base+d*.52},{x:p.x,y:base-h+d*.52},{x:p.x-w,y:base-h}],leftGrad,ink);
+poly([{x:p.x,y:base+d*.52},{x:p.x+w,y:base},{x:p.x+w,y:base-h},{x:p.x,y:base-h+d*.52}],rightGrad,ink);
+// Unterschiedliche Dächer: Satteldach, Flachdach, Mansarde und Hallendach
+const roofType=kind==='office'||kind==='apartments'?'flat':kind==='factory'?'shed':kind==='oldhome'?'gable':kind==='school'?'gable':Math.floor(rand(5)*3);
+if(roofType==='gable'||roofType==='shed'){
+  let ridge=kind==='factory'?d*.72:d*.62;
+  poly([{x:p.x-w-3*z,y:base-h},{x:p.x,y:base-h-ridge*z},{x:p.x+w+3*z,y:base-h},{x:p.x,y:base-h+d*.52}],kind==='school'?'#b95143':shade(b.color,31),ink);
+  ctx.strokeStyle=shade(b.color,-25);ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(p.x,base-h-ridge*z);ctx.lineTo(p.x,base-h-ridge*z+5*z);ctx.stroke();
+}else{
+  poly([{x:p.x-w-3*z,y:base-h},{x:p.x,y:base-h-d*.55},{x:p.x+w+3*z,y:base-h},{x:p.x,y:base-h+d*.52}],roof,ink);
+  // Dachkante, Lüfter und kleine Aufbauten
+  ctx.strokeStyle='#f1dfbd';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(p.x-w,base-h);ctx.lineTo(p.x,base-h+d*.52);ctx.lineTo(p.x+w,base-h);ctx.stroke();
+  if(kind==='office'||kind==='apartments'){
+    rounded(p.x-8*z,base-h-d*.12,13*z,8*z,1*z,'#687e83','#40565a');
+    rounded(p.x+13*z,base-h-d*.05,7*z,6*z,1*z,'#9da8a0','#53635f');
+  }
+}
+// Fensterreihen und Balkone geben jedem Haus eine eigene Fassade
+const rows=Math.max(1,Math.min(6,Math.floor(h/(13*z)))),cols=kind==='office'?2:2;
 for(let r=0;r<rows;r++)for(let col=0;col<cols;col++){
-let wx=p.x+(col?10:-23)*z,wy=base-h+(14+r*15)*z;
-let glass=ctx.createLinearGradient(wx,wy,wx+10*z,wy+10*z);glass.addColorStop(0,'#fff3c9');glass.addColorStop(1,'#82c7d5');
-rounded(wx,wy,10*z,11*z,1.5*z,glass,ink);
-ctx.strokeStyle='#fff7dc';ctx.lineWidth=1*z;ctx.beginPath();ctx.moveTo(wx+5*z,wy);ctx.lineTo(wx+5*z,wy+11*z);ctx.stroke();
+  let wy=base-h+(12+r*(Math.min(15,h/(rows+1))))*z;
+  let wx=col===0?p.x-w*.68:p.x+w*.17;
+  const ww=(kind==='office'?7:8)*z,wh=(kind==='office'?9:10)*z;
+  let glass=ctx.createLinearGradient(wx,wy,wx+ww,wy+wh);glass.addColorStop(0,'#fff0c2');glass.addColorStop(1,kind==='office'?'#75b8d0':'#8ccbd4');
+  rounded(wx,wy,ww,wh,1.4*z,glass,ink);
+  if(kind==='apartments'||kind==='oldhome'){
+    ctx.strokeStyle='#6d5948';ctx.lineWidth=1.3*z;ctx.beginPath();ctx.moveTo(wx-1*z,wy+wh+2*z);ctx.lineTo(wx+ww+1*z,wy+wh+2*z);ctx.stroke();
+  }
+}
+if(kind==='office'||kind==='apartments'){
+  // vertikale Fassadenstreifen und einzelne beleuchtete Fenster
+  ctx.strokeStyle='#e4e0d2aa';ctx.lineWidth=1.2*z;ctx.beginPath();ctx.moveTo(p.x+2*z,base-h+5*z);ctx.lineTo(p.x+2*z,base-2*z);ctx.stroke();
 }
 rounded(p.x-5*z,base-18*z,11*z,18*z,2*z,'#754b3d',ink);
 ctx.fillStyle='#ffe6a3';ctx.beginPath();ctx.arc(p.x+3*z,base-9*z,1.4*z,0,Math.PI*2);ctx.fill();
-if(b.kind==='pizza'||b.kind==='shop'||b.kind==='market'){
-let aw=b.kind==='pizza'?'#d94737':'#f4d46d';
-rounded(p.x-17*z,base-h+24*z,34*z,9*z,2*z,aw,ink);
-for(let k=0;k<4;k++){ctx.fillStyle=k%2?'#fff0ce':'#e95a46';ctx.fillRect(p.x-16*z+k*8.3*z,base-h+24*z,4*z,9*z);}
-rounded(p.x-15*z,base-h+34*z,30*z,12*z,1*z,'#b5e2e8',ink);
-if(b.kind==='pizza'){ctx.fillStyle='#fff8df';ctx.font='bold '+(7*z)+'px system-ui';ctx.textAlign='center';ctx.fillText('PIZZA',p.x,base-h+21*z);}
+// Läden, Markisen, Schaufenster und individuelle Schilder
+if(['pizza','shop','market','cafe'].includes(kind)){
+  let aw=kind==='pizza'?'#d94737':kind==='cafe'?'#e7b65e':'#f4d46d';
+  rounded(p.x-w*.65,base-h+Math.min(27,h*.55)*z,w*1.3,8*z,2*z,aw,ink);
+  for(let k=0;k<5;k++){ctx.fillStyle=k%2?'#fff0ce':'#e95a46';ctx.fillRect(p.x-w*.63+k*w*.25,base-h+Math.min(27,h*.55)*z,Math.max(2,3*z),8*z);}
+  rounded(p.x-w*.58,base-h+Math.min(36,h*.55+9)*z,w*1.16,12*z,1*z,'#b5e2e8',ink);
+  ctx.fillStyle='#fff8df';ctx.font='bold '+(7*z)+'px system-ui';ctx.textAlign='center';
+  ctx.fillText(kind==='pizza'?'PIZZA':kind==='cafe'?'CAFÉ':kind==='market'?'MARKT':'SHOP',p.x,base-h+Math.min(24,h*.55-3)*z);
 }
-if(b.kind==='school'){
-ctx.fillStyle='#fff1cf';ctx.font='bold '+(9*z)+'px system-ui';ctx.textAlign='center';ctx.fillText('SCHULE',p.x,base-h+20*z);
+if(kind==='school'||kind==='factory'){
+  ctx.fillStyle='#fff1cf';ctx.font='bold '+(8*z)+'px system-ui';ctx.textAlign='center';
+  ctx.fillText(kind==='school'?'SCHULE':'WERK',p.x,base-h+20*z);
+}
+if(kind==='oldhome'){
+  // Erker und kleine Dachgaube
+  rounded(p.x+8*z,base-h+8*z,9*z,15*z,2*z,'#e8c6a3','#705548');
+  poly([{x:p.x+6*z,y:base-h+8*z},{x:p.x+12*z,y:base-h+2*z},{x:p.x+19*z,y:base-h+8*z}], '#a95e4d',ink);
 }
 }
 function drawCar(x,y,time,color,angle=0){
