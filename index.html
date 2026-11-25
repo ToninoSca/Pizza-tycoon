@@ -457,7 +457,7 @@ ctx.fillStyle='#f0bd8d';ctx.beginPath();ctx.arc(0,-15*z,3*z,0,Math.PI*2);ctx.fil
 }
 function cityActors(time){
  const actors=new Map(),colors=['#e45c4f','#f0c44f','#4f8ecb','#f4f0df','#4f9b71','#d87c42','#8c6ab1','#d77ca5'];
- const add=(x,y,type,color,angle=0,stopped=false)=>{const tx=Math.max(0,Math.min(N-1,Math.round(x))),ty=Math.max(0,Math.min(N-1,Math.round(y))),id=ty*N+tx;if(!actors.has(id))actors.set(id,[]);actors.get(id).push({x,y,type,color,angle,stopped});};
+ const add=(x,y,type,color,angle=0,stopped=false)=>{let tx=Math.max(0,Math.min(N-1,Math.round(x))),ty=Math.max(0,Math.min(N-1,Math.round(y)));if(type==='ped'){const vx=ROAD_X.find(v=>Math.abs(x-v)<.85),hy=ROAD_Y.find(v=>Math.abs(y-v)<.85);if(vx!==undefined){tx=vx;ty=Math.round(y);}else if(hy!==undefined){tx=Math.round(x);ty=hy;}}const id=ty*N+tx;if(!actors.has(id))actors.set(id,[]);actors.get(id).push({x,y,type,color,angle,stopped});};
  const outer=[{x:6,y:7},{x:18,y:7},{x:33,y:7},{x:48,y:7},{x:56,y:7},{x:56,y:21},{x:56,y:35},{x:56,y:49},{x:56,y:56},{x:48,y:56},{x:33,y:56},{x:18,y:56},{x:6,y:56},{x:6,y:49},{x:6,y:35},{x:6,y:21}];
  const inner=[{x:18,y:21},{x:33,y:21},{x:48,y:21},{x:48,y:35},{x:48,y:49},{x:33,y:49},{x:18,y:49},{x:18,y:35}];
  [outer,inner].forEach((path,ri)=>{const legs=path.map((a,i)=>{const b=path[(i+1)%path.length];return{a,b,len:Math.hypot(b.x-a.x,b.y-a.y)};});const cycle=legs.reduce((sum,l)=>sum+l.len*780+900,0);for(let n=0;n<4;n++){let cursor=(time+n*cycle/4+ri*cycle/7)%cycle;if(cursor<0)cursor+=cycle;let pos=legs[0].a,stopped=false,angle=0;for(const leg of legs){const travel=leg.len*780;if(cursor<travel){const f=cursor/travel;pos={x:leg.a.x+(leg.b.x-leg.a.x)*f,y:leg.a.y+(leg.b.y-leg.a.y)*f};angle=Math.atan2((leg.b.x-leg.a.x+leg.b.y-leg.a.y)*.36,(leg.b.x-leg.a.x-leg.b.y+leg.a.y)*.72);break;}cursor-=travel;const at=leg.b,signal=hasTrafficSignal(at.x,at.y),red=signal&&signalPhase(at.x,at.y,time)===0,wait=signal?(red?1500:250):180;if(cursor<wait){pos=at;stopped=red;angle=Math.atan2((leg.b.x-leg.a.x+leg.b.y-leg.a.y)*.36,(leg.b.x-leg.a.x-leg.b.y+leg.a.y)*.72);break;}cursor-=wait;pos=leg.b;}add(pos.x,pos.y,'car',colors[(n+ri*2)%colors.length],angle,stopped);}});
@@ -509,33 +509,34 @@ for(const t of ordered){let p=screen(t.x,t.y);if(p.x<-100||p.x>W+100||p.y<-130||
 let road=t.road,coastal=t.x<3||t.y<3||t.x>=N-3||t.y>=N-3;if(coastal&&!road)continue;diamond(t.x,t.y,coastal?'#9a7954':(road?'#747b80':(t.plot?t.ground:'#879b78')),road||coastal||!t.plot);if(road&&!coastal)drawSidewalk(t,p);if(coastal&&road){const z=cam.zoom;ctx.strokeStyle='#e2c18a';ctx.lineWidth=2*z;for(let k=-1;k<=1;k++){ctx.beginPath();ctx.moveTo(p.x-17*z,p.y+k*7*z);ctx.lineTo(p.x+17*z,p.y+k*7*z);ctx.stroke();}ctx.strokeStyle='#5b5144';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(p.x-18*z,p.y-11*z);ctx.lineTo(p.x+18*z,p.y+11*z);ctx.moveTo(p.x-18*z,p.y+11*z);ctx.lineTo(p.x+18*z,p.y-11*z);ctx.stroke();}
 if(road){
 const z=cam.zoom;
-if(t.x%3===0&&t.y%3!==0){
+if(isVerticalRoad(t.x,t.y)&&!isHorizontalRoad(t.x,t.y)){
 ctx.strokeStyle='#f7e8b866';ctx.lineWidth=2*z;ctx.setLineDash([7*z,7*z]);ctx.beginPath();ctx.moveTo(p.x-4*z,p.y-18*z);ctx.lineTo(p.x-4*z,p.y+18*z);ctx.stroke();ctx.setLineDash([]);
 }
-if(t.y%3===0&&t.x%3!==0){
+if(isHorizontalRoad(t.x,t.y)&&!isVerticalRoad(t.x,t.y)){
 ctx.strokeStyle='#f7e8b866';ctx.lineWidth=2*z;ctx.setLineDash([7*z,7*z]);ctx.beginPath();ctx.moveTo(p.x+4*z,p.y-18*z);ctx.lineTo(p.x+4*z,p.y+18*z);ctx.stroke();ctx.setLineDash([]);
 }
-if(t.x%3===0&&t.y%3===0){
-ctx.strokeStyle='#fff4d8';ctx.lineWidth=2*z;
-for(let k=-2;k<=2;k++){ctx.beginPath();ctx.moveTo(p.x-15*z+k*5*z,p.y-8*z);ctx.lineTo(p.x-15*z+k*5*z,p.y+8*z);ctx.stroke();}
-ctx.fillStyle='#f5e7c6';ctx.beginPath();ctx.arc(p.x,p.y,2.5*z,0,Math.PI*2);ctx.fill();
-  // Ampel auf dem Gehweg mit Mast, Gehäuse und echter Lichtphase.
-  if((t.x+t.y)%6===0){
-   const ax=p.x+22*z,ay=p.y+12*z;
-   ctx.strokeStyle='#38443f';ctx.lineWidth=3*z;ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax,ay-39*z);ctx.stroke();
-   rounded(ax-4*z,ay-40*z,8*z,23*z,2*z,'#303a37','#1e2925');
-   const phase=Math.floor(time/1800)%3,lamps=['#ed5148','#efc34f','#55c879'];
-   for(let q=0;q<3;q++){
-    ctx.fillStyle=q===phase?lamps[q]:'#5b625d';
-    ctx.beginPath();ctx.arc(ax,ay-35*z+q*7*z,2.1*z,0,Math.PI*2);ctx.fill();
-    if(q===phase){ctx.strokeStyle=lamps[q];ctx.lineWidth=1*z;ctx.beginPath();ctx.arc(ax,ay-35*z+q*7*z,3.2*z,0,Math.PI*2);ctx.stroke();}
-   }
-  }
+if(isVerticalRoad(t.x,t.y)&&isHorizontalRoad(t.x,t.y)){
+ // Fußgängerüberwege an echten Kreuzungen.
+ ctx.strokeStyle='#fff4d8';ctx.lineWidth=1.6*z;for(let k=-2;k<=2;k++){ctx.beginPath();ctx.moveTo(p.x-13*z+k*5*z,p.y-7*z);ctx.lineTo(p.x-13*z+k*5*z,p.y+7*z);ctx.stroke();}
+ if(t.x===33&&t.y===35){
+  // Kleiner Kreisverkehr: flache Mittelinsel, umlaufende Fahrbahn und dezente Bepflanzung.
+  ctx.fillStyle='#4d5553';ctx.beginPath();ctx.ellipse(p.x,p.y,16*z,9*z,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#83aa68';ctx.beginPath();ctx.ellipse(p.x,p.y,7*z,4*z,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#d9e5c0';ctx.beginPath();ctx.arc(p.x-2*z,p.y-1*z,1.4*z,0,Math.PI*2);ctx.fill();
+ }else if(hasTrafficSignal(t.x,t.y)){
+  const ax=p.x+19*z,ay=p.y+9*z,phase=signalPhase(t.x,t.y,time),lamps=['#ed5148','#efc34f','#55c879'];
+  // Kleine Ampel am Gehwegrand, keine übergroße Straßen-Deko.
+  ctx.strokeStyle='#38443f';ctx.lineWidth=1.8*z;ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax,ay-24*z);ctx.stroke();
+  rounded(ax-3*z,ay-25*z,6*z,15*z,1.5*z,'#303a37','#1e2925');
+  for(let q=0;q<3;q++){ctx.fillStyle=q===phase?lamps[q]:'#59615d';ctx.beginPath();ctx.arc(ax,ay-21*z+q*4.5*z,1.35*z,0,Math.PI*2);ctx.fill();}
+  // Separates Fußgängersignal direkt daneben.
+  rounded(ax+5*z,ay-19*z,5*z,10*z,1*z,'#303a37','#1e2925');ctx.fillStyle=phase===2?'#e64e48':'#55c879';ctx.beginPath();ctx.arc(ax+7.5*z,ay-14*z,1.5*z,0,Math.PI*2);ctx.fill();
+ }
 }
 drawStreetProps(t,p);
 const moving=actors.get(t.id);
 if(moving)for(const actor of moving){
- if(actor.type==='car')drawCar(actor.x,actor.y,time,actor.color,actor.angle);
+ if(actor.type==='car')drawCar(actor.x,actor.y,time,actor.color,actor.angle,actor.stopped);
  else drawPedestrian(actor.x,actor.y,time,actor.color,actor.angle,actor.lateral);
 }
 }
