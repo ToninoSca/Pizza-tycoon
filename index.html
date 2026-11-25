@@ -153,8 +153,8 @@ if(b.kind==='park'){
 const kind=b.kind,wallColor=shade(b.color,Math.floor(rand(90)*25)-12);
 let floors=kind==='office'?2+Math.floor(rand(2)*3):kind==='apartments'?2+Math.floor(rand(2)*2):kind==='landmark'?3:kind==='factory'?1:kind==='school'?2:kind==='market'?1+Math.floor(rand(2)):kind==='pizza'?2:1+Math.floor(rand(3));
 let h=(kind==='office'?floors*15:kind==='apartments'?floors*12:kind==='landmark'?88:kind==='factory'?29:kind==='school'?43:kind==='market'?39:kind==='pizza'?48:kind==='cafe'?32:kind==='oldhome'?36+floors*6:25+floors*6)*z;
-let w=(kind==='office'?24+rand(3)*10:kind==='factory'?36+rand(3)*10:kind==='school'?39+rand(3)*10:kind==='landmark'?31+rand(3)*8:kind==='market'?32+rand(3)*8:kind==='cafe'?19+rand(3)*7:kind==='pizza'?25+rand(3)*8:kind==='oldhome'?23+rand(3)*12:kind==='home'?19+rand(3)*12:25+rand(3)*10)*z;
-let d=(kind==='office'?19+rand(4)*9:kind==='factory'?31+rand(4)*9:kind==='school'?24+rand(4)*7:kind==='market'?23+rand(4)*7:kind==='cafe'?15+rand(4)*6:kind==='oldhome'?18+rand(4)*11:14+rand(4)*12)*z;
+let w=(kind==='office'?24+rand(3)*10:kind==='factory'?29+rand(3)*4:kind==='school'?30+rand(3)*5:kind==='landmark'?31+rand(3)*8:kind==='market'?32+rand(3)*8:kind==='cafe'?19+rand(3)*7:kind==='pizza'?25+rand(3)*8:kind==='oldhome'?23+rand(3)*12:kind==='home'?19+rand(3)*12:25+rand(3)*10)*z;
+let d=(kind==='office'?19+rand(4)*9:kind==='factory'?24+rand(4)*4:kind==='school'?21+rand(4)*5:kind==='market'?23+rand(4)*7:kind==='cafe'?15+rand(4)*6:kind==='oldhome'?18+rand(4)*11:14+rand(4)*12)*z;
 let groundY=p.y,base=groundY-8*z,plinth=8*z,ink='#59463e',left=shade(wallColor,-34),right=shade(wallColor,-12),roof=shade(wallColor,24);
 ctx.fillStyle='#263d3655';ctx.beginPath();ctx.ellipse(p.x,base+8*z,w*1.05, d*.58,0,0,Math.PI*2);ctx.fill();
 const leftGrad=ctx.createLinearGradient(p.x-w,base-h,p.x,base);leftGrad.addColorStop(0,shade(wallColor,7));leftGrad.addColorStop(1,left);
@@ -188,15 +188,7 @@ if(roofType==='gable'||roofType==='shed'){
   ctx.stroke();
   ctx.strokeStyle=shade(roofBase,-18);ctx.lineWidth=2.2*z;
   ctx.beginPath();ctx.moveTo(backRidge.x,backRidge.y);ctx.lineTo(frontRidge.x,frontRidge.y);ctx.stroke();
-  // Dachlinien bleiben innerhalb der jeweiligen Dachfläche.
-  ctx.save();ctx.strokeStyle=shade(roofBase,-22);ctx.lineWidth=.8*z;ctx.globalAlpha=.42;
-  for(let row=1;row<=2;row++){
-    const t=row/3;
-    const lx={x:eaveL.x+(backRidge.x-eaveL.x)*t,y:eaveL.y+(backRidge.y-eaveL.y)*t};
-    const rx={x:eaveR.x+(backRidge.x-eaveR.x)*t,y:eaveR.y+(backRidge.y-eaveR.y)*t};
-    ctx.beginPath();ctx.moveTo(lx.x,lx.y);ctx.lineTo(rx.x,rx.y);ctx.stroke();
-  }
-  ctx.restore();
+
 }else if(roofType==='hip'){
   poly([{x:p.x-w-3*z,y:base-h+3*z},{x:p.x,y:base-h-d*.42},{x:p.x+w+3*z,y:base-h+3*z},{x:p.x,y:base-h+d*.52}],roof,ink);
   poly([{x:p.x-w-3*z,y:base-h+3*z},{x:p.x,y:base-h+3*z+d*.18},{x:p.x,y:base-h+d*.52},{x:p.x-w,y:base-h+d*.52}],shade(roof,-13),ink);
@@ -220,9 +212,9 @@ if(false && kind==='home'&&rand(150)>.48){
 }
 if(kind==='factory'){
   // Fabrikhallen bekommen Oberlichter und einen markanten Schornstein.
-  rounded(p.x+w*.48,base-h-17*z,7*z,19*z,1*z,'#a66b50','#62483e');
-  rounded(p.x+w*.43,base-h-19*z,17*z,3*z,1*z,'#754b40','#493b35');
-  ctx.fillStyle='#d9d4c5';ctx.globalAlpha=.35;ctx.beginPath();ctx.ellipse(p.x+w*.52,base-h-25*z,5*z,3*z,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+  rounded(p.x+w*.48,base-h-20*z,7*z,15*z,1*z,'#a66b50','#62483e');
+  rounded(p.x+w*.43,base-h-22*z,17*z,3*z,1*z,'#754b40','#493b35');
+  ctx.fillStyle='#d9d4c5';ctx.globalAlpha=.28;ctx.beginPath();ctx.ellipse(p.x+w*.52,base-h-27*z,5*z,3*z,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
   for(let skylight=0;skylight<3;skylight++){
     const xx=p.x-w*.48+skylight*10*z;
     poly([{x:xx,y:base-h-5*z},{x:xx+5*z,y:base-h-9*z},{x:xx+10*z,y:base-h-5*z},{x:xx+5*z,y:base-h-1*z}],'#9bcbd2','#52666a');
@@ -239,10 +231,7 @@ if(kind==='school'){
   ctx.fillStyle='#f1dfb9';ctx.beginPath();ctx.arc(p.x,base-h-8*z,4*z,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle='#655748';ctx.lineWidth=1*z;ctx.beginPath();ctx.moveTo(p.x,base-h-11*z);ctx.lineTo(p.x,base-h-8*z);ctx.lineTo(p.x+2*z,base-h-7*z);ctx.stroke();
 }
-// Ein durchgehender Sockelabschluss verbindet beide sichtbaren Fassaden.
-ctx.strokeStyle=shade(wallColor,-48);ctx.lineWidth=2.2*z;ctx.globalAlpha=.72;
-ctx.beginPath();ctx.moveTo(p.x-w,groundY-2*z);ctx.lineTo(p.x,groundY+d*.52-2*z);ctx.lineTo(p.x+w,groundY-2*z);ctx.stroke();
-ctx.globalAlpha=1;
+
 // Fenster liegen exakt auf den schrägen isometrischen Wandflächen – nie über Gebäudeecken.
 const rows=Math.max(1,Math.min(3,Math.floor(floors/2)));
 function facadeOpening(side,u,v,uw,vh,door=false){
