@@ -386,7 +386,8 @@ if(kind==='parking'){
   drawCar(tile.x-.15,tile.y+.1,0,tile.id%2?'#d95c4d':'#4c86b8',Math.atan2(.36,.72));
   return;
 }
-}
+drawBrandMast(tile,p,base-h);}
+function drawBrandMast(tile,p,roofY){if(tile!==state.owned)return;const z=cam.zoom,x=p.x+3*z,y=roofY-1*z;ctx.strokeStyle='#4c392e';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y-18*z);ctx.stroke();ctx.fillStyle=state.brandColor||'#e85d3f';ctx.strokeStyle='#4c392e';ctx.lineWidth=1.5*z;ctx.beginPath();ctx.arc(x,y-22*z,8*z,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.font='bold '+(10*z)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fff';ctx.fillText(state.brandLogo||'🍕',x,y-22*z);}
 function drawFrontage(tile,p){
 const z=cam.zoom,b=tile.building;if(!b||b.kind==='park'||b.kind==='landmark')return;
 const kind=b.kind;
