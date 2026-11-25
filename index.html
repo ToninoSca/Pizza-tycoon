@@ -155,12 +155,15 @@ let floors=kind==='office'?2+Math.floor(rand(2)*3):kind==='apartments'?2+Math.fl
 let h=(kind==='office'?floors*15:kind==='apartments'?floors*12:kind==='landmark'?88:kind==='factory'?29:kind==='school'?43:kind==='market'?39:kind==='pizza'?48:kind==='cafe'?32:kind==='oldhome'?36+floors*6:25+floors*6)*z;
 let w=(kind==='office'?24+rand(3)*10:kind==='factory'?36+rand(3)*10:kind==='school'?39+rand(3)*10:kind==='landmark'?31+rand(3)*8:kind==='market'?32+rand(3)*8:kind==='cafe'?19+rand(3)*7:kind==='pizza'?25+rand(3)*8:kind==='oldhome'?23+rand(3)*12:kind==='home'?19+rand(3)*12:25+rand(3)*10)*z;
 let d=(kind==='office'?19+rand(4)*9:kind==='factory'?31+rand(4)*9:kind==='school'?24+rand(4)*7:kind==='market'?23+rand(4)*7:kind==='cafe'?15+rand(4)*6:kind==='oldhome'?18+rand(4)*11:14+rand(4)*12)*z;
-let base=p.y,ink='#59463e',left=shade(wallColor,-34),right=shade(wallColor,-12),roof=shade(wallColor,24);
+let groundY=p.y,base=groundY-8*z,plinth=8*z,ink='#59463e',left=shade(wallColor,-34),right=shade(wallColor,-12),roof=shade(wallColor,24);
 ctx.fillStyle='#263d3655';ctx.beginPath();ctx.ellipse(p.x,base+8*z,w*1.05, d*.58,0,0,Math.PI*2);ctx.fill();
 const leftGrad=ctx.createLinearGradient(p.x-w,base-h,p.x,base);leftGrad.addColorStop(0,shade(wallColor,7));leftGrad.addColorStop(1,left);
 const rightGrad=ctx.createLinearGradient(p.x,base-h,p.x+w,base);rightGrad.addColorStop(0,shade(wallColor,18));rightGrad.addColorStop(1,right);
 poly([{x:p.x-w,y:base},{x:p.x,y:base+d*.52},{x:p.x,y:base-h+d*.52},{x:p.x-w,y:base-h}],leftGrad,ink);
 poly([{x:p.x,y:base+d*.52},{x:p.x+w,y:base},{x:p.x+w,y:base-h},{x:p.x,y:base-h+d*.52}],rightGrad,ink);
+// Sichtbarer, durchgehender Sockel bis zur Bodenebene: Das Gebäude steht auf dem Gelände statt darin.
+poly([{x:p.x-w,y:base},{x:p.x,y:base+d*.52},{x:p.x,y:base+d*.52+plinth},{x:p.x-w,y:base+plinth}],shade(wallColor,-48),ink);
+poly([{x:p.x,y:base+d*.52},{x:p.x+w,y:base},{x:p.x+w,y:base+plinth},{x:p.x,y:base+d*.52+plinth}],shade(wallColor,-58),ink);
 // Unterschiedliche Dächer: Satteldach, Flachdach, Mansarde und Hallendach
 const district=tile.district||'residential';
 const roofType=kind==='office'||kind==='apartments'?'flat':kind==='factory'?'shed':kind==='oldhome'?'gable':kind==='school'||kind==='landmark'?'gable':district==='oldtown'?(rand(8)<.82?'gable':'hip'):district==='industrial'?(kind==='factory'?'shed':'flat'):district==='civic'?(rand(8)<.78?'flat':'hip'):district==='shopping'?(rand(8)<.62?'flat':'gable'):kind==='home'?(rand(5)<.72?'gable':rand(6)<.5?'flat':'hip'):(rand(5)<.38?'gable':rand(7)<.5?'flat':'hip');
@@ -238,7 +241,7 @@ if(kind==='school'){
 }
 // Ein durchgehender Sockelabschluss verbindet beide sichtbaren Fassaden.
 ctx.strokeStyle=shade(wallColor,-48);ctx.lineWidth=2.2*z;ctx.globalAlpha=.72;
-ctx.beginPath();ctx.moveTo(p.x-w,base-2*z);ctx.lineTo(p.x,base+d*.52-2*z);ctx.lineTo(p.x+w,base-2*z);ctx.stroke();
+ctx.beginPath();ctx.moveTo(p.x-w,groundY-2*z);ctx.lineTo(p.x,groundY+d*.52-2*z);ctx.lineTo(p.x+w,groundY-2*z);ctx.stroke();
 ctx.globalAlpha=1;
 // Fenster liegen exakt auf den schrägen isometrischen Wandflächen – nie über Gebäudeecken.
 const rows=Math.max(1,Math.min(3,Math.floor(floors/2)));
