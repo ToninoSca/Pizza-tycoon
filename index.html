@@ -414,13 +414,13 @@ if(['home','oldhome','apartments'].includes(kind)){
       ctx.fillStyle='#e9d5b1';ctx.beginPath();ctx.arc(p.x+side*23*z,p.y+7*z,2*z,0,Math.PI*2);ctx.fill();
     }
   }
-  // Kleine Aushängeschilder und Kreidetafeln machen die Einkaufsstraße lebendiger.
-  if(kind==='cafe'||kind==='pizza'||kind==='shop'){
+  // Separate Aushängeschilder bleiben Cafés und Pizzerien vorbehalten.
+  if(kind==='cafe'||kind==='pizza'){
     const sx=p.x+31*z,sy=p.y-2*z;
     ctx.strokeStyle='#55463b';ctx.lineWidth=1.8*z;ctx.beginPath();ctx.moveTo(sx,sy-8*z);ctx.lineTo(sx,sy+7*z);ctx.stroke();
     rounded(sx-7*z,sy-8*z,14*z,12*z,2*z,kind==='pizza'?'#c94e3e':'#f0d59a','#5d493c');
     ctx.fillStyle=kind==='pizza'?'#fff0d2':'#57483a';ctx.font='bold '+(5*z)+'px system-ui';ctx.textAlign='center';
-    ctx.fillText(kind==='pizza'?'PIZZA':kind==='cafe'?'CAFÉ':'SHOP',sx,sy);
+    ctx.fillText(kind==='pizza'?'PIZZA':'CAFÉ',sx,sy);
   }
   // Niedrige bepflanzte Beete rahmen den Eingang ein und lassen den Zugang frei.
   for(const side of [-1,1]){
@@ -467,17 +467,23 @@ if(['cafe','pizza','shop','market'].includes(kind)){
     ctx.fillStyle='#fff0c8';ctx.font='bold '+(4.5*z)+'px system-ui';ctx.textAlign='center';
     ctx.fillText(kind==='pizza'?'PIZZA': 'KAFFEE',bx,by-2*z);
   }
-  // Terrassenstühle mit farbigen Sitzflächen.
-  if(kind==='cafe'||kind==='pizza'){
-    for(const side of [-1,1]){
-      const cx=p.x+side*11*z,cy=p.y+15*z;
-      ctx.strokeStyle='#594638';ctx.lineWidth=1.3*z;
-      ctx.beginPath();ctx.moveTo(cx-2*z,cy);ctx.lineTo(cx-3*z,cy+5*z);ctx.moveTo(cx+2*z,cy);ctx.lineTo(cx+3*z,cy+5*z);ctx.stroke();
-      rounded(cx-3*z,cy-3*z,6*z,3*z,1*z,side<0?'#d56b50':'#527f91','#594638');
+  // Kleine Außenterrassen: Shops erhalten ein Tischpaar mit je zwei Stühlen.
+  if(kind==='cafe'||kind==='pizza'||kind==='shop'){
+    const positions=kind==='shop'?[-13,13]:[-11,11];
+    for(const side of positions){
+      const cx=p.x+side*z,cy=p.y+14*z;
+      ctx.fillStyle='#6b4b37';ctx.beginPath();ctx.ellipse(cx,cy,5*z,3*z,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#493a30';ctx.lineWidth=1*z;ctx.beginPath();ctx.moveTo(cx-3*z,cy);ctx.lineTo(cx-3*z,cy+3*z);ctx.moveTo(cx+3*z,cy);ctx.lineTo(cx+3*z,cy+3*z);ctx.stroke();
+      for(const chairSide of [-1,1]){
+        const qx=cx+chairSide*7*z,qy=cy+1*z;
+        ctx.strokeStyle='#594638';ctx.lineWidth=1.2*z;
+        ctx.beginPath();ctx.moveTo(qx-2*z,qy);ctx.lineTo(qx-2.5*z,qy+4*z);ctx.moveTo(qx+2*z,qy);ctx.lineTo(qx+2.5*z,qy+4*z);ctx.stroke();
+        rounded(qx-3*z,qy-2*z,6*z,2.5*z,1*z,chairSide<0?'#d56b50':'#527f91','#594638');
+      }
     }
   }
-  // Fahrradständer vor wechselnden Geschäften.
-  if(tile.id%3===0){
+  // Fahrradständer nur vor Cafés und Märkten, nicht im Shop-Terrassenbereich.
+  if(kind!=='shop'&&tile.id%3===0){
     ctx.strokeStyle='#52636a';ctx.lineWidth=1.4*z;
     for(let bike=0;bike<2;bike++){
       const bx=p.x+27*z+bike*7*z,by=p.y+12*z;
@@ -486,7 +492,7 @@ if(['cafe','pizza','shop','market'].includes(kind)){
   }
 }
 // Kleine Sitzbank als Straßenelement vor einzelnen Ladenfronten.
-if(tile.id%7===0&&['shop','market','office'].includes(kind)){
+if(tile.id%7===0&&['market','office'].includes(kind)){
   const bx=p.x-31*z,by=p.y+13*z;
   rounded(bx-6*z,by-2*z,12*z,3*z,1*z,'#9b6846','#594638');
   ctx.strokeStyle='#594638';ctx.lineWidth=1.3*z;
