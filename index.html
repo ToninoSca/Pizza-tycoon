@@ -197,7 +197,7 @@ if(['home','oldhome','school','market','cafe','shop'].includes(kind)){
   ctx.strokeStyle=shade(b.color,-42);ctx.lineWidth=1.4*z;
   ctx.beginPath();ctx.moveTo(p.x-w+3*z,base-3*z);ctx.lineTo(p.x+w-3*z,base-3*z);ctx.stroke();
   if(kind==='home'||kind==='oldhome'){
-    rounded(p.x-w*.78,base-h+Math.min(18,h*.32)*z,5*z,Math.max(15,h*.35)*z,1*z,shade(b.color,16),'#705548');
+    rounded(p.x-w*.78,base-h+Math.min(18,(h/z)*.32)*z,5*z,Math.max(15,(h/z)*.35)*z,1*z,shade(b.color,16),'#705548');
   }
   if(kind==='school'){
     for(let flag=0;flag<3;flag++){ctx.fillStyle=['#d85b4e','#e8c75e','#6c9fc2'][flag];ctx.fillRect(p.x-w*.55+flag*9*z,base-h+5*z,6*z,4*z);}
