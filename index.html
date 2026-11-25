@@ -55,10 +55,17 @@ const buildings=[
  {name:'Werkhalle',emoji:'🏭',color:'#8d9997',kind:'factory'},
  {name:'Rathaus',emoji:'🏛️',color:'#d6c39b',kind:'landmark'}
 ];
+const ROAD_X=[6,18,33,48,56],ROAD_Y=[7,21,35,49,56];
+const BUILDING_X=[10,14,25,29,39,43,52],BUILDING_Y=[12,17,26,30,40,45,53];
+function isVerticalRoad(x,y){return ROAD_X.includes(x)||(x===12&&y>=8&&y<=20)||(x===40&&y>=22&&y<=34)||(x===26&&y>=36&&y<=48)||(x===52&&y>=8&&y<=20);}
+function isHorizontalRoad(x,y){return ROAD_Y.includes(y)||(y===14&&x>=7&&x<=17)||(y===29&&x>=19&&x<=32)||(y===42&&x>=34&&x<=47)||(y===53&&x>=49&&x<=55);}
+function isRoad(x,y){return isVerticalRoad(x,y)||isHorizontalRoad(x,y);}
+function hasTrafficSignal(x,y){return ROAD_X.includes(x)&&ROAD_Y.includes(y)&&(ROAD_X.indexOf(x)+ROAD_Y.indexOf(y))%2===0&&!(x===33&&y===35);}
+function signalPhase(x,y,time){const v=((time+x*193+y*97)%10000+10000)%10000;return v<4200?0:v<5200?1:2;}
 function makeCity(){
  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
-  const road=(x%3===0||y%3===0),edge=x===0||y===0||x===N-1||y===N-1,plot=!road&&!edge;
-  const parcelX=Math.floor(x/3),parcelY=Math.floor(y/3),roll=(parcelX*37+parcelY*71+parcelX*parcelY*13)%100;
+  const road=isRoad(x,y),edge=x===0||y===0||x===N-1||y===N-1,plot=!road&&!edge;
+  const parcelX=Math.floor(x/7),parcelY=Math.floor(y/7),roll=(parcelX*37+parcelY*71+parcelX*parcelY*13)%100;
   const district=(x<22&&y<24)?'oldtown':(x>=39&&y>=39)?'industrial':(y>42&&x>18&&x<43)?'shopping':(x>=39&&y<25)?'civic':(x>=22&&x<=39&&y>=20&&y<=40)?'downtown':'residential';
   let kind=0;
   // Deutlich erkennbare Stadtviertel: Wohnen ist nur ein Teil der Stadt.
@@ -77,8 +84,8 @@ function makeCity(){
   else if(plot&&x>=45&&x<=47&&y>=12&&y<=14) space='parking';
   const empty=!!space;
   const districtGround={oldtown:['#bca98f','#b5a18a','#c4b092'],shopping:['#c5b9a2','#cbbda4','#bfb39c'],industrial:['#aaa99d','#a4a69c','#b1ad9f'],civic:['#b7b9a7','#c0bba7','#aeb7a5'],downtown:['#b8b09c','#c0b49d','#b2b09b'],residential:['#b4ad91','#a9ad91','#b5b09a']};
-  const palette=districtGround[district],ground=space==='garden'||kind===6?'#8eaa78':space==='plaza'||kind===7||kind===8||kind===5?palette[roll%palette.length]:kind===9?'#a9a99a':palette[roll%palette.length];
-  tiles.push({x,y,road,plot,space,ground,district,building:plot&&x%3===1&&y%3===1&&!empty?buildings[kind]:null,price:900+((x*73+y*91)%8)*180,traffic:35+((x*19+y*13)%60),rent:120+((x*31+y*17)%100),id:y*N+x});
+  const palette=districtGround[district],ground=space==='garden'||kind===6?'#8eaa78':space==='plaza'?palette[1]:kind===9?'#a9a99a':palette[0];
+  tiles.push({x,y,road,plot,space,ground,district,building:plot&&BUILDING_X.includes(x)&&BUILDING_Y.includes(y)&&!empty&&roll<91?buildings[kind]:null,price:900+((x*73+y*91)%8)*180,traffic:35+((x*19+y*13)%60),rent:120+((x*31+y*17)%100),id:y*N+x});
  }
  // Ein markantes Rathaus als Orientierungspunkt im Zentrum
  const landmark=tiles.find(t=>t.x===30&&t.y===27);
@@ -435,14 +442,11 @@ if(tile.id%7===0&&['shop','market','office'].includes(kind)){
   ctx.beginPath();ctx.moveTo(bx-4*z,by+1*z);ctx.lineTo(bx-4*z,by+5*z);ctx.moveTo(bx+4*z,by+1*z);ctx.lineTo(bx+4*z,by+5*z);ctx.stroke();
 }
 }
-function drawCar(x,y,time,color,angle=0){
-let p=screen(x,y),z=cam.zoom;
-ctx.save();ctx.translate(p.x,p.y);ctx.rotate(angle);
-ctx.fillStyle='#253b3a55';ctx.beginPath();ctx.ellipse(0,7*z,17*z,7*z,0,0,Math.PI*2);ctx.fill();
-rounded(-15*z,-7*z,30*z,15*z,5*z,color,'#493b38');
-rounded(-8*z,-5*z,15*z,9*z,3*z,'#a9dce3','#493b38');
-ctx.fillStyle='#fff0bd';ctx.fillRect(11*z,-4*z,3*z,3*z);ctx.fillRect(11*z,2*z,3*z,3*z);
-ctx.fillStyle='#30353a';ctx.fillRect(-10*z,-9*z,6*z,3*z);ctx.fillRect(6*z,-9*z,6*z,3*z);ctx.restore();
+function drawCar(x,y,time,color,angle=0,stopped=false){
+let p=screen(x,y),z=cam.zoom;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(angle);
+ctx.fillStyle='#253b3a55';ctx.beginPath();ctx.ellipse(0,5*z,11*z,4*z,0,0,Math.PI*2);ctx.fill();
+rounded(-10*z,-5*z,20*z,10*z,3*z,color,'#493b38');rounded(-5.5*z,-3.5*z,10*z,6*z,2*z,'#a9dce3','#493b38');
+ctx.fillStyle='#fff0bd';ctx.fillRect(7*z,-3*z,2*z,2*z);ctx.fillRect(7*z,1*z,2*z,2*z);ctx.fillStyle=stopped?'#f14b43':'#30353a';ctx.fillRect(-9*z,-4*z,2*z,2*z);ctx.fillRect(-9*z,2*z,2*z,2*z);ctx.restore();
 }
 function drawPedestrian(x,y,time,color,angle=0,lateral=0){
 let p=screen(x,y),z=cam.zoom;p.x-=Math.sin(angle)*lateral*z;p.y+=Math.cos(angle)*lateral*z;ctx.save();ctx.translate(p.x,p.y);if(Math.cos(angle)<0)ctx.scale(-1,1);
@@ -453,30 +457,12 @@ ctx.fillStyle='#f0bd8d';ctx.beginPath();ctx.arc(0,-15*z,3*z,0,Math.PI*2);ctx.fil
 }
 function cityActors(time){
  const actors=new Map(),colors=['#e45c4f','#f0c44f','#4f8ecb','#f4f0df','#4f9b71','#d87c42','#8c6ab1','#d77ca5'];
- const add=(x,y,type,color,angle=0,lateral=0)=>{
-  const tx=Math.max(0,Math.min(N-1,Math.round(x))),ty=Math.max(0,Math.min(N-1,Math.round(y))),id=ty*N+tx;
-  if(!actors.has(id))actors.set(id,[]);
-  actors.get(id).push({x,y,type,color,angle,lateral});
- };
- [3,15,27].forEach((low,ri)=>{
-  const high=57-low,route=[{x:low,y:low},{x:high,y:low},{x:high,y:high},{x:low,y:high},{x:low,y:low}];
-  const lengths=route.slice(0,-1).map((p,i)=>Math.abs(route[i+1].x-p.x)+Math.abs(route[i+1].y-p.y));
-  const total=lengths.reduce((a,b)=>a+b,0);
-  for(let n=0;n<4;n++){
-   let distance=(time*.00125*(.82+((n+ri)%3)*.18)+n*total/4+ri*total/11)%total;
-   let seg=0;while(seg<3&&distance>lengths[seg]){distance-=lengths[seg];seg++;}
-   const a=route[seg],b=route[seg+1],t=distance/lengths[seg],x=a.x+(b.x-a.x)*t,y=a.y+(b.y-a.y)*t,dx=b.x-a.x,dy=b.y-a.y;
-   add(x,y,'car',colors[(n+ri*2)%colors.length],Math.atan2((dx+dy)*.36,(dx-dy)*.72));
-  }
- });
- for(let i=0;i<92;i++){
-  const lane=3+(i%17)*3,vertical=i%2===1,reverse=i%4>=2;
-  const along=3+((time*.00030*(i%3===0?1.1:.82)+i*7.31)%(N-6));
-  const x=vertical?lane:(reverse?N-along:along),y=vertical?(reverse?N-along:along):lane;
-  const dx=vertical?0:(reverse?-1:1),dy=vertical?(reverse?-1:1):0;
-  const angle=Math.atan2((dx+dy)*.36,(dx-dy)*.72);
-  add(x,y,'ped',colors[i%colors.length],angle,(i%4<2?-1:1)*13);
- }
+ const add=(x,y,type,color,angle=0,stopped=false)=>{const tx=Math.max(0,Math.min(N-1,Math.round(x))),ty=Math.max(0,Math.min(N-1,Math.round(y))),id=ty*N+tx;if(!actors.has(id))actors.set(id,[]);actors.get(id).push({x,y,type,color,angle,stopped});};
+ const outer=[{x:6,y:7},{x:18,y:7},{x:33,y:7},{x:48,y:7},{x:56,y:7},{x:56,y:21},{x:56,y:35},{x:56,y:49},{x:56,y:56},{x:48,y:56},{x:33,y:56},{x:18,y:56},{x:6,y:56},{x:6,y:49},{x:6,y:35},{x:6,y:21}];
+ const inner=[{x:18,y:21},{x:33,y:21},{x:48,y:21},{x:48,y:35},{x:48,y:49},{x:33,y:49},{x:18,y:49},{x:18,y:35}];
+ [outer,inner].forEach((path,ri)=>{const legs=path.map((a,i)=>{const b=path[(i+1)%path.length];return{a,b,len:Math.hypot(b.x-a.x,b.y-a.y)};});const cycle=legs.reduce((sum,l)=>sum+l.len*780+900,0);for(let n=0;n<4;n++){let cursor=(time+n*cycle/4+ri*cycle/7)%cycle;if(cursor<0)cursor+=cycle;let pos=legs[0].a,stopped=false,angle=0;for(const leg of legs){const travel=leg.len*780;if(cursor<travel){const f=cursor/travel;pos={x:leg.a.x+(leg.b.x-leg.a.x)*f,y:leg.a.y+(leg.b.y-leg.a.y)*f};angle=Math.atan2((leg.b.x-leg.a.x+leg.b.y-leg.a.y)*.36,(leg.b.x-leg.a.x-leg.b.y+leg.a.y)*.72);break;}cursor-=travel;const at=leg.b,signal=hasTrafficSignal(at.x,at.y),red=signal&&signalPhase(at.x,at.y,time)===0,wait=signal?(red?1500:250):180;if(cursor<wait){pos=at;stopped=red;angle=Math.atan2((leg.b.x-leg.a.x+leg.b.y-leg.a.y)*.36,(leg.b.x-leg.a.x-leg.b.y+leg.a.y)*.72);break;}cursor-=wait;pos=leg.b;}add(pos.x,pos.y,'car',colors[(n+ri*2)%colors.length],angle,stopped);}});
+ // Fußgänger laufen mittig auf den Gehwegen statt auf der Fahrbahn.
+ for(let i=0;i<56;i++){const vertical=i%2===1,roadIndex=Math.floor(i/2)%5,roadLine=vertical?ROAD_X[roadIndex]:ROAD_Y[roadIndex],reverse=i%4>=2,dir=reverse?-1:1;let along=4+((time*.00024*(i%3===0?1.12:.86)+i*8.17)%(N-8));if(reverse)along=N-4-along;const crossings=vertical?ROAD_Y:ROAD_X;for(const cross of crossings){const sx=vertical?roadLine:cross,sy=vertical?cross:roadLine,phase=signalPhase(sx,sy,time);if(hasTrafficSignal(sx,sy)&&phase===2&&Math.abs(along-cross)<.85){along=cross-dir*.9;break;}}const side=i%4<2?-1:1,offset=.62*side,x=vertical?roadLine+offset:along,y=vertical?along:roadLine+offset,dx=vertical?0:dir,dy=vertical?dir:0,angle=Math.atan2((dx+dy)*.36,(dx-dy)*.72);add(x,y,'ped',colors[i%colors.length],angle,false);}
  return actors;
 }
 function shade(hex,amt){let n=parseInt(hex.slice(1),16),r=Math.max(0,Math.min(255,(n>>16)+amt)),g=Math.max(0,Math.min(255,((n>>8)&255)+amt)),b=Math.max(0,Math.min(255,(n&255)+amt));return'#'+(1<<24|r<<16|g<<8|b).toString(16).slice(1);}
@@ -487,31 +473,15 @@ function drawSidewalk(t,p){
  const strip=(points,seed)=>{
   const pts=points.map(([x,y])=>screen(t.x+x,t.y+y));
   const paving=t.district==='oldtown'?'#c9b69a':t.district==='shopping'?'#d0c5ad':t.district==='industrial'?'#aaa99f':t.district==='civic'?'#c2c5b7':t.district==='downtown'?'#c2bba9':'#c9c3b2';
-  poly(pts,paving,'#827f73');
-  // Fugen quer über den Gehweg: dadurch wirken die Flächen wie verlegte Platten.
-  ctx.strokeStyle='#eee7d8';ctx.lineWidth=Math.max(.7,.85*z);
-  for(let i=1;i<5;i++){
-   const f=i/5;
-   ctx.beginPath();
-   ctx.moveTo(pts[0].x+(pts[3].x-pts[0].x)*f,pts[0].y+(pts[3].y-pts[0].y)*f);
-   ctx.lineTo(pts[1].x+(pts[2].x-pts[1].x)*f,pts[1].y+(pts[2].y-pts[1].y)*f);
-   ctx.stroke();
-  }
-  // Dezente wechselnde Steinfarben statt einer einheitlichen grauen Fläche.
-  for(let i=0;i<3;i++){
-   const f=((seed+i*2)%7+1)/9;
-   const x=pts[0].x+(pts[1].x-pts[0].x)*f;
-   const y=pts[0].y+(pts[1].y-pts[0].y)*f;
-   ctx.fillStyle=t.district==='oldtown'?(i===1?'#b7a487':'#d9c5a5'):t.district==='industrial'?(i===1?'#999b94':'#b8b8ad'):(i===1?'#bdb7a8':'#d4cebf');
-   ctx.beginPath();ctx.arc(x,y,Math.max(.45,.7*z),0,Math.PI*2);ctx.fill();
-  }
+  poly(pts,paving,null);
+  // Durchgehende Gehwegfläche ohne kleinteiliges Kachelmuster.
   // Bordstein hebt den Gehweg sichtbar von der Fahrbahn ab.
   ctx.strokeStyle='#f0e8d5';ctx.lineWidth=Math.max(1,2*z);
   ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);ctx.lineTo(pts[3].x,pts[3].y);ctx.stroke();
   ctx.strokeStyle='#8e897d';ctx.lineWidth=Math.max(.6,.9*z);
   ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y+1*z);ctx.lineTo(pts[3].x,pts[3].y+1*z);ctx.stroke();
  };
- if(t.x%3===0){
+ if(isVerticalRoad(t.x,t.y)&&!isHorizontalRoad(t.x,t.y)){
   for(const side of [-1,1])strip([[side*.46,-.49],[side*.73,-.49],[side*.73,.49],[side*.46,.49]],t.x+t.y+side);
  }else{
   for(const side of [-1,1])strip([[-.49,side*.46],[-.49,side*.73],[.49,side*.73],[.49,side*.46]],t.x+t.y+side);
