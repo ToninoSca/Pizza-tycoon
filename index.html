@@ -165,23 +165,32 @@ poly([{x:p.x,y:base+d*.52},{x:p.x+w,y:base},{x:p.x+w,y:base-h},{x:p.x,y:base-h+d
 const district=tile.district||'residential';
 const roofType=kind==='office'||kind==='apartments'?'flat':kind==='factory'?'shed':kind==='oldhome'?'gable':kind==='school'||kind==='landmark'?'gable':district==='oldtown'?(rand(8)<.82?'gable':'hip'):district==='industrial'?(kind==='factory'?'shed':'flat'):district==='civic'?(rand(8)<.78?'flat':'hip'):district==='shopping'?(rand(8)<.62?'flat':'gable'):kind==='home'?(rand(5)<.72?'gable':rand(6)<.5?'flat':'hip'):(rand(5)<.38?'gable':rand(7)<.5?'flat':'hip');
 if(roofType==='gable'||roofType==='shed'){
-  const ridge=kind==='factory'?d*.72:d*.62;
-  const eaveL={x:p.x-w-3*z,y:base-h},eaveR={x:p.x+w+3*z,y:base-h};
-  const ridgeTop={x:p.x,y:base-h-ridge*z},front={x:p.x,y:base-h+d*.52};
+  // Dach folgt exakt dem oberen Wand-Fußabdruck: linke, vordere,
+  // rechte und hintere Ecke liegen auf denselben Koordinaten wie die Wände.
   const roofBase=kind==='school'?'#b95143':shade(wallColor,31);
-  // Zwei getrennte Dachflächen treffen sich exakt an derselben Firstlinie.
-  poly([eaveL,ridgeTop,front],shade(roofBase,-13),ink);
-  poly([ridgeTop,eaveR,front],shade(roofBase,9),ink);
+  const eaveL={x:p.x-w-2*z,y:base-h};
+  const eaveR={x:p.x+w+2*z,y:base-h};
+  const frontEave={x:p.x,y:base-h+d*.52};
+  const backEave={x:p.x,y:base-h-d*.52};
+  const rise=(kind==='factory'?Math.max(5,d*.13):Math.max(8,Math.min(17,d*.25)))*z;
+  const frontRidge={x:p.x,y:frontEave.y-rise};
+  const backRidge={x:p.x,y:backEave.y-rise};
+  // Zwei durchgehende Dachflächen statt zweier Dreiecke mit falscher Tiefe.
+  poly([eaveL,backRidge,frontRidge,frontEave],shade(roofBase,-13),ink);
+  poly([frontEave,frontRidge,backRidge,eaveR],shade(roofBase,9),ink);
   ctx.strokeStyle=shade(roofBase,-28);ctx.lineWidth=2*z;
-  ctx.beginPath();ctx.moveTo(eaveL.x,eaveL.y);ctx.lineTo(ridgeTop.x,ridgeTop.y);ctx.lineTo(eaveR.x,eaveR.y);ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(eaveL.x,eaveL.y);ctx.lineTo(backRidge.x,backRidge.y);
+  ctx.lineTo(frontRidge.x,frontRidge.y);ctx.lineTo(eaveR.x,eaveR.y);
+  ctx.stroke();
   ctx.strokeStyle=shade(roofBase,-18);ctx.lineWidth=2.2*z;
-  ctx.beginPath();ctx.moveTo(ridgeTop.x,ridgeTop.y);ctx.lineTo(front.x,front.y);ctx.stroke();
-  // Dezente Dachlinien folgen der jeweiligen Dachfläche.
-  ctx.save();ctx.strokeStyle=shade(roofBase,-22);ctx.lineWidth=.8*z;ctx.globalAlpha=.48;
+  ctx.beginPath();ctx.moveTo(backRidge.x,backRidge.y);ctx.lineTo(frontRidge.x,frontRidge.y);ctx.stroke();
+  // Dachlinien bleiben innerhalb der jeweiligen Dachfläche.
+  ctx.save();ctx.strokeStyle=shade(roofBase,-22);ctx.lineWidth=.8*z;ctx.globalAlpha=.42;
   for(let row=1;row<=2;row++){
     const t=row/3;
-    const lx={x:eaveL.x+(ridgeTop.x-eaveL.x)*t,y:eaveL.y+(ridgeTop.y-eaveL.y)*t};
-    const rx={x:eaveR.x+(ridgeTop.x-eaveR.x)*t,y:eaveR.y+(ridgeTop.y-eaveR.y)*t};
+    const lx={x:eaveL.x+(backRidge.x-eaveL.x)*t,y:eaveL.y+(backRidge.y-eaveL.y)*t};
+    const rx={x:eaveR.x+(backRidge.x-eaveR.x)*t,y:eaveR.y+(backRidge.y-eaveR.y)*t};
     ctx.beginPath();ctx.moveTo(lx.x,lx.y);ctx.lineTo(rx.x,rx.y);ctx.stroke();
   }
   ctx.restore();
