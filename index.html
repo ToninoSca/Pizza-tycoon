@@ -467,7 +467,7 @@ function cityActors(time){
 }
 function shade(hex,amt){let n=parseInt(hex.slice(1),16),r=Math.max(0,Math.min(255,(n>>16)+amt)),g=Math.max(0,Math.min(255,((n>>8)&255)+amt)),b=Math.max(0,Math.min(255,(n&255)+amt));return'#'+(1<<24|r<<16|g<<8|b).toString(16).slice(1);}
 function drawSidewalk(t,p){
- if(!t.road||t.x%3===0&&t.y%3===0)return;
+ if(!t.road)return;
  // Breitere, gepflasterte Gehwege mit sichtbarer Bordsteinkante und einzelnen Steinplatten.
  const z=cam.zoom;
  const strip=(points,seed)=>{
@@ -500,7 +500,7 @@ if(isVerticalRoad(t.x,t.y)&&isHorizontalRoad(t.x,t.y)&&(t.x+t.y)%14===0){
 // Straßenlaternen an ausgewählten Gehweg-Ecken
 if(t.road&&(t.x*5+t.y*3)%8===0){const lx=p.x+19*z,ly=p.y-10*z;ctx.strokeStyle='#42504a';ctx.lineWidth=3*z;ctx.beginPath();ctx.moveTo(lx,ly+12*z);ctx.lineTo(lx,ly-22*z);ctx.lineTo(lx+8*z,ly-26*z);ctx.stroke();ctx.fillStyle='#ffe9a0';ctx.beginPath();ctx.arc(lx+8*z,ly-26*z,4*z,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff3bd';ctx.lineWidth=1*z;ctx.stroke();}
 // Kleine Bushaltestellen mit Dach und Haltestellenschild
-if(t.x===3&&t.y===4||t.x===6&&t.y===7){rounded(p.x-17*z,p.y-17*z,28*z,3*z,1*z,'#e7e9df','#52605a');ctx.strokeStyle='#52605a';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(p.x-14*z,p.y-14*z);ctx.lineTo(p.x-14*z,p.y+5*z);ctx.moveTo(p.x+8*z,p.y-14*z);ctx.lineTo(p.x+8*z,p.y+5*z);ctx.stroke();rounded(p.x+13*z,p.y-21*z,3*z,23*z,1*z,'#52605a');rounded(p.x+10*z,p.y-24*z,9*z,8*z,2*z,'#f4d46d','#52605a');ctx.fillStyle='#33443c';ctx.font='bold '+(5*z)+'px system-ui';ctx.textAlign='center';ctx.fillText('BUS',p.x+14.5*z,p.y-18*z);}
+if(t.x===18&&t.y===7||t.x===48&&t.y===21){rounded(p.x-17*z,p.y-17*z,28*z,3*z,1*z,'#e7e9df','#52605a');ctx.strokeStyle='#52605a';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(p.x-14*z,p.y-14*z);ctx.lineTo(p.x-14*z,p.y+5*z);ctx.moveTo(p.x+8*z,p.y-14*z);ctx.lineTo(p.x+8*z,p.y+5*z);ctx.stroke();rounded(p.x+13*z,p.y-21*z,3*z,23*z,1*z,'#52605a');rounded(p.x+10*z,p.y-24*z,9*z,8*z,2*z,'#f4d46d','#52605a');ctx.fillStyle='#33443c';ctx.font='bold '+(5*z)+'px system-ui';ctx.textAlign='center';ctx.fillText('BUS',p.x+14.5*z,p.y-18*z);}
 // Parkende Fahrzeuge kommen später auf eigene markierte Stellplätze.
 }
 function drawMapBase(time){ctx.fillStyle='#4babc5';ctx.fillRect(0,0,W,H);for(let i=0;i<22;i++){let x=(i*137+time*.009)%(W+100)-50,y=(i*83+Math.sin(time*.001+i)*8)%(H+30);ctx.strokeStyle='#b8e8e766';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+24,y-3);ctx.stroke();}const corners=[[3,3],[N-3,3],[N-3,N-3],[3,N-3]].map(([x,y])=>screen(x,y));poly(corners,'#c9b47b','#8caa72');const inner=[[3.5,3.5],[N-3.5,3.5],[N-3.5,N-3.5],[3.5,N-3.5]].map(([x,y])=>screen(x,y));poly(inner,'#83bd69','#e6d29a');}
