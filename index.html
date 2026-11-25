@@ -56,7 +56,7 @@ const buildings=[
  {name:'Rathaus',emoji:'🏛️',color:'#d6c39b',kind:'landmark'}
 ];
 const ROAD_X=[6,18,33,48,56],ROAD_Y=[7,21,35,49,56];
-const BUILDING_X=[10,14,25,29,39,43,52],BUILDING_Y=[12,17,26,30,40,45,53];
+const BUILDING_X=[9,15,24,29,38,44,51,54],BUILDING_Y=[10,18,25,32,38,45,51,54];
 function isVerticalRoad(x,y){return ROAD_X.includes(x)||(x===12&&y>=8&&y<=20)||(x===40&&y>=22&&y<=34)||(x===26&&y>=36&&y<=48)||(x===52&&y>=8&&y<=20);}
 function isHorizontalRoad(x,y){return ROAD_Y.includes(y)||(y===14&&x>=7&&x<=17)||(y===29&&x>=19&&x<=32)||(y===42&&x>=34&&x<=47)||(y===53&&x>=49&&x<=55);}
 function isRoad(x,y){return isVerticalRoad(x,y)||isHorizontalRoad(x,y);}
@@ -481,7 +481,9 @@ function drawSidewalk(t,p){
   ctx.strokeStyle='#8e897d';ctx.lineWidth=Math.max(.6,.9*z);
   ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y+1*z);ctx.lineTo(pts[3].x,pts[3].y+1*z);ctx.stroke();
  };
- if(isVerticalRoad(t.x,t.y)&&!isHorizontalRoad(t.x,t.y)){
+ if(isVerticalRoad(t.x,t.y)&&isHorizontalRoad(t.x,t.y)){
+  for(const side of [-1,1]){strip([[side*.46,-.49],[side*.73,-.49],[side*.73,.49],[side*.46,.49]],t.x+t.y+side);strip([[-.49,side*.46],[-.49,side*.73],[.49,side*.73],[.49,side*.46]],t.x+t.y-side);}
+ }else if(isVerticalRoad(t.x,t.y)){
   for(const side of [-1,1])strip([[side*.46,-.49],[side*.73,-.49],[side*.73,.49],[side*.46,.49]],t.x+t.y+side);
  }else{
   for(const side of [-1,1])strip([[-.49,side*.46],[-.49,side*.73],[.49,side*.73],[.49,side*.46]],t.x+t.y+side);
@@ -489,7 +491,7 @@ function drawSidewalk(t,p){
 }
 function drawStreetProps(t,p){const z=cam.zoom;
 // Vierteltypische Orientierungsschilder an ausgewählten Kreuzungen.
-if(t.x%3===0&&t.y%3===0&&(t.x+t.y)%12===0){
+if(isVerticalRoad(t.x,t.y)&&isHorizontalRoad(t.x,t.y)&&(t.x+t.y)%14===0){
  const label=t.district==='oldtown'?'ALTSTADT':t.district==='shopping'?'EINKAUF':t.district==='industrial'?'GEWERBE':t.district==='civic'?'CAMPUS':t.district==='downtown'?'ZENTRUM':'WOHNEN';
  const signColor=t.district==='oldtown'?'#8b563f':t.district==='shopping'?'#b75b45':t.district==='industrial'?'#586d70':t.district==='civic'?'#607f68':'#607a9b';
  rounded(p.x-18*z,p.y-29*z,36*z,9*z,2*z,signColor,'#493f35');
