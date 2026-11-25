@@ -898,7 +898,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  let last=0;function loop(ms){requestAnimationFrame(loop);const dt=Math.min(.05,(ms-last)/1000||.016);last=ms;clock+=dt;updatePeople(dt);renderer.render(scene,camera);}requestAnimationFrame(loop);
 })();
 </script>
-</body></html><script type="module">
+<script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 (()=>{
  const canvas=document.getElementById('city3d');if(!canvas)return;
@@ -1034,3 +1034,4 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  let prev=0;function loop(ms){requestAnimationFrame(loop);const dt=Math.min(.05,(ms-prev)/1000||.016);prev=ms;const api=window.__pizzaCity;if(api?.isInterior()){canvas.style.display='none';renderer.render(scene,camera);return;}canvas.style.display='block';if(api){const actors=api.getActors(ms);const list=[];actors.forEach(a=>a.forEach(v=>list.push(v)));let ci=0,pi=0;for(const a of list){if(a.type==='car'&&ci<cars.length){const g=cars[ci++];g.position.set(a.x,.08,a.y);g.rotation.y=-a.angle;g.visible=true;}else if(a.type==='ped'&&pi<peds.length){const p=peds[pi++],g=p.g,walk=Math.sin(ms*.012+p.phase);g.position.set(a.x,.02,a.y);g.rotation.y=-a.angle;g.position.y=.02+Math.abs(walk)*.025;p.left.rotation.x=walk*.48;p.right.rotation.x=-walk*.48;p.armL.rotation.x=-walk*.32;p.armR.rotation.x=walk*.32;g.visible=true;}}for(;ci<cars.length;ci++)cars[ci].visible=false;for(;pi<peds.length;pi++)peds[pi].visible=false;}renderer.render(scene,camera);}requestAnimationFrame(loop);
 })();
 </script>
+</body></html>
