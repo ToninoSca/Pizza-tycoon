@@ -154,11 +154,12 @@ if(kind==='apartments'||kind==='oldhome'||kind==='home'){
   for(let br=0;br<balconyRows;br++){
     const by=base-h+(25+br*18)*z;
     const bx=p.x+w*.18;
-    rounded(bx-2*z,by+wh*.55,12*z,3*z,1*z,'#d8c9ad','#594b40');
+    const balconyY=by+5.5*z;
+    rounded(bx-2*z,balconyY,12*z,3*z,1*z,'#d8c9ad','#594b40');
     ctx.strokeStyle='#4e5550';ctx.lineWidth=1.4*z;
-    ctx.beginPath();ctx.moveTo(bx-2*z,by+wh*.55);ctx.lineTo(bx-2*z,by+wh*.55-7*z);ctx.lineTo(bx+10*z,by+wh*.55-7*z);ctx.lineTo(bx+10*z,by+wh*.55);ctx.stroke();
-    for(let rail=0;rail<4;rail++){ctx.beginPath();ctx.moveTo(bx+rail*4*z,by+wh*.55-7*z);ctx.lineTo(bx+rail*4*z,by+wh*.55);ctx.stroke();}
-    if(rand(30+br)>.45){ctx.fillStyle='#4c9855';ctx.beginPath();ctx.arc(bx+5*z,by+wh*.55-10*z,3*z,0,Math.PI*2);ctx.fill();}
+    ctx.beginPath();ctx.moveTo(bx-2*z,balconyY);ctx.lineTo(bx-2*z,balconyY-7*z);ctx.lineTo(bx+10*z,balconyY-7*z);ctx.lineTo(bx+10*z,balconyY);ctx.stroke();
+    for(let rail=0;rail<4;rail++){ctx.beginPath();ctx.moveTo(bx+rail*4*z,balconyY-7*z);ctx.lineTo(bx+rail*4*z,balconyY);ctx.stroke();}
+    if(rand(30+br)>.45){ctx.fillStyle='#4c9855';ctx.beginPath();ctx.arc(bx+5*z,balconyY-10*z,3*z,0,Math.PI*2);ctx.fill();}
   }
 }
 if(kind==='office'||kind==='apartments'){
