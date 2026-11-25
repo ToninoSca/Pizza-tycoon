@@ -551,6 +551,7 @@ if(!road&&t.building){
  drawBuilding(t,time);drawFrontage(t,p);
 }
 if(!road&&t.space==='roundabout'){
+ const z=cam.zoom;
  ctx.fillStyle='#4d5553';ctx.beginPath();ctx.ellipse(p.x,p.y,13*z,7*z,0,0,Math.PI*2);ctx.fill();
  ctx.fillStyle='#83aa68';ctx.beginPath();ctx.ellipse(p.x,p.y,6*z,3.5*z,0,0,Math.PI*2);ctx.fill();
  ctx.fillStyle='#d9e5c0';ctx.beginPath();ctx.arc(p.x-1.5*z,p.y-.7*z,1.2*z,0,Math.PI*2);ctx.fill();
