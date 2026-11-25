@@ -41,7 +41,7 @@ const $=id=>document.getElementById(id),canvas=$('world'),ctx=canvas.getContext(
 const SAVE='pizzaTycoonWorld_v2';
 let W=0,H=0,dpr=1,cam={x:5.2,y:5.2,zoom:1},drag=null,pinch=null,selected=null,activeTab='city',last=0,toastTimer=0;
 const state={company:'',money:5000,day:1,owned:null,shop:null,customers:0,revenue:0,started:false};
-const N=41,T=52,tiles=[];
+const N=61,T=52,tiles=[];
 const buildings=[
  {name:'Wohnhaus',emoji:'🏠',color:'#c77d58',kind:'home'},
  {name:'Bürogebäude',emoji:'🏢',color:'#8da4ad',kind:'office'},
@@ -56,7 +56,7 @@ function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight
 addEventListener('resize',resize);
 function iso(x,y){return{x:(x-y)*T*.72,y:(x+y)*T*.36};}
 function screen(x,y){let p=iso(x-cam.x,y-cam.y);return{x:W/2+p.x*cam.zoom,y:H*.46+p.y*cam.zoom};}
-function clampCamera(){const r=(W/(2*T*.72*cam.zoom)+H/(2*T*.36*cam.zoom))*.5+1.2;cam.x=Math.max(r,Math.min(N-r,cam.x));cam.y=Math.max(r,Math.min(N-r,cam.y));}
+function clampCamera(){const edge=3.4;cam.x=Math.max(edge,Math.min(N-edge,cam.x));cam.y=Math.max(edge,Math.min(N-edge,cam.y));}
 function poly(points,fill,stroke){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=Math.max(1.2,2.1*cam.zoom);ctx.lineJoin='round';ctx.stroke();}}
 function diamond(x,y,color){let p=screen(x,y),w=T*.72*cam.zoom,h=T*.36*cam.zoom;poly([{x:p.x,y:p.y-h},{x:p.x+w,y:p.y},{x:p.x,y:p.y+h},{x:p.x-w,y:p.y}],color,'#344c3e55');}
 function rounded(x,y,w,h,r,fill,stroke){
@@ -149,11 +149,11 @@ if(t.x===3&&t.y===4||t.x===6&&t.y===7){rounded(p.x-17*z,p.y-17*z,28*z,3*z,1*z,'#
 // Geparkte Autos am Straßenrand
 if(t.road&&t.y%3===0&&t.x%3===1&&t.x<9){drawCar(t.x+.12,t.y+.42,0,t.x%2?'#d95c4d':'#4c86b8');}
 }
-function drawMapBase(time){ctx.fillStyle='#4babc5';ctx.fillRect(0,0,W,H);for(let i=0;i<22;i++){let x=(i*137+time*.009)%(W+100)-50,y=(i*83+Math.sin(time*.001+i)*8)%(H+30);ctx.strokeStyle='#b8e8e766';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+24,y-3);ctx.stroke();}const corners=[[0,0],[N,0],[N,N],[0,N]].map(([x,y])=>screen(x,y));poly(corners,'#c9b47b','#8caa72');const inner=[[.5,.5],[N-.5,.5],[N-.5,N-.5],[.5,N-.5]].map(([x,y])=>screen(x,y));poly(inner,'#83bd69','#e6d29a');}
+function drawMapBase(time){ctx.fillStyle='#4babc5';ctx.fillRect(0,0,W,H);for(let i=0;i<22;i++){let x=(i*137+time*.009)%(W+100)-50,y=(i*83+Math.sin(time*.001+i)*8)%(H+30);ctx.strokeStyle='#b8e8e766';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+24,y-3);ctx.stroke();}const corners=[[3,3],[N-3,3],[N-3,N-3],[3,N-3]].map(([x,y])=>screen(x,y));poly(corners,'#c9b47b','#8caa72');const inner=[[3.5,3.5],[N-3.5,3.5],[N-3.5,N-3.5],[3.5,N-3.5]].map(([x,y])=>screen(x,y));poly(inner,'#83bd69','#e6d29a');}
 function draw(time=0){if(!W)return;ctx.clearRect(0,0,W,H);drawMapBase(time);
 const ordered=[...tiles].sort((a,b)=>a.x+a.y-(b.x+b.y));
 for(const t of ordered){let p=screen(t.x,t.y);if(p.x<-100||p.x>W+100||p.y<-130||p.y>H+100)continue;
-let road=t.road;diamond(t.x,t.y,road?'#737b82':(t.plot?'#91c878':'#7eb96c'));
+let road=t.road,coastal=t.x<3||t.y<3||t.x>=N-3||t.y>=N-3;if(coastal&&!road)continue;diamond(t.x,t.y,coastal?'#9a7954':(road?'#737b82':(t.plot?'#91c878':'#7eb96c')));if(coastal&&road){const z=cam.zoom;ctx.strokeStyle='#e2c18a';ctx.lineWidth=2*z;for(let k=-1;k<=1;k++){ctx.beginPath();ctx.moveTo(p.x-17*z,p.y+k*7*z);ctx.lineTo(p.x+17*z,p.y+k*7*z);ctx.stroke();}ctx.strokeStyle='#5b5144';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(p.x-18*z,p.y-11*z);ctx.lineTo(p.x+18*z,p.y+11*z);ctx.moveTo(p.x-18*z,p.y+11*z);ctx.lineTo(p.x+18*z,p.y-11*z);ctx.stroke();}
 if(road){
 const z=cam.zoom;
 if(t.x%3===0&&t.y%3!==0){
@@ -213,7 +213,7 @@ $('quality').onclick=()=>{if(state.money<350||s.quality>=5){toast('Nicht möglic
 $('staff').onclick=()=>{if(state.money<500){toast('Nicht genug Geld.');return;}state.money-=500;s.staff++;refreshMoney();showBusiness();save();};
 $('day').onclick=nextDay;}
 function nextDay(){let s=state.shop;if(!s){toast('Erst eine Pizzeria eröffnen.');return;}let customers=Math.max(8,Math.round((state.owned.traffic*.55+s.quality*5+s.staff*7)*(1-Math.abs(s.price-12)*.035)));let sold=Math.min(s.stock,customers);let revenue=sold*s.price,cost=sold*4+s.staff*55+(s.rent?state.owned.rent:0);let profit=revenue-cost;state.money+=profit;s.stock=Math.max(0,s.stock-sold);state.customers+=sold;state.revenue+=revenue;state.day++;refreshMoney();save();openPanel('📊 Tagesabschluss','<p class="muted">Tag '+(state.day-1)+' · '+state.company+'</p><div class="statrow"><span>Bediente Kunden</span><b>'+sold+'</b></div><div class="statrow"><span>Umsatz</span><b>'+revenue.toLocaleString('de-DE')+' €</b></div><div class="statrow"><span>Kosten</span><b>'+cost.toLocaleString('de-DE')+' €</b></div><div class="statrow"><span>Tagesergebnis</span><b style="color:'+(profit>=0?'#b6e36b':'#ff8b7d')+'">'+(profit>=0?'+':'')+profit.toLocaleString('de-DE')+' €</b></div><p class="muted">Der Lagerbestand muss später wieder aufgefüllt werden.</p>','<div class="actions"><button id="okDay">Weiter</button></div>');$('okDay').onclick=()=>showBusiness();}
-function tab(name){activeTab=name;document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));if(name==='city'){$('panel').style.display='none';$('hint').textContent='Wische, um die Stadt zu erkunden · Grundstück antippen';}if(name==='business')showBusiness();if(name==='map'){openPanel('🗺️ Stadtkarte','<p class="muted">Deine Stadt: 41 × 41 Felder. Wische frei über die Stadt. Mit zwei Fingern zoomst du.</p><div class="statrow"><span>Dein Standort</span><b>'+(state.owned?'Eröffnet':'Noch keiner')+'</b></div>');}if(name==='menu'){openPanel('☰ Spielmenü','<p class="muted">Dein Fortschritt wird automatisch gespeichert.</p><div class="statrow"><span>Spieltag</span><b>'+state.day+'</b></div><div class="statrow"><span>Gesamtumsatz</span><b>'+state.revenue.toLocaleString('de-DE')+' €</b></div><div class="actions"><button id="saveNow">Speichern</button><button class="secondary" id="pauseMenu">Hauptmenü</button></div>');$('saveNow').onclick=()=>{save();toast('Spiel gespeichert.');};$('pauseMenu').onclick=()=>{save();show('mainMenu');};}}
+function tab(name){activeTab=name;document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));if(name==='city'){$('panel').style.display='none';$('hint').textContent='Wische, um die Stadt zu erkunden · Grundstück antippen';}if(name==='business')showBusiness();if(name==='map'){openPanel('🗺️ Stadtkarte','<p class="muted">Deine Stadt: 61 × 61 Felder. Wische frei über die Stadt. Mit zwei Fingern zoomst du.</p><div class="statrow"><span>Dein Standort</span><b>'+(state.owned?'Eröffnet':'Noch keiner')+'</b></div>');}if(name==='menu'){openPanel('☰ Spielmenü','<p class="muted">Dein Fortschritt wird automatisch gespeichert.</p><div class="statrow"><span>Spieltag</span><b>'+state.day+'</b></div><div class="statrow"><span>Gesamtumsatz</span><b>'+state.revenue.toLocaleString('de-DE')+' €</b></div><div class="actions"><button id="saveNow">Speichern</button><button class="secondary" id="pauseMenu">Hauptmenü</button></div>');$('saveNow').onclick=()=>{save();toast('Spiel gespeichert.');};$('pauseMenu').onclick=()=>{save();show('mainMenu');};}}
 document.querySelectorAll('.nav').forEach(b=>b.addEventListener('click',()=>tab(b.dataset.tab)));
 function pointerDown(e){e.preventDefault();if(e.pointerType==='touch'&&e.isPrimary===false)return;canvas.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,moved:false,id:e.pointerId};}
 function pointerMove(e){if(!drag||drag.id!==e.pointerId)return;let dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>3)drag.moved=true;if(drag.moved){const sx=dx/(T*.72*cam.zoom),sy=dy/(T*.36*cam.zoom),wx=(sx+sy)*.5,wy=(sy-sx)*.5;cam.x-=wx;cam.y-=wy;clampCamera();drag.x=e.clientX;drag.y=e.clientY;}}
