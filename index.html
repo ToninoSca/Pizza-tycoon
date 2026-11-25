@@ -56,7 +56,7 @@ const buildings=[
  {name:'Rathaus',emoji:'🏛️',color:'#d6c39b',kind:'landmark'}
 ];
 const ROAD_X=[6,18,33,48,56],ROAD_Y=[7,21,35,49,56];
-const BUILDING_X=[9,15,24,29,38,44,51,54],BUILDING_Y=[10,18,25,32,38,45,51,54];
+const BUILDING_X=[4,8,12,16,23,27,31,37,41,45,50,54,58],BUILDING_Y=[4,8,12,16,23,27,31,37,41,45,50,54,58];
 const ROUNDABOUT_RING=[[32,34],[33,34],[34,34],[34,35],[34,36],[33,36],[32,36],[32,35]];
 function isRoundaboutRoad(x,y){return ROUNDABOUT_RING.some(([rx,ry])=>rx===x&&ry===y);}
 function isVerticalRoad(x,y){return ROAD_X.includes(x)||(x===12&&y>=8&&y<=20)||(x===40&&y>=22&&y<=34)||(x===26&&y>=36&&y<=48)||(x===52&&y>=8&&y<=20);}
@@ -511,11 +511,11 @@ function draw(time=0){if(!W)return;ctx.clearRect(0,0,W,H);drawMapBase(time);
 const ordered=[...tiles].sort((a,b)=>a.x+a.y-(b.x+b.y));
 const actors=cityActors(time);
 for(const t of ordered){let p=screen(t.x,t.y);if(p.x<-100||p.x>W+100||p.y<-130||p.y>H+100)continue;
-let road=t.road,coastal=t.x<3||t.y<3||t.x>=N-3||t.y>=N-3;if(coastal&&!road)continue;diamond(t.x,t.y,coastal?'#9a7954':(road?'#747b80':(t.plot?t.ground:'#879b78')),road||coastal||!t.plot);if(road&&!coastal)drawSidewalk(t,p);if(coastal&&road){const z=cam.zoom;ctx.strokeStyle='#e2c18a';ctx.lineWidth=2*z;for(let k=-1;k<=1;k++){ctx.beginPath();ctx.moveTo(p.x-17*z,p.y+k*7*z);ctx.lineTo(p.x+17*z,p.y+k*7*z);ctx.stroke();}ctx.strokeStyle='#5b5144';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(p.x-18*z,p.y-11*z);ctx.lineTo(p.x+18*z,p.y+11*z);ctx.moveTo(p.x-18*z,p.y+11*z);ctx.lineTo(p.x+18*z,p.y-11*z);ctx.stroke();}
+let road=t.road,coastal=t.x<3||t.y<3||t.x>=N-3||t.y>=N-3;if(coastal&&!road)continue;diamond(t.x,t.y,coastal?'#9a7954':(road?'#747b80':(t.plot?t.ground:'#879b78')),coastal||!t.plot);if(road&&!coastal)drawSidewalk(t,p);if(coastal&&road){const z=cam.zoom;ctx.strokeStyle='#e2c18a';ctx.lineWidth=2*z;for(let k=-1;k<=1;k++){ctx.beginPath();ctx.moveTo(p.x-17*z,p.y+k*7*z);ctx.lineTo(p.x+17*z,p.y+k*7*z);ctx.stroke();}ctx.strokeStyle='#5b5144';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(p.x-18*z,p.y-11*z);ctx.lineTo(p.x+18*z,p.y+11*z);ctx.moveTo(p.x-18*z,p.y+11*z);ctx.lineTo(p.x+18*z,p.y-11*z);ctx.stroke();}
 if(road){
 const z=cam.zoom;
 if(isVerticalRoad(t.x,t.y)&&!isHorizontalRoad(t.x,t.y)){
-ctx.strokeStyle='#f7e8b866';ctx.lineWidth=2*z;ctx.setLineDash([7*z,7*z]);ctx.beginPath();ctx.moveTo(p.x-4*z,p.y-18*z);ctx.lineTo(p.x-4*z,p.y+18*z);ctx.stroke();ctx.setLineDash([]);
+ctx.strokeStyle='#ffffffd9';ctx.lineWidth=2.2*z;ctx.setLineDash([9*z,8*z]);ctx.beginPath();ctx.moveTo(p.x-4*z,p.y-18*z);ctx.lineTo(p.x-4*z,p.y+18*z);ctx.stroke();ctx.setLineDash([]);
 }
 if(isHorizontalRoad(t.x,t.y)&&!isVerticalRoad(t.x,t.y)){
 ctx.strokeStyle='#f7e8b866';ctx.lineWidth=2*z;ctx.setLineDash([7*z,7*z]);ctx.beginPath();ctx.moveTo(p.x+4*z,p.y-18*z);ctx.lineTo(p.x+4*z,p.y+18*z);ctx.stroke();ctx.setLineDash([]);
