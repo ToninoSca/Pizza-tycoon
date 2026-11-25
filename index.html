@@ -922,10 +922,22 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  function roadLine(x1,z1,x2,z2,width=1.02){const dx=x2-x1,dz=z2-z1,len=Math.hypot(dx,dz),o=slab((x1+x2)/2,(z1+z2)/2,dx===0?width:len,dz===0?width:len,road,.01);if(dx!==0&&dz!==0)o.rotation.y=Math.atan2(dz,dx);}
  function sidewalkLine(x1,z1,x2,z2,offsetX,offsetZ){const dx=x2-x1,dz=z2-z1,len=Math.hypot(dx,dz);slab((x1+x2)/2+offsetX,(z1+z2)/2+offsetZ,dx===0?.22:len,dz===0?.22:len,sidewalk,.065);}
  const vertical=[6,18,33,48,56],horizontal=[7,21,35,49,56];
- vertical.forEach(x=>{roadLine(x,0,x,60);sidewalkLine(x,0,x,60,-.68,0);sidewalkLine(x,0,x,60,.68,0);});
- horizontal.forEach(z=>{roadLine(0,z,60,z);sidewalkLine(0,z,60,z,0,-.68);sidewalkLine(0,z,60,z,0,.68);});
- [[12,8,12,20],[40,22,40,34],[26,36,26,48],[52,8,52,20]].forEach(([x1,z1,x2,z2])=>{roadLine(x1,z1,x2,z2);sidewalkLine(x1,z1,x2,z2,-.68,0);sidewalkLine(x1,z1,x2,z2,.68,0);});
- [[7,14,17,14],[19,29,32,29],[34,42,47,42],[49,53,55,53]].forEach(([x1,z1,x2,z2])=>{roadLine(x1,z1,x2,z2);sidewalkLine(x1,z1,x2,z2,0,-.68);sidewalkLine(x1,z1,x2,z2,0,.68);});
+ const verticalSegments=vertical.map(x=>({x,a:0,b:60})).concat([[12,8,20],[40,22,34],[26,36,48],[52,8,20]].map(([x,a,b])=>({x,a,b})));
+ const horizontalSegments=horizontal.map(z=>({z,a:0,b:60})).concat([[14,7,17],[29,19,32],[42,34,47],[53,49,55]].map(([z,a,b])=>({z,a,b})));
+ // Fahrbahnen bleiben durchgehend. Gehwege werden an jeder querenden Straße sauber unterbrochen,
+ // damit an Kreuzungen keine vier Gehwegplatten zu einem geschlossenen Quadrat verschmelzen.
+ verticalSegments.forEach(s=>roadLine(s.x,s.a,s.x,s.b));
+ horizontalSegments.forEach(s=>roadLine(s.a,s.z,s.b,s.z));
+ function clippedWalk(axis,fixed,start,end,side){
+  const cuts=axis==='v'
+   ?horizontalSegments.filter(h=>fixed>=h.a-.01&&fixed<=h.b+.01).map(h=>h.z)
+   :verticalSegments.filter(v=>fixed>=v.a-.01&&fixed<=v.b+.01).map(v=>v.x);
+  cuts.sort((a,b)=>a-b);let cursor=start;
+  for(const cross of cuts){const lo=Math.max(start,cross-.58),hi=Math.min(end,cross+.58);if(lo>cursor+.05){if(axis==='v')sidewalkLine(fixed,cursor,fixed,lo,side*.68,0);else sidewalkLine(cursor,fixed,lo,fixed,0,side*.68);}cursor=Math.max(cursor,hi);}
+  if(cursor<end-.05){if(axis==='v')sidewalkLine(fixed,cursor,fixed,end,side*.68,0);else sidewalkLine(cursor,fixed,end,fixed,0,side*.68);}
+ }
+ verticalSegments.forEach(s=>[-1,1].forEach(side=>clippedWalk('v',s.x,s.a,s.b,side)));
+ horizontalSegments.forEach(s=>[-1,1].forEach(side=>clippedWalk('h',s.z,s.a,s.b,side)));
  const tiles=window.__pizzaCity?.tiles||[];
  const typeHeight={home:1.8,oldhome:2.1,apartments:3.3,office:4.8,school:2.8,market:2.3,park:.2,shop:2.0,cafe:1.7,factory:1.8,landmark:4.0,wholesale:2.2,deli:1.8,hardware:2.0};
  function makeBuilding(t){
@@ -935,14 +947,45 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   const fronts=[{x:t.x,y:t.y-1,a:Math.PI},{x:t.x+1,y:t.y,a:Math.PI/2},{x:t.x,y:t.y+1,a:0},{x:t.x-1,y:t.y,a:-Math.PI/2}];
   const front=fronts.find(p=>tiles.some(q=>q.x===p.x&&q.y===p.y&&q.road));
   if(front){g.rotation.y=front.a;g.position.set(t.x+(t.x-front.x)*.56,0,t.y+(t.y-front.y)*.56);}else g.position.set(t.x,0,t.y);
-  const kind=b.kind,h=typeHeight[kind]||2.0,w=kind==='office'||kind==='landmark'?1.28:kind==='factory'?1.22:1.12,d=kind==='factory'?1.18:1.04;
+  const kind=b.kind,h=typeHeight[kind]||2.0,seed=((t.x*37+t.y*71)%11)/10;
+  // Jedes Haus bekommt leicht andere Proportionen statt identischer Schuhkarton-Maße.
+  const w=(kind==='office'||kind==='landmark'?1.34:kind==='factory'?1.3:kind==='apartments'?1.22:1.14)*(.9+seed*.16);
+  const d=(kind==='factory'?1.28:kind==='apartments'?1.18:1.08)*(.9+((t.x*13+t.y*29)%9)/10*.14);
   const base=mat(b.color||'#c78c69'),side=mat(shadeFacade(b.color||'#c78c69',-22)),roof=mat(kind==='oldhome'||t.district==='oldtown'?'#a85a48':kind==='factory'?'#687579':'#655b52');
   const trim=mat('#e9dfcb'),foundation=mat('#655b52'),frame=mat('#493f37'),glassLit=mat('#a9d9e8',.18),doorGlass=mat('#8fc5d4',.2);
   // Vorderseite heller, Seiten und Rückseite mit eigener Fassadenfarbe.
   const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),[side,side,roof,foundation,base,side]);body.position.set(0,h/2+.08,0);body.castShadow=true;body.receiveShadow=true;g.add(body);box(g,w+.08,.13,d+.08,foundation,0,.12,0);
   // Roof silhouette and building-specific roof details
-  if(['oldhome','school','landmark'].includes(kind)){const r=box(g,w+.16,.3,d+.16,roof,0,h+.23,0);r.rotation.z=0;}
-  else box(g,w+.12,.18,d+.12,roof,0,h+.18,0);
+  if(['oldhome','school','landmark','home'].includes(kind)){
+   box(g,w+.16,.2,d+.16,roof,0,h+.2,0);
+   if(kind==='oldhome'||kind==='home'){
+    const peak=new THREE.Mesh(new THREE.ConeGeometry(Math.max(w,d)*.72,.62,4),roof);peak.position.set(0,h+.58,0);peak.rotation.y=Math.PI/4;g.add(peak);
+   }else if(kind==='landmark'){
+    const cap=new THREE.Mesh(new THREE.ConeGeometry(.48,.72,8),mat('#b89b69'));cap.position.set(0,h+.62,0);g.add(cap);
+   }
+  }else{
+   box(g,w+.14,.16,d+.14,roof,0,h+.16,0);
+   if(kind==='apartments'||kind==='office'){
+    box(g,w+.22,.1,d+.22,trim,0,h+.28,0);
+    box(g,.42,.22,.42,side,w*.27,h+.42,-d*.22);
+   }else if(kind==='factory'){
+    box(g,.22,.55,.22,mat('#778486'),w*.28,h+.48,-d*.2);
+    box(g,.26,.08,.26,roof,w*.28,h+.78,-d*.2);
+   }
+  }
+  // Fassadenkanten, Sockel und Gesimse geben den Häusern mehr Tiefe.
+  if(kind!=='factory')box(g,w+.12,.075,.075,trim,0,h*.34,d/2+.035);
+  if(kind==='apartments'||kind==='oldhome'||kind==='office'){
+   const balconyY=kind==='office'?2.25:1.05;
+   if(balconyY<h-.25){
+    for(const bx of [-.34,.34]){
+     box(g,.34,.055,.18,mat('#b9aa91'),bx,balconyY-.18,d/2+.1);
+     box(g,.035,.2,.035,frame,bx-.14,balconyY-.07,d/2+.18);
+     box(g,.035,.2,.035,frame,bx+.14,balconyY-.07,d/2+.18);
+     box(g,.31,.025,.025,trim,bx,balconyY+.03,d/2+.18);
+    }
+   }
+  }
   if(kind==='home'||kind==='oldhome'||kind==='apartments'){
    box(g,.32,.5,.32,side,-.42,h+.55,-.25);box(g,.18,.13,.18,roof,-.42,h+.87,-.25);
    if(kind==='oldhome')box(g,w+.05,.12,.08,mat('#d6b887'),0,h+.05,d/2);
@@ -974,9 +1017,12 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   if(['cafe','pizza','shop','market','wholesale','deli','hardware'].includes(kind)){
    box(g,.92,.12,.1,trim,0,h*.72,d/2+.1);
    box(g,.76,.34,.035,glassLit,0,h*.48,d/2+.085);
-   box(g,1.12,.13,.5,kind==='cafe'||kind==='pizza'?mat('#b85c43'):mat('#d4b46e'),0,h*.78,d/2+.24);
+   const awning=kind==='cafe'||kind==='pizza'?mat('#b85c43'):mat('#d4b46e');
+   box(g,1.12,.13,.5,awning,0,h*.78,d/2+.24);
+   for(const x of [-.48,-.24,0,.24,.48])box(g,.055,.13,.5,x%0.48===0?trim:awning,x,h*.78,d/2+.25);
    for(const x of [-.48,.48])box(g,.07,.48,.08,frame,x,h*.48,d/2+.13);
    box(g,.8,.055,.06,trim,0,h*.27,d/2+.13);
+   if(kind==='cafe'||kind==='pizza'){box(g,.16,.16,.12,trim,-.38,h*.93,d/2+.28);box(g,.16,.16,.12,trim,.38,h*.93,d/2+.28);}
   }
   if(kind==='landmark'){for(let k=-1;k<=1;k++)box(g,.16,.65,.16,roof,k*.43,h+.55,0);}
   // Seitenfenster werden bereits im gemeinsamen Fensterblock erzeugt.
