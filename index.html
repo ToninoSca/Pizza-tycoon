@@ -359,7 +359,7 @@ const z=cam.zoom,b=tile.building;if(!b||b.kind==='park'||b.kind==='landmark')ret
 const kind=b.kind;
 // Kleiner gepflasterter Zugang vor dem Gebäude
 ctx.strokeStyle='#d9c79e';ctx.lineWidth=4*z;ctx.lineCap='round';
-const entryX=p.x+w*.38,entryY=p.y-4*z+d*.52*.62;
+const entryX=p.x+12*z,entryY=p.y+3*z;
 ctx.beginPath();ctx.moveTo(entryX,entryY);ctx.lineTo(p.x,p.y+15*z);ctx.stroke();
 ctx.strokeStyle='#f1e4c8';ctx.lineWidth=1*z;ctx.beginPath();ctx.moveTo(p.x-2*z,p.y+5*z);ctx.lineTo(p.x-2*z,p.y+14*z);ctx.stroke();ctx.lineCap='butt';
 if(['home','oldhome','apartments'].includes(kind)){
