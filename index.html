@@ -78,7 +78,7 @@ function makeCity(){
   const empty=plot&&(roll>92||!!space);
   const districtGround={oldtown:['#bca98f','#b5a18a','#c4b092'],shopping:['#c5b9a2','#cbbda4','#bfb39c'],industrial:['#aaa99d','#a4a69c','#b1ad9f'],civic:['#b7b9a7','#c0bba7','#aeb7a5'],downtown:['#b8b09c','#c0b49d','#b2b09b'],residential:['#b4ad91','#a9ad91','#b5b09a']};
   const palette=districtGround[district],ground=space==='garden'||kind===6?'#8eaa78':space==='plaza'||kind===7||kind===8||kind===5?palette[(x+y)%palette.length]:kind===9?'#a9a99a':palette[roll%palette.length];
-  tiles.push({x,y,road,plot,space,ground,district,building:plot&&!empty?buildings[kind]:null,price:900+((x*73+y*91)%8)*180,traffic:35+((x*19+y*13)%60),rent:120+((x*31+y*17)%100),id:y*N+x});
+  tiles.push({x,y,road,plot,space,ground,district,building:plot&&x%3===1&&y%3===1&&!empty?buildings[kind]:null,price:900+((x*73+y*91)%8)*180,traffic:35+((x*19+y*13)%60),rent:120+((x*31+y*17)%100),id:y*N+x});
  }
  // Ein markantes Rathaus als Orientierungspunkt im Zentrum
  const landmark=tiles.find(t=>t.x===30&&t.y===27);
@@ -193,7 +193,7 @@ for(let r=0;r<rows;r++){
  for(const side of [-1,1]){
   const count=1;
   for(let col=0;col<count;col++){
-   const u=count===1?.5:(col===0?.32:.68);
+   const u=count===1?.32:(col===0?.32:.68);
    const wx=side<0?p.x-w+2*w*u:p.x+w*u;
    const groundY=side<0?base+d*.52*u:base+d*.52*(1-u);
    const ww=(kind==='office'?6:6.5)*z,wh=(kind==='office'?7.5:8)*z;
@@ -353,9 +353,9 @@ const z=cam.zoom,b=tile.building;if(!b||b.kind==='park'||b.kind==='landmark')ret
 const kind=b.kind;
 // Kleiner gepflasterter Zugang vor dem Gebäude
 ctx.strokeStyle='#d9c79e';ctx.lineWidth=4*z;ctx.lineCap='round';
-const entryX=p.x+12*z,entryY=p.y+3*z;
-ctx.beginPath();ctx.moveTo(entryX,entryY);ctx.lineTo(p.x,p.y+15*z);ctx.stroke();
-ctx.strokeStyle='#f1e4c8';ctx.lineWidth=1*z;ctx.beginPath();ctx.moveTo(p.x-2*z,p.y+5*z);ctx.lineTo(p.x-2*z,p.y+14*z);ctx.stroke();ctx.lineCap='butt';
+const entryX=p.x+10*z,entryY=p.y+5*z;
+ctx.beginPath();ctx.moveTo(entryX,entryY);ctx.lineTo(p.x+10*z,p.y+16*z);ctx.stroke();
+ctx.strokeStyle='#f1e4c8';ctx.lineWidth=1*z;ctx.beginPath();ctx.moveTo(p.x+9*z,p.y+7*z);ctx.lineTo(p.x+9*z,p.y+15*z);ctx.stroke();ctx.lineCap='butt';
 if(['home','oldhome','apartments'].includes(kind)){
   // Vorgärten mit niedrigen Hecken und Blumen
   rounded(p.x-23*z,p.y+5*z,9*z,3*z,1*z,'#477f4c','#315b3a');
@@ -446,8 +446,8 @@ ctx.fillStyle='#30353a';ctx.fillRect(-10*z,-9*z,6*z,3*z);ctx.fillRect(6*z,-9*z,6
 }
 function drawPedestrian(x,y,time,color,angle=0,lateral=0){
 let p=screen(x,y),z=cam.zoom;p.x-=Math.sin(angle)*lateral*z;p.y+=Math.cos(angle)*lateral*z;ctx.save();ctx.translate(p.x,p.y);if(Math.cos(angle)<0)ctx.scale(-1,1);
-ctx.fillStyle='#34433c66';ctx.beginPath();ctx.ellipse(0,5*z,4*z,1.5*z,0,0,Math.PI*2);ctx.fill();
-ctx.strokeStyle='#34343a';ctx.lineWidth=2*z;let step=Math.sin(time*.012+x*4+y*3)*1.5;ctx.beginPath();ctx.moveTo(-1*z,-1*z);ctx.lineTo((-2+step)*z,3*z);ctx.moveTo(1*z,-1*z);ctx.lineTo((2-step)*z,3*z);ctx.stroke();
+ctx.fillStyle='#34433c66';ctx.beginPath();ctx.ellipse(0,2.5*z,3.5*z,1.2*z,0,0,Math.PI*2);ctx.fill();
+ctx.strokeStyle='#34343a';ctx.lineWidth=2*z;let step=Math.sin(time*.012+x*4+y*3)*1.5;ctx.beginPath();ctx.moveTo(-1*z,-1*z);ctx.lineTo((-2+step)*z,1.5*z);ctx.moveTo(1*z,-1*z);ctx.lineTo((2-step)*z,1.5*z);ctx.stroke();
 rounded(-2.8*z,-12*z,5.6*z,10*z,1.8*z,color,'#51433c');
 ctx.fillStyle='#f0bd8d';ctx.beginPath();ctx.arc(0,-15*z,3*z,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#6a4537';ctx.lineWidth=1*z;ctx.stroke();ctx.restore();
 }
