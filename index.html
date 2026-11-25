@@ -140,10 +140,10 @@ function makeCity(){
   t.building=buildings[kind];placed.push({x:t.x,y:t.y,kind});
  }
   // Besondere Geschäfte als feste, gut auffindbare Stadtziele
- const specialSites=[{x:8,y:8,name:'Großhandel',emoji:'📦',color:'#6d9eb1',kind:'wholesale',siteId:'wholesale'},{x:43,y:44,name:'Feinkost',emoji:'🥫',color:'#ba8d61',kind:'deli',siteId:'deli'},{x:27,y:46,name:'Baumarkt',emoji:'🔨',color:'#b5a263',kind:'hardware',siteId:'hardware'}];
+ const specialSites=[{x:8,y:8,name:'Großhandel',emoji:'📦',color:'#6d9eb1',kind:'wholesale',siteId:'wholesale'},{x:20,y:48,name:'Feinkost',emoji:'🥫',color:'#ba8d61',kind:'deli',siteId:'deli'},{x:27,y:46,name:'Baumarkt',emoji:'🔨',color:'#b5a263',kind:'hardware',siteId:'hardware'}];
  for(const site of specialSites){const t=tiles.find(q=>q.x===site.x&&q.y===site.y);if(t){t.building={name:site.name,emoji:site.emoji,color:site.color,kind:site.kind,siteId:site.siteId};t.plot=true;t.space=null;t.ground='#b8b09c';t.traffic=75;}}
  // Ein markantes Rathaus als Orientierungspunkt im Zentrum
- const landmark=tiles.find(t=>t.x===30&&t.y===27);
+ const landmark=tiles.find(t=>t.x===30&&t.y===30);
  if(landmark)landmark.building={name:'Rathaus',emoji:'🏛️',color:'#d6c39b',kind:'landmark'};
 }
 makeCity();
@@ -1004,8 +1004,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  function bin(x,z){const g=new THREE.Group();g.position.set(x,0,z);city.add(g);box(g,.28,.42,.28,metal,0,.22,0);box(g,.31,.055,.31,lampMat,0,.45,0);}
  function waySign(x,z,rot=0){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;city.add(g);box(g,.055,1.35,.055,metal,0,.67,0);box(g,.48,.25,.08,signBlue,0,1.22,0);box(g,.025,.12,.085,line,0,1.22,.05);}
  // Laternen stehen regelmäßig an den größeren Straßen, nicht mitten auf den Gehwegen.
- for(let ri=0;ri<vertical.length;ri++)for(let z=11;z<56;z+=9){streetLamp(vertical[ri]+.98,z,0);if(ri%2===0)bin(vertical[ri]-.98,z+2);}
- for(let ri=0;ri<horizontal.length;ri++)for(let x=11;x<56;x+=10){streetLamp(x,horizontal[ri]-.98,Math.PI/2);}
+ for(let ri=0;ri<vertical.length;ri++)for(let z=11;z<56;z+=9){streetLamp(vertical[ri]+.68,z,0);if(ri%2===0)bin(vertical[ri]-.68,z+2);}
+ for(let ri=0;ri<horizontal.length;ri++)for(let x=11;x<56;x+=10){streetLamp(x,horizontal[ri]-.68,Math.PI/2);}
  // Sitzgelegenheiten und Wegweiser an öffentlichen Orten.
  bench(24.7,27.1,Math.PI/2);bench(26.2,28.4,0);bin(25.5,26.1);waySign(24.1,28.8,Math.PI/2);
  bench(34.2,16.2,Math.PI/2);bin(35.1,16.8);bench(13.2,40.1,0);
