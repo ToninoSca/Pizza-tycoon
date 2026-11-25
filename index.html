@@ -903,7 +903,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
 (()=>{
  const canvas=document.getElementById('city3d');if(!canvas)return;
  let renderer;try{renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:false});}catch(e){canvas.style.display='none';document.getElementById('world').style.display='block';return;}
- renderer.setPixelRatio(Math.min(devicePixelRatio||1,1));renderer.shadowMap.enabled=false;renderer.outputColorSpace=THREE.SRGBColorSpace;
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,.72));renderer.shadowMap.enabled=false;renderer.outputColorSpace=THREE.SRGBColorSpace;
  const scene=new THREE.Scene();scene.background=new THREE.Color('#9bcde0');scene.fog=new THREE.Fog('#9bcde0',75,125);
  const camera=new THREE.OrthographicCamera(-24,24,24,-24,.1,220);
  const target=new THREE.Vector3(30,0,30);let zoom=1;
@@ -954,7 +954,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   box(g,.025,.16,.025,mat('#d7b66d'),.2,.4,d/2+.11);
   box(g,.48,.08,.22,trim,.12,.08,d/2+.13);
   // Repeated windows with frames, sills and warm interiors
-  const rows=Math.max(1,Math.floor((h-.35)/.72));
+  const rows=Math.min(2,Math.max(1,Math.floor((h-.35)/.95)));
   for(let row=0;row<rows;row++){
    const y=.78+row*.72;if(y>h-.1)continue;
    for(const x of [-.43,.43]){
@@ -962,7 +962,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
     box(g,.34,.045,.1,trim,x,y-.2,d/2+.08);
     box(g,.025,.37,.025,trim,x,y,d/2+.11);
    }
-   if(kind==='office'||kind==='apartments')box(g,.055,.3,d*.72,glassLit,w/2+.035,y,0);
+   if((kind==='office'||kind==='apartments')&&row===0)box(g,.055,.3,d*.72,glassLit,w/2+.035,y,0);
   }
   // Shops get a real storefront, display glazing and projecting sign/awning
   if(['cafe','pizza','shop','market','wholesale','deli','hardware'].includes(kind)){
@@ -1023,7 +1023,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  if(window.ResizeObserver)new ResizeObserver(resize).observe(canvas);else window.addEventListener('resize',resize);
  function setFromPointer(e){const r=canvas.getBoundingClientRect();mouse.x=((e.clientX-r.left)/r.width)*2-1;mouse.y=-((e.clientY-r.top)/r.height)*2+1;ray.setFromCamera(mouse,camera);const p=new THREE.Vector3();return ray.ray.intersectPlane(groundPick,p)?p:null;}
  canvas.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'&&e.isPrimary===false)return;canvas.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false,id:e.pointerId};});
- canvas.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const dx=e.clientX-drag.lastX,dy=e.clientY-drag.lastY;if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>4)drag.moved=true;if(drag.moved){const scale=43/(zoom*Math.max(300,canvas.clientHeight));const sx=dx*scale*.92,sy=dy*scale*.72;target.x+=(-sx-sy)*.707;target.z+=(sx-sy)*.707;target.x=Math.max(-10,Math.min(70,target.x));target.z=Math.max(-10,Math.min(70,target.z));placeCamera();}drag.lastX=e.clientX;drag.lastY=e.clientY;});
+ canvas.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const dx=e.clientX-drag.lastX,dy=e.clientY-drag.lastY;if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>4)drag.moved=true;if(drag.moved){const scale=43/(zoom*Math.max(300,canvas.clientHeight));const sx=dx*scale*.92,sy=dy*scale*.72;target.x+=(sx+sy)*.707;target.z+=(-sx+sy)*.707;target.x=Math.max(-10,Math.min(70,target.x));target.z=Math.max(-10,Math.min(70,target.z));placeCamera();}drag.lastX=e.clientX;drag.lastY=e.clientY;});
  canvas.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;if(!drag.moved){const p=setFromPointer(e);if(p){const x=Math.round(p.x),z=Math.round(p.z),t=tiles.find(q=>q.x===x&&q.y===z);if(t)window.__pizzaCity?.selectTile(t);}}drag=null;});
  canvas.addEventListener('pointercancel',()=>drag=null);
  canvas.addEventListener('touchstart',e=>{if(e.touches.length===2){drag=null;pinch={d:Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY),z:zoom};}},{passive:true});
@@ -1031,7 +1031,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  canvas.addEventListener('touchend',e=>{if(e.touches.length<2)pinch=null;});
  canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(.65,Math.min(2.2,zoom*Math.exp(-e.deltaY*.001)));placeCamera();},{passive:false});
  placeCamera();resize();
- let prev=0,lastRender=0;function loop(ms){requestAnimationFrame(loop);if(ms-lastRender<33)return;lastRender=ms;const api=window.__pizzaCity;if(api?.isInterior()){canvas.style.display='none';return;}canvas.style.display='block';if(api){const actors=api.getActors(ms);const list=[];actors.forEach(a=>a.forEach(v=>list.push(v)));let ci=0,pi=0;for(const a of list){if(a.type==='car'&&ci<cars.length){const g=cars[ci++];g.position.set(a.x,.08,a.y);g.rotation.y=-a.angle;g.visible=true;}else if(a.type==='ped'&&pi<peds.length){const p=peds[pi++],g=p.g,walk=Math.sin(ms*.012+p.phase);g.position.set(a.x,.02,a.y);g.rotation.y=-a.angle;g.position.y=.02+Math.abs(walk)*.025;p.left.rotation.x=walk*.48;p.right.rotation.x=-walk*.48;p.armL.rotation.x=-walk*.32;p.armR.rotation.x=walk*.32;g.visible=true;}}for(;ci<cars.length;ci++)cars[ci].visible=false;for(;pi<peds.length;pi++)peds[pi].visible=false;}renderer.render(scene,camera);}requestAnimationFrame(loop);
+ let lastRender=0;function loop(ms){requestAnimationFrame(loop);if(ms-lastRender<50)return;lastRender=ms;const api=window.__pizzaCity;if(api?.isInterior()){canvas.style.display='none';return;}canvas.style.display='block';if(api){const actors=api.getActors(ms);const list=[];actors.forEach(a=>a.forEach(v=>list.push(v)));let ci=0,pi=0;for(const a of list){if(a.type==='car'&&ci<cars.length){const g=cars[ci++];g.position.set(a.x,.08,a.y);g.rotation.y=-a.angle;g.visible=true;}else if(a.type==='ped'&&pi<peds.length){const p=peds[pi++],g=p.g,walk=Math.sin(ms*.012+p.phase);g.position.set(a.x,.02,a.y);g.rotation.y=-a.angle;g.position.y=.02+Math.abs(walk)*.025;p.left.rotation.x=walk*.48;p.right.rotation.x=-walk*.48;p.armL.rotation.x=-walk*.32;p.armR.rotation.x=walk*.32;g.visible=true;}}for(;ci<cars.length;ci++)cars[ci].visible=false;for(;pi<peds.length;pi++)peds[pi].visible=false;}renderer.render(scene,camera);}requestAnimationFrame(loop);
 })();
 </script>
 </body></html>
