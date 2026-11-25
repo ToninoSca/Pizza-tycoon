@@ -88,7 +88,33 @@ function makeCity(){
   const empty=!!space;
   const districtGround={oldtown:['#bca98f','#b5a18a','#c4b092'],shopping:['#c5b9a2','#cbbda4','#bfb39c'],industrial:['#aaa99d','#a4a69c','#b1ad9f'],civic:['#b7b9a7','#c0bba7','#aeb7a5'],downtown:['#b8b09c','#c0b49d','#b2b09b'],residential:['#b4ad91','#a9ad91','#b5b09a']};
   const palette=districtGround[district],ground=space==='garden'||kind===6?'#8eaa78':space==='plaza'?palette[1]:kind===9?'#a9a99a':palette[0];
-  tiles.push({x,y,road,plot,space,ground,district,building:plot&&BUILDING_X.includes(x)&&BUILDING_Y.includes(y)&&!empty&&roll<91?buildings[kind]:null,price:900+((x*73+y*91)%8)*180,traffic:35+((x*19+y*13)%60),rent:120+((x*31+y*17)%100),id:y*N+x});
+  tiles.push({x,y,road,plot,space,ground,district,building:null,price:900+((x*73+y*91)%8)*180,traffic:35+((x*19+y*13)%60),rent:120+((x*31+y*17)%100),id:y*N+x});
+ }
+ // Gebäude werden zuerst als Straßenrand-Bebauung gesetzt: keine Häuser mitten auf großen Grünflächen.
+ const placed=[];
+ const isCommercial=k=>k===5||k===7||k===8;
+ for(const t of tiles){
+  if(!t.plot||t.space||!BUILDING_X.includes(t.x)||!BUILDING_Y.includes(t.y))continue;
+  const besideRoad=isRoad(t.x-1,t.y)||isRoad(t.x+1,t.y)||isRoad(t.x,t.y-1)||isRoad(t.x,t.y+1)||
+   isRoad(t.x-1,t.y-1)||isRoad(t.x+1,t.y-1)||isRoad(t.x-1,t.y+1)||isRoad(t.x+1,t.y+1);
+  if(!besideRoad)continue;
+  const roll=(((t.x*73856093)^(t.y*19349663))>>>0)%100;
+  if(roll>94)continue;
+  let kind=0;
+  if(t.district==='industrial')kind=roll<35?9:roll<52?5:roll<68?3:roll<80?7:roll<89?8:6;
+  else if(t.district==='downtown')kind=roll<15?3:roll<28?2:roll<42?8:roll<59?7:roll<74?5:roll<86?4:6;
+  else if(t.district==='oldtown')kind=roll<24?1:roll<38?8:roll<59?7:roll<73?5:roll<88?0:6;
+  else if(t.district==='shopping')kind=roll<25?5:roll<44?7:roll<57?8:roll<72?3:roll<87?6:0;
+  else if(t.district==='civic')kind=roll<13?4:roll<30?3:roll<44?5:roll<57?8:roll<77?6:7;
+  else kind=roll<29?0:roll<46?1:roll<56?2:roll<68?6:roll<80?7:roll<88?8:roll<96?4:5;
+  // Keine direkt aneinander gereihten gleichen Gebäude oder Ladenarten.
+  const nearby=placed.filter(p=>Math.abs(p.x-t.x)<=2&&Math.abs(p.y-t.y)<=2);
+  if(nearby.some(p=>p.kind===kind||(isCommercial(p.kind)&&isCommercial(kind)))){
+   const alternatives=t.district==='industrial'?[9,3,0,1,4,6]:t.district==='civic'?[4,3,0,1,2,6]:[0,1,2,3,4,6,9];
+   kind=alternatives.find(k=>!nearby.some(p=>p.kind===k||(isCommercial(p.kind)&&isCommercial(k))))??null;
+  }
+  if(kind===null)continue;
+  t.building=buildings[kind];placed.push({x:t.x,y:t.y,kind});
  }
  // Ein markantes Rathaus als Orientierungspunkt im Zentrum
  const landmark=tiles.find(t=>t.x===30&&t.y===27);
