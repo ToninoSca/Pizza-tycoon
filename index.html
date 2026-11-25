@@ -52,9 +52,27 @@ const buildings=[
  {name:'Park',emoji:'🌳',color:'#4e895c',kind:'park'},
  {name:'Ladenlokal',emoji:'🏪',color:'#bd819a',kind:'shop'},
  {name:'Café',emoji:'☕',color:'#d69b62',kind:'cafe'},
- {name:'Werkhalle',emoji:'🏭',color:'#8d9997',kind:'factory'}
+ {name:'Werkhalle',emoji:'🏭',color:'#8d9997',kind:'factory'},
+ {name:'Rathaus',emoji:'🏛️',color:'#d6c39b',kind:'landmark'}
 ];
-function makeCity(){for(let y=0;y<N;y++)for(let x=0;x<N;x++){let road=(x%3===0||y%3===0);let edge=x===0||y===0||x===N-1||y===N-1;let type=(x*7+y*11)%buildings.length;let plot=!road&&!edge;let district=Math.floor(x/10)+Math.floor(y/10)*5;let kind=(type+district)%buildings.length;tiles.push({x,y,road,plot,building:plot?(kind===5?null:buildings[kind]):null,price:900+((x*73+y*91)%8)*180,traffic:35+((x*19+y*13)%60),rent:120+((x*31+y*17)%100),id:y*N+x});}}
+function makeCity(){
+ for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+  const road=(x%3===0||y%3===0),edge=x===0||y===0||x===N-1||y===N-1,plot=!road&&!edge;
+  const roll=(x*37+y*71+x*y*13)%100;
+  let kind=0;
+  // Stadtviertel mit eigener Bebauung statt überall gleicher Mischung
+  if(x>=39&&y>=39) kind=roll<48?9:roll<67?2:roll<82?7:0;                 // Gewerbegebiet
+  else if(x>=22&&x<=39&&y>=20&&y<=40) kind=roll<38?3:roll<60?2:roll<76?8:roll<88?7:0; // Zentrum
+  else if(x<22&&y<24) kind=roll<45?1:roll<68?8:roll<82?7:0;            // Altstadt
+  else if(y>42&&x>18&&x<43) kind=roll<28?5:roll<52?7:roll<72?8:0;      // Einkaufsviertel
+  else kind=roll<32?0:roll<53?1:roll<68?2:roll<78?6:roll<88?7:8;      // Wohnviertel
+  const empty=plot&&roll>92;
+  tiles.push({x,y,road,plot,building:plot&&!empty?buildings[kind]:null,price:900+((x*73+y*91)%8)*180,traffic:35+((x*19+y*13)%60),rent:120+((x*31+y*17)%100),id:y*N+x});
+ }
+ // Ein markantes Rathaus als Orientierungspunkt im Zentrum
+ const landmark=tiles.find(t=>t.x===30&&t.y===27);
+ if(landmark)landmark.building={name:'Rathaus',emoji:'🏛️',color:'#d6c39b',kind:'landmark'};
+}
 makeCity();
 function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);if(!cam.ready){cam.x=N/2;cam.y=N/2;cam.zoom=1.12;cam.ready=true;}clampCamera();draw();}
 addEventListener('resize',resize);
@@ -86,9 +104,9 @@ if(b.kind==='park'){
   ctx.fillStyle='#e7d8a8';ctx.beginPath();ctx.arc(p.x-3*z,p.y-5*z,3*z,0,Math.PI*2);ctx.fill();return;
 }
 const kind=b.kind;
-let floors=kind==='office'?4+Math.floor(rand(2)*5):kind==='apartments'?3+Math.floor(rand(2)*3):kind==='factory'?1:kind==='school'?2:kind==='market'?2:kind==='pizza'?2:1+Math.floor(rand(2)*2);
-let h=(kind==='office'?floors*17:kind==='apartments'?floors*13:kind==='factory'?31:kind==='school'?48:kind==='market'?42:kind==='pizza'?50:kind==='cafe'?35:kind==='oldhome'?42+floors*7:34+floors*8)*z;
-let w=(kind==='office'?24+rand(3)*8:kind==='factory'?31+rand(3)*8:kind==='school'?30+rand(3)*8:25+rand(3)*12)*z;
+let floors=kind==='office'?4+Math.floor(rand(2)*5):kind==='apartments'?3+Math.floor(rand(2)*3):kind==='landmark'?3:kind==='factory'?1:kind==='school'?2:kind==='market'?2:kind==='pizza'?2:1+Math.floor(rand(2)*2);
+let h=(kind==='office'?floors*17:kind==='apartments'?floors*13:kind==='landmark'?84:kind==='factory'?31:kind==='school'?48:kind==='market'?42:kind==='pizza'?50:kind==='cafe'?35:kind==='oldhome'?42+floors*7:34+floors*8)*z;
+let w=(kind==='office'?24+rand(3)*8:kind==='factory'?31+rand(3)*8:kind==='school'||kind==='landmark'?30+rand(3)*8:25+rand(3)*12)*z;
 let d=(kind==='office'?19+rand(4)*7:kind==='factory'?27:17+rand(4)*10)*z;
 let base=p.y-4*z,ink='#59463e',left=shade(b.color,-34),right=shade(b.color,-12),roof=shade(b.color,24);
 ctx.fillStyle='#263d3655';ctx.beginPath();ctx.ellipse(p.x,base+8*z,w*1.05, d*.58,0,0,Math.PI*2);ctx.fill();
@@ -97,7 +115,7 @@ const rightGrad=ctx.createLinearGradient(p.x,base-h,p.x+w,base);rightGrad.addCol
 poly([{x:p.x-w,y:base},{x:p.x,y:base+d*.52},{x:p.x,y:base-h+d*.52},{x:p.x-w,y:base-h}],leftGrad,ink);
 poly([{x:p.x,y:base+d*.52},{x:p.x+w,y:base},{x:p.x+w,y:base-h},{x:p.x,y:base-h+d*.52}],rightGrad,ink);
 // Unterschiedliche Dächer: Satteldach, Flachdach, Mansarde und Hallendach
-const roofType=kind==='office'||kind==='apartments'?'flat':kind==='factory'?'shed':kind==='oldhome'?'gable':kind==='school'?'gable':Math.floor(rand(5)*3);
+const roofType=kind==='office'||kind==='apartments'?'flat':kind==='factory'?'shed':kind==='oldhome'?'gable':kind==='school'||kind==='landmark'?'gable':Math.floor(rand(5)*3);
 if(roofType==='gable'||roofType==='shed'){
   let ridge=kind==='factory'?d*.72:d*.62;
   poly([{x:p.x-w-3*z,y:base-h},{x:p.x,y:base-h-ridge*z},{x:p.x+w+3*z,y:base-h},{x:p.x,y:base-h+d*.52}],kind==='school'?'#b95143':shade(b.color,31),ink);
@@ -137,6 +155,14 @@ if(['pizza','shop','market','cafe'].includes(kind)){
   rounded(p.x-w*.58,base-h+Math.min(36,h*.55+9)*z,w*1.16,12*z,1*z,'#b5e2e8',ink);
   ctx.fillStyle='#fff8df';ctx.font='bold '+(7*z)+'px system-ui';ctx.textAlign='center';
   ctx.fillText(kind==='pizza'?'PIZZA':kind==='cafe'?'CAFÉ':kind==='market'?'MARKT':'SHOP',p.x,base-h+Math.min(24,h*.55-3)*z);
+}
+if(kind==='landmark'){
+  // Rathauskuppel, Uhr und Eingangsportal als weithin sichtbares Wahrzeichen
+  ctx.fillStyle='#8c765b';ctx.beginPath();ctx.ellipse(p.x,base-h-10*z,12*z,8*z,0,Math.PI,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#695744';ctx.lineWidth=2*z;ctx.stroke();
+  rounded(p.x-5*z,base-h-30*z,10*z,17*z,2*z,'#e8d7b6','#695744');
+  ctx.fillStyle='#514638';ctx.beginPath();ctx.arc(p.x,base-h-22*z,3.5*z,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff1cf';ctx.font='bold '+(7*z)+'px system-ui';ctx.textAlign='center';ctx.fillText('RATHAUS',p.x,base-h+19*z);
 }
 if(kind==='school'||kind==='factory'){
   ctx.fillStyle='#fff1cf';ctx.font='bold '+(8*z)+'px system-ui';ctx.textAlign='center';
