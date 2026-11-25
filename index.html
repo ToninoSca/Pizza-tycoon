@@ -210,6 +210,35 @@ if(kind==='parking'){
   return;
 }
 }
+function drawFrontage(tile,p){
+const z=cam.zoom,b=tile.building;if(!b||b.kind==='park'||b.kind==='landmark')return;
+const kind=b.kind;
+// Kleiner gepflasterter Zugang vor dem Gebäude
+ctx.strokeStyle='#d9c79e';ctx.lineWidth=4*z;ctx.lineCap='round';
+ctx.beginPath();ctx.moveTo(p.x,p.y+2*z);ctx.lineTo(p.x,p.y+15*z);ctx.stroke();
+ctx.strokeStyle='#f1e4c8';ctx.lineWidth=1*z;ctx.beginPath();ctx.moveTo(p.x-2*z,p.y+5*z);ctx.lineTo(p.x-2*z,p.y+14*z);ctx.stroke();ctx.lineCap='butt';
+if(['home','oldhome','apartments'].includes(kind)){
+  // Vorgärten mit niedrigen Hecken und Blumen
+  rounded(p.x-23*z,p.y+5*z,9*z,3*z,1*z,'#477f4c','#315b3a');
+  rounded(p.x+14*z,p.y+5*z,9*z,3*z,1*z,'#477f4c','#315b3a');
+  for(let i=0;i<3;i++){ctx.fillStyle=['#f2c96a','#e58c83','#f7ead0'][i];ctx.beginPath();ctx.arc(p.x-19*z+i*3*z,p.y+4*z,1.4*z,0,Math.PI*2);ctx.fill();}
+}else if(kind==='cafe'||kind==='shop'||kind==='pizza'||kind==='market'){
+  // Kleine Außentische vor Läden und Cafés
+  if(kind==='cafe'||kind==='pizza'||tile.id%2===0){
+    for(const side of [-1,1]){
+      ctx.fillStyle='#6b4b37';ctx.beginPath();ctx.ellipse(p.x+side*17*z,p.y+7*z,5*z,2.5*z,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#594633';ctx.lineWidth=1.5*z;ctx.beginPath();ctx.moveTo(p.x+side*17*z,p.y+7*z);ctx.lineTo(p.x+side*17*z,p.y+12*z);ctx.stroke();
+      ctx.fillStyle='#e9d5b1';ctx.beginPath();ctx.arc(p.x+side*23*z,p.y+7*z,2*z,0,Math.PI*2);ctx.fill();
+    }
+  }
+  // Pflanzkübel am Eingang
+  for(const side of [-1,1]){rounded(p.x+side*25*z-3*z,p.y+7*z,6*z,5*z,1*z,'#b56e4d','#704b39');ctx.fillStyle='#4b9856';ctx.beginPath();ctx.arc(p.x+side*25*z,p.y+5*z,4*z,0,Math.PI*2);ctx.fill();}
+}else if(kind==='school'||kind==='factory'||kind==='office'){
+  // Schmale Grünstreifen statt leerer Grundstückskanten
+  rounded(p.x-25*z,p.y+8*z,50*z,4*z,2*z,kind==='factory'?'#8a9b79':'#72a96a','#52794f');
+  for(let i=0;i<5;i++){ctx.fillStyle=i%2?'#f0d16e':'#e98e83';ctx.beginPath();ctx.arc(p.x-19*z+i*9*z,p.y+7*z,1.5*z,0,Math.PI*2);ctx.fill();}
+}
+}
 function drawCar(x,y,time,color,angle=0){
 let p=screen(x,y),z=cam.zoom;
 ctx.save();ctx.translate(p.x,p.y);ctx.rotate(angle);
@@ -271,7 +300,7 @@ ctx.fillStyle='#f5e7c6';ctx.beginPath();ctx.arc(p.x,p.y,2.5*z,0,Math.PI*2);ctx.f
 }
 drawStreetProps(t,p);
 }
-if(!road&&t.building)drawBuilding(t,time);
+if(!road&&t.building){drawBuilding(t,time);drawFrontage(t,p);}
 if(!road&&t.space)drawPublicSpace(t,p);
 if(!road&&!t.building&&!t.space){
 const z=cam.zoom;
