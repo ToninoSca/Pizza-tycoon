@@ -431,7 +431,7 @@ ctx.fillStyle='#fff0bd';ctx.fillRect(11*z,-4*z,3*z,3*z);ctx.fillRect(11*z,2*z,3*
 ctx.fillStyle='#30353a';ctx.fillRect(-10*z,-9*z,6*z,3*z);ctx.fillRect(6*z,-9*z,6*z,3*z);ctx.restore();
 }
 function drawPedestrian(x,y,time,color,angle=0,lateral=0){
-let p=screen(x,y),z=cam.zoom;p.x-=Math.sin(angle)*lateral*z;p.y+=Math.cos(angle)*lateral*z;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(angle);
+let p=screen(x,y),z=cam.zoom;p.x-=Math.sin(angle)*lateral*z;p.y+=Math.cos(angle)*lateral*z;ctx.save();ctx.translate(p.x,p.y);if(Math.cos(angle)<0)ctx.scale(-1,1);
 ctx.fillStyle='#34433c55';ctx.beginPath();ctx.ellipse(0,3*z,5*z,2.5*z,0,0,Math.PI*2);ctx.fill();
 ctx.strokeStyle='#3c3940';ctx.lineWidth=2*z;let step=Math.sin(time*.012+x*4+y*3)*2.2;ctx.beginPath();ctx.moveTo(-1*z,-2*z);ctx.lineTo((-2+step)*z,3*z);ctx.moveTo(1*z,-2*z);ctx.lineTo((3-step)*z,3*z);ctx.stroke();
 rounded(-3*z,-12*z,7*z,10*z,2*z,color,'#51433c');
