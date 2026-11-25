@@ -543,12 +543,12 @@ ctx.fillStyle='#f0bd8d';ctx.beginPath();ctx.arc(0,-15*z,3*z,0,Math.PI*2);ctx.fil
 }
 function cityActors(time){
  const actors=new Map(),colors=['#e45c4f','#f0c44f','#4f8ecb','#f4f0df','#4f9b71','#d87c42','#8c6ab1','#d77ca5'];
- const add=(x,y,type,color,angle=0,stopped=false)=>{let tx=Math.max(0,Math.min(N-1,Math.round(x))),ty=Math.max(0,Math.min(N-1,Math.round(y)));if(type==='ped'){const vx=ROAD_X.find(v=>Math.abs(x-v)<.85),hy=ROAD_Y.find(v=>Math.abs(y-v)<.85);if(vx!==undefined){tx=vx;ty=Math.round(y);}else if(hy!==undefined){tx=Math.round(x);ty=hy;}if(tx===33&&ty===35){tx=34;ty=35;}}const id=ty*N+tx;if(!actors.has(id))actors.set(id,[]);actors.get(id).push({x,y,type,color,angle,stopped});};
+ const add=(x,y,type,color,angle=0,stopped=false,actorId='')=>{let tx=Math.max(0,Math.min(N-1,Math.round(x))),ty=Math.max(0,Math.min(N-1,Math.round(y)));if(type==='ped'){const vx=ROAD_X.find(v=>Math.abs(x-v)<.85),hy=ROAD_Y.find(v=>Math.abs(y-v)<.85);if(vx!==undefined){tx=vx;ty=Math.round(y);}else if(hy!==undefined){tx=Math.round(x);ty=hy;}if(tx===33&&ty===35){tx=34;ty=35;}}const id=ty*N+tx;if(!actors.has(id))actors.set(id,[]);actors.get(id).push({id:actorId,x,y,type,color,angle,stopped});};
  const outer=[{x:6,y:7},{x:18,y:7},{x:33,y:7},{x:48,y:7},{x:56,y:7},{x:56,y:21},{x:56,y:35},{x:56,y:49},{x:56,y:56},{x:48,y:56},{x:33,y:56},{x:18,y:56},{x:6,y:56},{x:6,y:49},{x:6,y:35},{x:6,y:21}];
  const inner=[{x:18,y:21},{x:33,y:21},{x:48,y:21},{x:48,y:35},{x:48,y:49},{x:33,y:49},{x:18,y:49},{x:18,y:35}];
- [outer,inner,ROUNDABOUT_RING.map(([x,y])=>({x,y}))].forEach((path,ri)=>{const legs=path.map((a,i)=>{const b=path[(i+1)%path.length];return{a,b,len:Math.hypot(b.x-a.x,b.y-a.y)};});const cycle=legs.reduce((sum,l)=>sum+l.len*780+900,0);for(let n=0;n<(ri===2?2:4);n++){let cursor=(time+n*cycle/4+ri*cycle/7)%cycle;if(cursor<0)cursor+=cycle;let pos=legs[0].a,stopped=false,angle=0;for(const leg of legs){const travel=leg.len*780;if(cursor<travel){const f=cursor/travel;pos={x:leg.a.x+(leg.b.x-leg.a.x)*f,y:leg.a.y+(leg.b.y-leg.a.y)*f};angle=Math.atan2(leg.b.x-leg.a.x,leg.b.y-leg.a.y);break;}cursor-=travel;const at=leg.b,signal=hasTrafficSignal(at.x,at.y),red=signal&&signalPhase(at.x,at.y,time)===0,wait=signal?(red?1500:250):180;if(cursor<wait){pos=at;stopped=red;angle=Math.atan2(leg.b.x-leg.a.x,leg.b.y-leg.a.y);break;}cursor-=wait;pos=leg.b;}add(pos.x,pos.y,'car',colors[(n+ri*2)%colors.length],angle,stopped);}});
+ [outer,inner,ROUNDABOUT_RING.map(([x,y])=>({x,y}))].forEach((path,ri)=>{const legs=path.map((a,i)=>{const b=path[(i+1)%path.length];return{a,b,len:Math.hypot(b.x-a.x,b.y-a.y)};});const cycle=legs.reduce((sum,l)=>sum+l.len*780+900,0);for(let n=0;n<(ri===2?2:4);n++){let cursor=(time+n*cycle/4+ri*cycle/7)%cycle;if(cursor<0)cursor+=cycle;let pos=legs[0].a,stopped=false,angle=0;for(const leg of legs){const travel=leg.len*780;if(cursor<travel){const f=cursor/travel;pos={x:leg.a.x+(leg.b.x-leg.a.x)*f,y:leg.a.y+(leg.b.y-leg.a.y)*f};angle=Math.atan2(leg.b.x-leg.a.x,leg.b.y-leg.a.y);break;}cursor-=travel;const at=leg.b,signal=hasTrafficSignal(at.x,at.y),red=signal&&signalPhase(at.x,at.y,time)===0,wait=signal?(red?1500:250):180;if(cursor<wait){pos=at;stopped=red;angle=Math.atan2(leg.b.x-leg.a.x,leg.b.y-leg.a.y);break;}cursor-=wait;pos=leg.b;}add(pos.x,pos.y,'car',colors[(n+ri*2)%colors.length],angle,stopped,'car-'+ri+'-'+n);}});
  // Fußgänger laufen mittig auf den Gehwegen statt auf der Fahrbahn.
- for(let i=0;i<56;i++){const vertical=i%2===1,roadIndex=Math.floor(i/2)%5,roadLine=vertical?ROAD_X[roadIndex]:ROAD_Y[roadIndex],reverse=i%4>=2,dir=reverse?-1:1;let along=4+((time*.00024*(i%3===0?1.12:.86)+i*8.17)%(N-8));if(reverse)along=N-4-along;const crossings=vertical?ROAD_Y:ROAD_X;for(const cross of crossings){const sx=vertical?roadLine:cross,sy=vertical?cross:roadLine,phase=signalPhase(sx,sy,time);if(hasTrafficSignal(sx,sy)&&phase===2&&Math.abs(along-cross)<.85){along=cross-dir*.9;break;}}const side=i%4<2?-1:1,offset=.72*side,x=vertical?roadLine+offset:along,y=vertical?along:roadLine+offset,dx=vertical?0:dir,dy=vertical?dir:0,angle=Math.atan2(dx,dy);add(x,y,'ped',colors[i%colors.length],angle,false);}
+ for(let i=0;i<56;i++){const vertical=i%2===1,roadIndex=Math.floor(i/2)%5,roadLine=vertical?ROAD_X[roadIndex]:ROAD_Y[roadIndex],reverse=i%4>=2,dir=reverse?-1:1;let along=4+((time*.00024*(i%3===0?1.12:.86)+i*8.17)%(N-8));if(reverse)along=N-4-along;const crossings=vertical?ROAD_Y:ROAD_X;for(const cross of crossings){const sx=vertical?roadLine:cross,sy=vertical?cross:roadLine,phase=signalPhase(sx,sy,time);if(hasTrafficSignal(sx,sy)&&phase===2&&Math.abs(along-cross)<.85){along=cross-dir*.9;break;}}const side=i%4<2?-1:1,offset=.72*side,x=vertical?roadLine+offset:along,y=vertical?along:roadLine+offset,dx=vertical?0:dir,dy=vertical?dir:0,angle=Math.atan2(dx,dy);add(x,y,'ped',colors[i%colors.length],angle,false,'ped-'+i);}
  return actors;
 }
 window.__pizzaCity={tiles,getActors:cityActors,selectTile,isInterior:()=>!!state.interior};
@@ -957,20 +957,22 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   box(g,.025,.16,.025,mat('#d7b66d'),.2,.4,d/2+.11);
   box(g,.48,.08,.22,trim,.12,.08,d/2+.13);
   // Fenster sitzen bündig auf den Fassaden; Laden-Schaufenster bleiben darunter frei.
-  const shopFront=['cafe','pizza','shop','market','wholesale','deli','hardware'].includes(kind);const rows=h>2.5?[1.05,2.2].filter(y=>y<h-.35):[shopFront?1.42:.96].filter(y=>y<h-.35);
-  for(const y of rows){
-   for(const x of [-.43,.43]){
-    const z=d/2+.055;
-    box(g,.39,.48,.065,frame,x,y,z);
-    box(g,.31,.39,.025,glassLit,x,y,z+.043);
-   }
-   for(const sign of [-1,1]){const sx=sign*(w/2+.035);box(g,.055,.43,.34,frame,sx,y,0);box(g,.022,.34,.26,glassLit,sx+sign*.035,y,0);}
-   const rz=-d/2-.035;box(g,.34,.43,.055,frame,0,y,rz);box(g,.26,.34,.022,glassLit,0,y,rz-.035);
-  }
+  const shopFront=['cafe','pizza','shop','market','wholesale','deli','hardware'].includes(kind);
+  const windowAt=(face,x,y)=>{const fw=.27,fh=.38,frameDepth=.035,glassDepth=.014;let px=x,pz=0,rx=fw,rz=frameDepth,gx=x,gz=0;
+   if(face==='front'){pz=d/2+.022;gz=pz+.021;}
+   else if(face==='back'){pz=-d/2-.022;gz=pz-.021;}
+   else {px=face==='right'?w/2+.022:-w/2-.022;pz=0;rx=frameDepth;rz=.31;gx=px+(face==='right'?.021:-.021);gz=0;}
+   box(g,rx,fh,rz,frame,px,y,pz);box(g,rx-.065,fh-.075,glassDepth,glassLit,gx,y,gz);
+  };
+  const floors=h>3.7?[1.05,2.25,3.45].filter(y=>y<h-.35):h>2.5?[1.05,2.25].filter(y=>y<h-.35):[];
+  if(!shopFront){const y=h>2.5?.98:.92;windowAt('front',-.34,y);windowAt('front',.34,y);}
+  for(const y of floors){if(!shopFront){windowAt('front',-.34,y);windowAt('front',.34,y);}else if(y>1.25){windowAt('front',-.34,y);windowAt('front',.34,y);}}
+  const sideY=floors.length?floors:[h*.58];
+  for(const y of sideY){windowAt('left',0,y);windowAt('right',0,y);windowAt('back',0,y);}
   // Shops get a real storefront, display glazing and projecting sign/awning
   if(['cafe','pizza','shop','market','wholesale','deli','hardware'].includes(kind)){
    box(g,.92,.12,.1,trim,0,h*.72,d/2+.1);
-   box(g,.84,.36,.055,glassLit,0,h*.48,d/2+.09);
+   box(g,.76,.34,.035,glassLit,0,h*.48,d/2+.085);
    box(g,1.12,.13,.5,kind==='cafe'||kind==='pizza'?mat('#b85c43'):mat('#d4b46e'),0,h*.78,d/2+.24);
    for(const x of [-.48,.48])box(g,.07,.48,.08,frame,x,h*.48,d/2+.13);
    box(g,.8,.055,.06,trim,0,h*.27,d/2+.13);
@@ -1019,7 +1021,9 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  // Animierte Fahrzeuge und Fußgänger
  const carColors=['#d95c4f','#e2b94f','#4d83b7','#e7e2d5','#4c956d','#d47a43','#8b70ad','#d2769c'];
  const cars=carColors.slice(0,10).map((col,i)=>{const g=new THREE.Group();city.add(g);box(g,.38,.25,.72,mat(col),0,.27,0);box(g,.32,.2,.39,windowMat,0,.49,-.015);box(g,.28,.12,.07,mat('#f2e6c5'),0,.32,.365);for(const x of [-.2,.2])for(const z of [-.23,.23]){const w=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,.055,12),mat('#252a2a'));w.rotation.z=Math.PI/2;w.position.set(x,.13,z);g.add(w);}for(const x of [-.13,.13]){box(g,.085,.07,.025,mat('#f8e6a8'),x,.3,.37);box(g,.085,.07,.025,mat('#b94b3f'),x,.3,-.37);}return g;});
+ const carMeshes=new Map(cars.map((g,i)=>['car-'+Math.floor(i/4)+'-'+(i%4),g]));
  const peds=Array.from({length:56},(_,i)=>{const g=new THREE.Group();city.add(g);const shirt=mat(carColors[i%carColors.length]),skin=mat('#e4b48c'),pants=mat('#343d45');const torso=box(g,.2,.43,.14,shirt,0,.68,0);const head=new THREE.Mesh(new THREE.SphereGeometry(.11,12,10),skin);head.position.y=1.02;g.add(head);const left=box(g,.075,.43,.08,pants,-.065,.25,0),right=box(g,.075,.43,.08,pants,.065,.25,0);const armL=box(g,.065,.34,.07,shirt,-.15,.68,0),armR=box(g,.065,.34,.07,shirt,.15,.68,0);return {g,left,right,armL,armR,torso,phase:i*.8};});
+ const pedMeshes=new Map(peds.map((p,i)=>['ped-'+i,p]));
  const ray=new THREE.Raycaster(),mouse=new THREE.Vector2(),groundPick=new THREE.Plane(new THREE.Vector3(0,1,0),0);let drag=null,pinch=null;
  function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);placeCamera();}
  if(window.ResizeObserver)new ResizeObserver(resize).observe(canvas);else window.addEventListener('resize',resize);
@@ -1033,7 +1037,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  canvas.addEventListener('touchend',e=>{if(e.touches.length<2)pinch=null;});
  canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(.65,Math.min(2.2,zoom*Math.exp(-e.deltaY*.001)));placeCamera();},{passive:false});
  placeCamera();resize();
- function loop(ms){requestAnimationFrame(loop);const api=window.__pizzaCity;if(api?.isInterior()){canvas.style.display='none';return;}canvas.style.display='block';if(api){const actors=api.getActors(ms);const list=[];actors.forEach(a=>a.forEach(v=>list.push(v)));let ci=0,pi=0;for(const a of list){if(a.type==='car'&&ci<cars.length){const g=cars[ci++];g.position.set(a.x,.08,a.y);g.rotation.y=a.angle;g.visible=true;}else if(a.type==='ped'&&pi<peds.length){const p=peds[pi++],g=p.g,walk=Math.sin(ms*.012+p.phase);g.position.set(a.x,.02,a.y);g.rotation.y=a.angle;const shirtMat=mat(a.color||'#5d8b75');p.torso.material=shirtMat;p.armL.material=shirtMat;p.armR.material=shirtMat;g.position.y=.02+Math.abs(walk)*.025;p.left.rotation.x=walk*.48;p.right.rotation.x=-walk*.48;p.armL.rotation.x=-walk*.32;p.armR.rotation.x=walk*.32;g.visible=true;}}for(;ci<cars.length;ci++)cars[ci].visible=false;for(;pi<peds.length;pi++)peds[pi].visible=false;}renderer.render(scene,camera);}requestAnimationFrame(loop);
+ function loop(ms){requestAnimationFrame(loop);const api=window.__pizzaCity;if(api?.isInterior()){canvas.style.display='none';return;}canvas.style.display='block';if(api){const actors=api.getActors(ms);const seenCars=new Set(),seenPeds=new Set();actors.forEach(a=>a.forEach(v=>{if(v.type==='car'){const g=carMeshes.get(v.id);if(g){g.position.set(v.x,.08,v.y);g.rotation.y=v.angle;g.visible=true;seenCars.add(v.id);}}else if(v.type==='ped'){const p=pedMeshes.get(v.id);if(p){const g=p.g,walk=Math.sin(ms*.012+p.phase);g.position.set(v.x,.02,v.y);g.rotation.y=v.angle;const shirtMat=mat(v.color||'#5d8b75');p.torso.material=shirtMat;p.armL.material=shirtMat;p.armR.material=shirtMat;g.position.y=.02+Math.abs(walk)*.025;p.left.rotation.x=walk*.48;p.right.rotation.x=-walk*.48;p.armL.rotation.x=walk*.32;p.armR.rotation.x=-walk*.32;g.visible=true;seenPeds.add(v.id);}}}));for(const [id,g] of carMeshes)if(!seenCars.has(id))g.visible=false;for(const [id,p] of pedMeshes)if(!seenPeds.has(id))p.g.visible=false;}renderer.render(scene,camera);}requestAnimationFrame(loop);
 })();
 </script>
 </body></html>
