@@ -152,9 +152,9 @@ if(b.kind==='park'){
 }
 const kind=b.kind,wallColor=shade(b.color,Math.floor(rand(90)*25)-12);
 let floors=kind==='office'?2+Math.floor(rand(2)*3):kind==='apartments'?2+Math.floor(rand(2)*2):kind==='landmark'?3:kind==='factory'?1:kind==='school'?2:kind==='market'?1+Math.floor(rand(2)):kind==='pizza'?2:1+Math.floor(rand(3));
-let h=(kind==='office'?floors*14:kind==='apartments'?floors*11:kind==='landmark'?84:kind==='factory'?31:kind==='school'?48:kind==='market'?42:kind==='pizza'?50:kind==='cafe'?35:kind==='oldhome'?38+floors*6:29+floors*6)*z;
-let w=(kind==='office'?22+rand(3)*11:kind==='factory'?31+rand(3)*8:kind==='school'||kind==='landmark'?30+rand(3)*8:kind==='oldhome'?22+rand(3)*13:kind==='home'?21+rand(3)*15:25+rand(3)*12)*z;
-let d=(kind==='office'?17+rand(4)*10:kind==='factory'?27+rand(4)*8:kind==='oldhome'?17+rand(4)*13:14+rand(4)*14)*z;
+let h=(kind==='office'?floors*15:kind==='apartments'?floors*12:kind==='landmark'?88:kind==='factory'?29:kind==='school'?43:kind==='market'?39:kind==='pizza'?48:kind==='cafe'?32:kind==='oldhome'?36+floors*6:25+floors*6)*z;
+let w=(kind==='office'?24+rand(3)*10:kind==='factory'?36+rand(3)*10:kind==='school'?39+rand(3)*10:kind==='landmark'?31+rand(3)*8:kind==='market'?32+rand(3)*8:kind==='cafe'?19+rand(3)*7:kind==='pizza'?25+rand(3)*8:kind==='oldhome'?23+rand(3)*12:kind==='home'?19+rand(3)*12:25+rand(3)*10)*z;
+let d=(kind==='office'?19+rand(4)*9:kind==='factory'?31+rand(4)*9:kind==='school'?24+rand(4)*7:kind==='market'?23+rand(4)*7:kind==='cafe'?15+rand(4)*6:kind==='oldhome'?18+rand(4)*11:14+rand(4)*12)*z;
 let base=p.y-4*z,ink='#59463e',left=shade(wallColor,-34),right=shade(wallColor,-12),roof=shade(wallColor,24);
 ctx.fillStyle='#263d3655';ctx.beginPath();ctx.ellipse(p.x,base+8*z,w*1.05, d*.58,0,0,Math.PI*2);ctx.fill();
 const leftGrad=ctx.createLinearGradient(p.x-w,base-h,p.x,base);leftGrad.addColorStop(0,shade(wallColor,7));leftGrad.addColorStop(1,left);
@@ -287,36 +287,43 @@ if(false && (kind==='home'||kind==='oldhome'||kind==='school')){
   }
 }
 // Mehr Tiefe und individuelle Fassaden: Balkone, Erker und Gesimse
-if(false && (kind==='apartments'||kind==='oldhome'||kind==='home')){
-  const balconyRows=kind==='apartments'?Math.min(4,Math.max(2,Math.floor(floors/1.5))):kind==='oldhome'?1:0;
+if((kind==='apartments'||kind==='oldhome')&&rand(177)>.30){
+  const balconyRows=kind==='apartments'?Math.min(3,Math.max(1,Math.floor(floors/2))):1;
   for(let br=0;br<balconyRows;br++){
     const by=base-h+(25+br*18)*z;
-    const bx=p.x+w*.18;
+    const bx=p.x+w*.28;
     const balconyY=by+5.5*z;
-    rounded(bx-2*z,balconyY,12*z,3*z,1*z,'#d8c9ad','#594b40');
-    ctx.strokeStyle='#4e5550';ctx.lineWidth=1.4*z;
-    ctx.beginPath();ctx.moveTo(bx-2*z,balconyY);ctx.lineTo(bx-2*z,balconyY-7*z);ctx.lineTo(bx+10*z,balconyY-7*z);ctx.lineTo(bx+10*z,balconyY);ctx.stroke();
-    for(let rail=0;rail<4;rail++){ctx.beginPath();ctx.moveTo(bx+rail*4*z,balconyY-7*z);ctx.lineTo(bx+rail*4*z,balconyY);ctx.stroke();}
-    if(rand(30+br)>.45){ctx.fillStyle='#4c9855';ctx.beginPath();ctx.arc(bx+5*z,balconyY-10*z,3*z,0,Math.PI*2);ctx.fill();}
+    const balconyW=kind==='apartments'?Math.min(15,w*.58):Math.min(12,w*.42);
+    poly([{x:bx-2*z,y:balconyY},{x:bx+balconyW*z,y:balconyY},{x:bx+balconyW*z,y:balconyY+2*z},{x:bx-2*z,y:balconyY+2*z}],'#d8c9ad','#594b40');
+    ctx.strokeStyle='#4e5550';ctx.lineWidth=1.2*z;
+    ctx.beginPath();ctx.moveTo(bx-2*z,balconyY);ctx.lineTo(bx-2*z,balconyY-6*z);ctx.lineTo(bx+balconyW*z,balconyY-6*z);ctx.lineTo(bx+balconyW*z,balconyY);ctx.stroke();
+    for(let rail=0;rail<5;rail++){const rx=bx+rail*balconyW*z/4;ctx.beginPath();ctx.moveTo(rx,balconyY-6*z);ctx.lineTo(rx,balconyY);ctx.stroke();}
+    if(rand(30+br)>.45){ctx.fillStyle='#4c9855';ctx.beginPath();ctx.arc(bx+balconyW*z*.55,balconyY-9*z,2.5*z,0,Math.PI*2);ctx.fill();}
   }
 }
-if(false && (kind==='office'||kind==='apartments')){
-  // vertikale Fassadenstreifen und einzelne beleuchtete Fenster
-  ctx.strokeStyle='#e4e0d2aa';ctx.lineWidth=1.2*z;ctx.beginPath();ctx.moveTo(p.x+2*z,base-h+5*z);ctx.lineTo(p.x+2*z,base-2*z);ctx.stroke();
+if(kind==='office'){
+  // Dezente horizontale Geschossbänder auf dem Bürohaus.
+  ctx.strokeStyle='#d7e0d8';ctx.globalAlpha=.42;ctx.lineWidth=1.5*z;
+  for(let floor=1;floor<floors;floor++){
+    const yy=base-h+floor*(h/floors);
+    ctx.beginPath();ctx.moveTo(p.x+2*z,yy);ctx.lineTo(p.x+w*.92,yy-d*.48);ctx.stroke();
+  }
+  ctx.globalAlpha=1;
 }
 // Eingang als perspektivisch korrektes Türfeld auf der rechten Gebäudefassade.
 const doorW=kind==='home'||kind==='oldhome'?.19:.22;
-facadeOpening(1,.30,.58,doorW,.42,true);
+const doorU=['pizza','shop','market','cafe'].includes(kind)?.08:.30;
+facadeOpening(1,doorU,.58,doorW,.42,true);
 // Läden, Markisen, Schaufenster und individuelle Schilder
 if(['pizza','shop','market','cafe'].includes(kind)){
   const aw=kind==='pizza'?'#d94737':kind==='cafe'?'#e7b65e':'#f4d46d';
   // Markise, Schaufenster und Eingang bleiben vollständig auf derselben Fassadenseite.
-  const u=.12,v=.43,uw=.76,vh=.09;
+  const u=.34,v=.43,uw=.58,vh=.09;
   const fascia=(uu,vv)=>({x:p.x+uu*w,y:base-h+d*.52*(1-uu)+vv*h});
   const m=[fascia(u,v),fascia(u+uw,v),fascia(u+uw,v+vh),fascia(u,v+vh)];
   poly(m,aw,ink);
   for(let k=1;k<5;k++){const q1=fascia(u+uw*k/5,v),q2=fascia(u+uw*k/5,v+vh);ctx.strokeStyle=k%2?'#fff0ce':'#e95a46';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(q1.x,q1.y);ctx.lineTo(q2.x,q2.y);ctx.stroke();}
-  facadeOpening(1,.16,.55,.68,.20,false);
+  facadeOpening(1,.35,.55,.56,.20,false);
   ctx.fillStyle='#fff8df';ctx.font='bold '+(6*z)+'px system-ui';ctx.textAlign='center';
   const sign=fascia(.5,.37);ctx.fillText(kind==='pizza'?'PIZZA':kind==='cafe'?'CAFÉ':kind==='market'?'MARKT':'SHOP',sign.x,sign.y);
 }
