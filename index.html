@@ -41,7 +41,7 @@ const $=id=>document.getElementById(id),canvas=$('world'),ctx=canvas.getContext(
 const SAVE='pizzaTycoonWorld_v2';
 let W=0,H=0,dpr=1,cam={x:5.2,y:5.2,zoom:1},drag=null,pinch=null,selected=null,activeTab='city',last=0,toastTimer=0;
 const state={company:'',money:5000,day:1,owned:null,shop:null,customers:0,revenue:0,started:false};
-const N=11,T=64,tiles=[];
+const N=41,T=52,tiles=[];
 const buildings=[
  {name:'Wohnhaus',emoji:'🏠',color:'#c77d58',kind:'home'},
  {name:'Bürogebäude',emoji:'🏢',color:'#8da4ad',kind:'office'},
@@ -50,12 +50,13 @@ const buildings=[
  {name:'Park',emoji:'🌳',color:'#4e895c',kind:'park'},
  {name:'Ladenlokal',emoji:'🏪',color:'#b77d9b',kind:'shop'}
 ];
-function makeCity(){for(let y=0;y<N;y++)for(let x=0;x<N;x++){let road=(x%3===0||y%3===0);let edge=x===0||y===0||x===N-1||y===N-1;let type=(x*7+y*11)%6;let plot=!road&&!edge;tiles.push({x,y,road,plot,building:plot?(type===5?null:buildings[type]):null,price:900+((x*73+y*91)%8)*180,traffic:35+((x*19+y*13)%60),rent:120+((x*31+y*17)%100),id:y*N+x});}}
+function makeCity(){for(let y=0;y<N;y++)for(let x=0;x<N;x++){let road=(x%3===0||y%3===0);let edge=x===0||y===0||x===N-1||y===N-1;let type=(x*7+y*11)%6;let plot=!road&&!edge;let district=Math.floor(x/10)+Math.floor(y/10)*5;let kind=(type+district)%6;tiles.push({x,y,road,plot,building:plot?(kind===5?null:buildings[kind]):null,price:900+((x*73+y*91)%8)*180,traffic:35+((x*19+y*13)%60),rent:120+((x*31+y*17)%100),id:y*N+x});}}
 makeCity();
-function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);if(!cam.ready){cam.ready=true;}draw();}
+function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);if(!cam.ready){cam.x=N/2;cam.y=N/2;cam.zoom=1.12;cam.ready=true;}clampCamera();draw();}
 addEventListener('resize',resize);
 function iso(x,y){return{x:(x-y)*T*.72,y:(x+y)*T*.36};}
 function screen(x,y){let p=iso(x-cam.x,y-cam.y);return{x:W/2+p.x*cam.zoom,y:H*.46+p.y*cam.zoom};}
+function clampCamera(){const r=(W/(2*T*.72*cam.zoom)+H/(2*T*.36*cam.zoom))*.5+1.2;cam.x=Math.max(r,Math.min(N-r,cam.x));cam.y=Math.max(r,Math.min(N-r,cam.y));}
 function poly(points,fill,stroke){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=Math.max(1.2,2.1*cam.zoom);ctx.lineJoin='round';ctx.stroke();}}
 function diamond(x,y,color){let p=screen(x,y),w=T*.72*cam.zoom,h=T*.36*cam.zoom;poly([{x:p.x,y:p.y-h},{x:p.x+w,y:p.y},{x:p.x,y:p.y+h},{x:p.x-w,y:p.y}],color,'#344c3e55');}
 function rounded(x,y,w,h,r,fill,stroke){
@@ -109,32 +110,34 @@ if(b.kind==='school'){
 ctx.fillStyle='#fff1cf';ctx.font='bold '+(9*z)+'px system-ui';ctx.textAlign='center';ctx.fillText('SCHULE',p.x,base-h+20*z);
 }
 }
-function drawCar(x,y,time,color){
+function drawCar(x,y,time,color,angle=0){
 let p=screen(x,y),z=cam.zoom;
-ctx.save();ctx.translate(p.x,p.y);ctx.rotate(-.42);
+ctx.save();ctx.translate(p.x,p.y);ctx.rotate(angle);
 ctx.fillStyle='#253b3a55';ctx.beginPath();ctx.ellipse(0,7*z,17*z,7*z,0,0,Math.PI*2);ctx.fill();
 rounded(-15*z,-7*z,30*z,15*z,5*z,color,'#493b38');
 rounded(-8*z,-5*z,15*z,9*z,3*z,'#a9dce3','#493b38');
 ctx.fillStyle='#fff0bd';ctx.fillRect(11*z,-4*z,3*z,3*z);ctx.fillRect(11*z,2*z,3*z,3*z);
 ctx.fillStyle='#30353a';ctx.fillRect(-10*z,-9*z,6*z,3*z);ctx.fillRect(6*z,-9*z,6*z,3*z);ctx.restore();
 }
-function drawPedestrian(x,y,time,color){
+function drawPedestrian(x,y,time,color,angle=0){
 let p=screen(x,y),z=cam.zoom;ctx.save();ctx.translate(p.x,p.y);
 ctx.fillStyle='#34433c55';ctx.beginPath();ctx.ellipse(0,3*z,5*z,2.5*z,0,0,Math.PI*2);ctx.fill();
-ctx.strokeStyle='#3c3940';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(-1*z,-2*z);ctx.lineTo(-2*z,3*z);ctx.moveTo(1*z,-2*z);ctx.lineTo(3*z,3*z);ctx.stroke();
+ctx.strokeStyle='#3c3940';ctx.lineWidth=2*z;let step=Math.sin(time*.012+x*4+y*3)*2.2;ctx.beginPath();ctx.moveTo(-1*z,-2*z);ctx.lineTo((-2+step)*z,3*z);ctx.moveTo(1*z,-2*z);ctx.lineTo((3-step)*z,3*z);ctx.stroke();
 rounded(-3*z,-12*z,7*z,10*z,2*z,color,'#51433c');
 ctx.fillStyle='#f0bd8d';ctx.beginPath();ctx.arc(0,-15*z,3.3*z,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#6a4537';ctx.lineWidth=1*z;ctx.stroke();ctx.restore();
 }
 function drawCityLife(time){
-for(let lane=3;lane<N;lane+=3){
-let x=((time*.000035+lane*.31)%1)*(N-1);
-drawCar(x,lane,time,['#e45c4f','#f0c44f','#4f8ecb'][lane%3]);
-let y=((time*.000027+lane*.23)%1)*(N-1);
-drawCar(lane,y,time,['#f4f0df','#4f9b71','#d87c42'][lane%3]);
+const speed=time*.000055,colors=['#e45c4f','#f0c44f','#4f8ecb','#f4f0df','#4f9b71','#d87c42'];
+for(let lane=3;lane<N;lane+=6){
+let x=1+((speed*(lane%2?1:.82)+lane*1.73)%(N-2));
+drawCar(x,lane+.18,time,colors[(lane/3|0)%colors.length],Math.atan2(.36,.72));
+let y=1+((speed*(lane%2?.76:1)+lane*2.11)%(N-2));
+drawCar(lane+.18,y,time,colors[(lane/3+2|0)%colors.length],Math.atan2(.36,-.72));
 }
-for(let i=0;i<9;i++){
-let x=(i*1.17+time*.000018)%(N-1),y=(i*2.13+3)% (N-1);
-drawPedestrian(x,y,time,['#e85c4d','#4c83c2','#f2c14e','#f1e9d5'][i%4]);
+for(let i=0;i<34;i++){
+const lane=3+(i%12)*3,along=1+((time*.000018*(i%2?1:.72)+i*2.37)%(N-2));
+if(i%2===0)drawPedestrian(along,lane+.58,time,colors[i%colors.length],Math.atan2(.36,.72));
+else drawPedestrian(lane+.58,along,time,colors[i%colors.length],Math.atan2(.36,-.72));
 }
 }
 function shade(hex,amt){let n=parseInt(hex.slice(1),16),r=Math.max(0,Math.min(255,(n>>16)+amt)),g=Math.max(0,Math.min(255,((n>>8)&255)+amt)),b=Math.max(0,Math.min(255,(n&255)+amt));return'#'+(1<<24|r<<16|g<<8|b).toString(16).slice(1);}
@@ -146,9 +149,8 @@ if(t.x===3&&t.y===4||t.x===6&&t.y===7){rounded(p.x-17*z,p.y-17*z,28*z,3*z,1*z,'#
 // Geparkte Autos am Straßenrand
 if(t.road&&t.y%3===0&&t.x%3===1&&t.x<9){drawCar(t.x+.12,t.y+.42,0,t.x%2?'#d95c4d':'#4c86b8');}
 }
-function draw(time=0){if(!W)return;ctx.clearRect(0,0,W,H);let sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#77c9eb');sky.addColorStop(.62,'#c9e8d6');sky.addColorStop(1,'#f5df9d');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
-ctx.fillStyle='#83bd69';ctx.fillRect(0,H*.68,W,H*.32);
-drawCityLife(time);
+function drawMapBase(time){ctx.fillStyle='#4babc5';ctx.fillRect(0,0,W,H);for(let i=0;i<22;i++){let x=(i*137+time*.009)%(W+100)-50,y=(i*83+Math.sin(time*.001+i)*8)%(H+30);ctx.strokeStyle='#b8e8e766';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+24,y-3);ctx.stroke();}const corners=[[0,0],[N,0],[N,N],[0,N]].map(([x,y])=>screen(x,y));poly(corners,'#c9b47b','#8caa72');const inner=[[.5,.5],[N-.5,.5],[N-.5,N-.5],[.5,N-.5]].map(([x,y])=>screen(x,y));poly(inner,'#83bd69','#e6d29a');}
+function draw(time=0){if(!W)return;ctx.clearRect(0,0,W,H);drawMapBase(time);
 const ordered=[...tiles].sort((a,b)=>a.x+a.y-(b.x+b.y));
 for(const t of ordered){let p=screen(t.x,t.y);if(p.x<-100||p.x>W+100||p.y<-130||p.y>H+100)continue;
 let road=t.road;diamond(t.x,t.y,road?'#737b82':(t.plot?'#91c878':'#7eb96c'));
@@ -178,14 +180,14 @@ ctx.fillStyle='#f4c66d';ctx.beginPath();ctx.arc(p.x-12*z,p.y-3*z,2.5*z,0,Math.PI
 }
 if(t===selected){let w=T*.72*cam.zoom,h=T*.36*cam.zoom;poly([{x:p.x,y:p.y-h},{x:p.x+w,y:p.y},{x:p.x,y:p.y+h},{x:p.x-w,y:p.y}], '#d5ef7a33','#f3ff9a');}
 }
-
+drawCityLife(time);
 for(let i=0;i<8;i++){let x=(i*173+time*.012)%(W+100)-50,y=H*.28+(i%4)*48;ctx.fillStyle='#fff8';ctx.beginPath();ctx.ellipse(x,y,20,5,0,0,Math.PI*2);ctx.fill();}
 requestAnimationFrame(draw);
 }
 function toast(msg){$('toast').textContent=msg;$('toast').style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').style.display='none',2100);}
-function save(){localStorage.setItem(SAVE,JSON.stringify({...state,owned:state.owned?state.owned.id:null,cam:{x:cam.x,y:cam.y,zoom:cam.zoom}}));}
+function save(){localStorage.setItem(SAVE,JSON.stringify({...state,worldSize:N,owned:state.owned?state.owned.id:null,cam:{x:cam.x,y:cam.y,zoom:cam.zoom}}));}
 function hasSave(){return !!localStorage.getItem(SAVE);}
-function load(){let raw=localStorage.getItem(SAVE);if(!raw)return false;try{let s=JSON.parse(raw);Object.assign(state,s);state.owned=s.owned===null?null:tiles.find(t=>t.id===s.owned)||null;if(s.cam){cam.x=s.cam.x??5.2;cam.y=s.cam.y??5.2;cam.zoom=s.cam.zoom||1;}refreshMoney();return true;}catch(e){return false;}}
+function load(){let raw=localStorage.getItem(SAVE);if(!raw)return false;try{let s=JSON.parse(raw);Object.assign(state,s);let oldOwned=s.owned;if(s.worldSize===11&&Number.isInteger(oldOwned)){let ox=oldOwned%11,oy=Math.floor(oldOwned/11);oldOwned=oy*N+ox;}state.owned=oldOwned===null?null:tiles.find(t=>t.id===oldOwned)||null;if(state.owned&&state.owned.building===null)state.owned.building={name:state.company,emoji:'🍕',color:'#c96f43',kind:'pizza'};if(s.cam){cam.x=s.worldSize===11?N/2:(s.cam.x??N/2);cam.y=s.worldSize===11?N/2:(s.cam.y??N/2);cam.zoom=Math.max(.9,Math.min(1.8,s.cam.zoom||1.12));}clampCamera();refreshMoney();return true;}catch(e){return false;}}
 function refreshMoney(){$('money').textContent=Math.round(state.money).toLocaleString('de-DE')+' €';}
 function show(id){document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('show'));$(id).classList.add('show');}
 function enterWorld(){document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('show'));$('hint').textContent='Wische, um die Stadt zu erkunden · Grundstück antippen';save();draw();}
@@ -193,7 +195,7 @@ function introRoute(){if(hasSave()&&load()){enterWorld();toast('Willkommen zurü
 $('introGo').onclick=introRoute;
 $('newGame').onclick=()=>show('setup');
 $('cancelSetup').onclick=()=>show('mainMenu');
-$('createCompany').onclick=()=>{state.company=$('company').value.trim()||'Tonys Pizza';state.money=Number($('capital').value);state.day=1;state.started=true;state.owned=null;state.shop=null;state.customers=0;state.revenue=0;cam={x:5.2,y:5.2,zoom:1,ready:true};save();enterWorld();toast('Willkommen in deiner Stadt! Tippe ein freies Grundstück an.');};
+$('createCompany').onclick=()=>{state.company=$('company').value.trim()||'Tonys Pizza';state.money=Number($('capital').value);state.day=1;state.started=true;state.owned=null;state.shop=null;state.customers=0;state.revenue=0;cam={x:N/2,y:N/2,zoom:1.12,ready:true};save();enterWorld();toast('Willkommen in deiner Stadt! Tippe ein freies Grundstück an.');};
 $('loadGame').onclick=()=>{if(load()){enterWorld();toast('Spielstand geladen.');}else toast('Noch kein Spielstand vorhanden.');};
 $('settings').onclick=()=>toast('Einstellungen kommen im nächsten Ausbau.');
 function hit(sx,sy){let best=null,dist=1e9;for(let t of tiles){if(t.road)continue;let p=screen(t.x,t.y),d=Math.hypot((sx-p.x)/.9,(sy-p.y)/.55);if(d<dist){dist=d;best=t;}}return dist<55*cam.zoom?best:null;}
@@ -211,14 +213,14 @@ $('quality').onclick=()=>{if(state.money<350||s.quality>=5){toast('Nicht möglic
 $('staff').onclick=()=>{if(state.money<500){toast('Nicht genug Geld.');return;}state.money-=500;s.staff++;refreshMoney();showBusiness();save();};
 $('day').onclick=nextDay;}
 function nextDay(){let s=state.shop;if(!s){toast('Erst eine Pizzeria eröffnen.');return;}let customers=Math.max(8,Math.round((state.owned.traffic*.55+s.quality*5+s.staff*7)*(1-Math.abs(s.price-12)*.035)));let sold=Math.min(s.stock,customers);let revenue=sold*s.price,cost=sold*4+s.staff*55+(s.rent?state.owned.rent:0);let profit=revenue-cost;state.money+=profit;s.stock=Math.max(0,s.stock-sold);state.customers+=sold;state.revenue+=revenue;state.day++;refreshMoney();save();openPanel('📊 Tagesabschluss','<p class="muted">Tag '+(state.day-1)+' · '+state.company+'</p><div class="statrow"><span>Bediente Kunden</span><b>'+sold+'</b></div><div class="statrow"><span>Umsatz</span><b>'+revenue.toLocaleString('de-DE')+' €</b></div><div class="statrow"><span>Kosten</span><b>'+cost.toLocaleString('de-DE')+' €</b></div><div class="statrow"><span>Tagesergebnis</span><b style="color:'+(profit>=0?'#b6e36b':'#ff8b7d')+'">'+(profit>=0?'+':'')+profit.toLocaleString('de-DE')+' €</b></div><p class="muted">Der Lagerbestand muss später wieder aufgefüllt werden.</p>','<div class="actions"><button id="okDay">Weiter</button></div>');$('okDay').onclick=()=>showBusiness();}
-function tab(name){activeTab=name;document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));if(name==='city'){$('panel').style.display='none';$('hint').textContent='Wische, um Tony durch die Stadt zu bewegen · Grundstück antippen';}if(name==='business')showBusiness();if(name==='map'){openPanel('🗺️ Stadtkarte','<p class="muted">Dein Viertel: 11 × 11 Felder. Wische frei über die Stadt. Mit zwei Fingern zoomst du.</p><div class="statrow"><span>Dein Standort</span><b>'+(state.owned?'Eröffnet':'Noch keiner')+'</b></div>');}if(name==='menu'){openPanel('☰ Spielmenü','<p class="muted">Dein Fortschritt wird automatisch gespeichert.</p><div class="statrow"><span>Spieltag</span><b>'+state.day+'</b></div><div class="statrow"><span>Gesamtumsatz</span><b>'+state.revenue.toLocaleString('de-DE')+' €</b></div><div class="actions"><button id="saveNow">Speichern</button><button class="secondary" id="pauseMenu">Hauptmenü</button></div>');$('saveNow').onclick=()=>{save();toast('Spiel gespeichert.');};$('pauseMenu').onclick=()=>{save();show('mainMenu');};}}
+function tab(name){activeTab=name;document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));if(name==='city'){$('panel').style.display='none';$('hint').textContent='Wische, um die Stadt zu erkunden · Grundstück antippen';}if(name==='business')showBusiness();if(name==='map'){openPanel('🗺️ Stadtkarte','<p class="muted">Deine Stadt: 41 × 41 Felder. Wische frei über die Stadt. Mit zwei Fingern zoomst du.</p><div class="statrow"><span>Dein Standort</span><b>'+(state.owned?'Eröffnet':'Noch keiner')+'</b></div>');}if(name==='menu'){openPanel('☰ Spielmenü','<p class="muted">Dein Fortschritt wird automatisch gespeichert.</p><div class="statrow"><span>Spieltag</span><b>'+state.day+'</b></div><div class="statrow"><span>Gesamtumsatz</span><b>'+state.revenue.toLocaleString('de-DE')+' €</b></div><div class="actions"><button id="saveNow">Speichern</button><button class="secondary" id="pauseMenu">Hauptmenü</button></div>');$('saveNow').onclick=()=>{save();toast('Spiel gespeichert.');};$('pauseMenu').onclick=()=>{save();show('mainMenu');};}}
 document.querySelectorAll('.nav').forEach(b=>b.addEventListener('click',()=>tab(b.dataset.tab)));
 function pointerDown(e){e.preventDefault();if(e.pointerType==='touch'&&e.isPrimary===false)return;canvas.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,moved:false,id:e.pointerId};}
-function pointerMove(e){if(!drag||drag.id!==e.pointerId)return;let dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>3)drag.moved=true;if(drag.moved){const sx=dx/(T*.72*cam.zoom),sy=dy/(T*.36*cam.zoom),wx=(sx+sy)*.5,wy=(sy-sx)*.5;cam.x=Math.max(-2,Math.min(N+2,cam.x-wx));cam.y=Math.max(-2,Math.min(N+2,cam.y-wy));drag.x=e.clientX;drag.y=e.clientY;}}
+function pointerMove(e){if(!drag||drag.id!==e.pointerId)return;let dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>3)drag.moved=true;if(drag.moved){const sx=dx/(T*.72*cam.zoom),sy=dy/(T*.36*cam.zoom),wx=(sx+sy)*.5,wy=(sy-sx)*.5;cam.x-=wx;cam.y-=wy;clampCamera();drag.x=e.clientX;drag.y=e.clientY;}}
 function pointerUp(e){if(!drag||drag.id!==e.pointerId)return;if(!drag.moved){let t=hit(e.clientX,e.clientY);if(t)selectTile(t);}drag=null;save();}
 canvas.addEventListener('pointerdown',pointerDown);canvas.addEventListener('pointermove',pointerMove);canvas.addEventListener('pointerup',pointerUp);canvas.addEventListener('pointercancel',()=>drag=null);
 let lastPinch=0;canvas.addEventListener('touchstart',e=>{if(e.touches.length===2){drag=null;pinch={d:Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY),z:cam.zoom};}},{passive:true});
-canvas.addEventListener('touchmove',e=>{if(e.touches.length===2&&pinch){e.preventDefault();let d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);cam.zoom=Math.max(.55,Math.min(1.8,pinch.z*d/pinch.d));}},{passive:false});
+canvas.addEventListener('touchmove',e=>{if(e.touches.length===2&&pinch){e.preventDefault();let d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);cam.zoom=Math.max(.9,Math.min(1.8,pinch.z*d/pinch.d));clampCamera();}},{passive:false});
 canvas.addEventListener('touchend',e=>{if(e.touches.length<2)pinch=null;});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&state.started)save();});
 window.addEventListener('pagehide',()=>{if(state.started)save();});
