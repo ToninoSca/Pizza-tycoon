@@ -56,7 +56,7 @@ const buildings=[
  {name:'Rathaus',emoji:'🏛️',color:'#d6c39b',kind:'landmark'}
 ];
 const ROAD_X=[6,18,33,48,56],ROAD_Y=[7,21,35,49,56];
-const BUILDING_X=[4,7,10,13,16,22,25,28,31,37,40,43,46,49,52,55,58],BUILDING_Y=[4,7,10,13,16,22,25,28,31,37,40,43,46,49,52,55,58];
+const BUILDING_X=Array.from({length:28},(_,i)=>4+i*2),BUILDING_Y=Array.from({length:28},(_,i)=>4+i*2);
 const ROUNDABOUT_RING=[[32,34],[33,34],[34,34],[34,35],[34,36],[33,36],[32,36],[32,35]];
 function isRoundaboutRoad(x,y){return ROUNDABOUT_RING.some(([rx,ry])=>rx===x&&ry===y);}
 function isVerticalRoad(x,y){return ROAD_X.includes(x)||(x===12&&y>=8&&y<=20)||(x===40&&y>=22&&y<=34)||(x===26&&y>=36&&y<=48)||(x===52&&y>=8&&y<=20);}
@@ -67,16 +67,16 @@ function signalPhase(x,y,time){const v=((time+x*193+y*97)%10000+10000)%10000;ret
 function makeCity(){
  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
   const road=isRoad(x,y),edge=x===0||y===0||x===N-1||y===N-1,plot=!road&&!edge;
-  const parcelX=Math.floor(x/7),parcelY=Math.floor(y/7),roll=(parcelX*37+parcelY*71+parcelX*parcelY*13)%100;
+  const roll=(((x*73856093)^(y*19349663))>>>0)%100;
   const district=(x<22&&y<24)?'oldtown':(x>=39&&y>=39)?'industrial':(y>42&&x>18&&x<43)?'shopping':(x>=39&&y<25)?'civic':(x>=22&&x<=39&&y>=20&&y<=40)?'downtown':'residential';
   let kind=0;
   // Deutlich erkennbare Stadtviertel: Wohnen ist nur ein Teil der Stadt.
-  if(x>=39&&y>=39) kind=roll<42?9:roll<58?5:roll<72?3:roll<84?7:roll<94?8:6; // Gewerbepark
-  else if(x>=22&&x<=39&&y>=20&&y<=40) kind=roll<15?3:roll<25?2:roll<48?8:roll<68?7:roll<82?5:roll<89?4:6; // Innenstadt mit weniger hohen Häusern
-  else if(x<22&&y<24) kind=roll<30?1:roll<53?8:roll<73?7:roll<85?5:roll<94?0:6; // Altstadt mit Läden
-  else if(y>42&&x>18&&x<43) kind=roll<30?5:roll<54?7:roll<75?8:roll<86?3:roll<94?6:0; // Einkaufsviertel
-  else if(x>=39&&y<25) kind=roll<12?4:roll<30?3:roll<44?5:roll<64?8:roll<84?6:7; // öffentlicher / Bürobereich
-  else kind=roll<27?0:roll<43?1:roll<51?2:roll<65?6:roll<78?7:roll<91?8:roll<96?4:5; // gemischte Wohnviertel
+  if(x>=39&&y>=39) kind=roll<42?9:roll<58?5:roll<72?3:roll<80?7:roll<88?8:6; // Gewerbepark
+  else if(x>=22&&x<=39&&y>=20&&y<=40) kind=roll<15?3:roll<25?2:roll<37?8:roll<62?7:roll<78?5:roll<88?4:6; // Innenstadt mit weniger hohen Häusern
+  else if(x<22&&y<24) kind=roll<30?1:roll<42?8:roll<65?7:roll<80?5:roll<92?0:6; // Altstadt mit Läden
+  else if(y>42&&x>18&&x<43) kind=roll<30?5:roll<52?7:roll<62?8:roll<78?3:roll<91?6:0; // Einkaufsviertel
+  else if(x>=39&&y<25) kind=roll<12?4:roll<30?3:roll<44?5:roll<54?8:roll<78?6:7; // öffentlicher / Bürobereich
+  else kind=roll<27?0:roll<43?1:roll<51?2:roll<65?6:roll<78?7:roll<86?8:roll<96?4:5; // gemischte Wohnviertel
   // Öffentliche Plätze und Parkflächen lockern das starre Straßenraster auf
   let space=null;
   if(x===33&&y===35) space='roundabout';
