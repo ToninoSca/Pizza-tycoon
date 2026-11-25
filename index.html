@@ -1165,13 +1165,13 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   // Seitenfenster werden bereits im gemeinsamen Fensterblock erzeugt.
   if(kind==='pizza'&&t===window.__pizzaCity?.tiles?.find(q=>q.building?.kind==='pizza'))box(g,.42,.42,.42,mat('#b84d37'),0,h+.42,0);
   // Großzügige unsichtbare Trefferfläche macht Gebäude auf dem Handy leichter antippbar.
-  const hitArea=new THREE.Mesh(new THREE.BoxGeometry(w+.62,h+.72,d+.62),new THREE.MeshBasicMaterial({transparent:true,opacity:0,colorWrite:false,depthWrite:false}));
+  const hitArea=new THREE.Mesh(new THREE.BoxGeometry(w+1.0,h+1.0,d+1.0),new THREE.MeshBasicMaterial({transparent:true,opacity:0,colorWrite:false,depthWrite:false}));
   hitArea.position.set(0,h/2+.08,0);hitArea.userData.buildingHitArea=true;g.add(hitArea);
   // Sanfter weißer Glas-Schimmer: wird nur beim ausgewählten Gebäude eingeblendet.
-  const glow=new THREE.Mesh(new THREE.BoxGeometry(w+.3,h+.38,d+.3),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
-  glow.position.set(0,h/2+.08,0);glow.renderOrder=5;glow.visible=false;glow.userData.selectionGlow=true;g.add(glow);
-  const edge=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w+.34,h+.42,d+.34)),new THREE.LineBasicMaterial({color:'#ffffff',transparent:true,opacity:0}));
-  edge.position.copy(glow.position);edge.renderOrder=6;edge.visible=false;g.add(edge);g.userData.glow=glow;g.userData.glowEdge=edge;g.userData.selectionActive=false;
+  const glow=new THREE.Mesh(new THREE.BoxGeometry(w+.3,h+.38,d+.3),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:0,depthWrite:false,depthTest:false,side:THREE.DoubleSide}));
+  glow.position.set(0,h/2+.08,0);glow.renderOrder=10;glow.visible=false;glow.userData.selectionGlow=true;g.add(glow);
+  const edge=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w+.34,h+.42,d+.34)),new THREE.LineBasicMaterial({color:'#ffffff',transparent:true,opacity:0,depthTest:false}));
+  edge.position.copy(glow.position);edge.renderOrder=11;edge.visible=false;g.add(edge);g.userData.glow=glow;g.userData.glowEdge=edge;g.userData.selectionActive=false;
   g.userData.tile=t;g.userData.rivalBuilding=!!b.rivalId;
  }
  for(const t of tiles)if(t.building&&t.building.kind!=='park')makeBuilding(t);
@@ -1237,7 +1237,11 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  canvas.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const dx=e.clientX-drag.lastX,dy=e.clientY-drag.lastY;if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>4)drag.moved=true;if(drag.moved){const scale=43/(zoom*Math.max(300,canvas.clientHeight));const sx=dx*scale*.92,sy=dy*scale*.72;target.x+=(-sx-sy)*.707;target.z+=(sx-sy)*.707;target.x=Math.max(-10,Math.min(70,target.x));target.z=Math.max(-10,Math.min(70,target.z));placeCamera();}drag.lastX=e.clientX;drag.lastY=e.clientY;});
  function pickBuilding(e){
   const r=canvas.getBoundingClientRect();mouse.x=((e.clientX-r.left)/r.width)*2-1;mouse.y=-((e.clientY-r.top)/r.height)*2+1;ray.setFromCamera(mouse,camera);
-  // Erst echte Gebäudeflächen prüfen; die unsichtbaren Trefferflächen vergrößern den Touch-Bereich.
+  // Zuerst die vergrößerten unsichtbaren Touch-Flächen prüfen, damit kleine Gebäude leichter getroffen werden.
+  const hitAreas=[];for(const g of city.children)if(g.userData?.tile?.building){const h=g.children.find(o=>o.userData?.buildingHitArea);if(h)hitAreas.push(h);}
+  const touchHits=ray.intersectObjects(hitAreas,false);
+  if(touchHits.length){let o=touchHits[0].object;while(o&&o!==city){if(o.userData?.tile?.building)return o.userData.tile;o=o.parent;}}
+  // Falls keine Touch-Fläche getroffen wurde, gelten die sichtbaren Gebäudeflächen.
   const hits=ray.intersectObjects(city.children,true);
   for(const hit of hits){let o=hit.object;while(o&&o!==city){if(o.userData?.tile?.building)return o.userData.tile;o=o.parent;}}
   // Freie Grundstücke bleiben separat antippbar, normale Bodenflächen nicht.
