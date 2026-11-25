@@ -62,7 +62,7 @@ function makeCity(){
   let kind=0;
   // Deutlich erkennbare Stadtviertel: Wohnen ist nur ein Teil der Stadt.
   if(x>=39&&y>=39) kind=roll<42?9:roll<58?5:roll<72?3:roll<84?7:roll<94?8:6; // Gewerbepark
-  else if(x>=22&&x<=39&&y>=20&&y<=40) kind=roll<30?3:roll<47?2:roll<63?8:roll<77?7:roll<88?5:roll<95?4:6; // Innenstadt
+  else if(x>=22&&x<=39&&y>=20&&y<=40) kind=roll<18?3:roll<31?2:roll<52?8:roll<70?7:roll<84?5:roll<94?4:6; // Innenstadt mit weniger hohen Häusern
   else if(x<22&&y<24) kind=roll<30?1:roll<53?8:roll<73?7:roll<85?5:roll<94?0:6; // Altstadt mit Läden
   else if(y>42&&x>18&&x<43) kind=roll<30?5:roll<54?7:roll<75?8:roll<86?3:roll<94?6:0; // Einkaufsviertel
   else if(x>=39&&y<25) kind=roll<28?4:roll<48?3:roll<65?5:roll<80?8:roll<92?6:7; // öffentlicher / Bürobereich
@@ -112,8 +112,8 @@ if(b.kind==='park'){
   ctx.fillStyle='#e7d8a8';ctx.beginPath();ctx.arc(p.x-3*z,p.y-5*z,3*z,0,Math.PI*2);ctx.fill();return;
 }
 const kind=b.kind;
-let floors=kind==='office'?4+Math.floor(rand(2)*5):kind==='apartments'?3+Math.floor(rand(2)*3):kind==='landmark'?3:kind==='factory'?1:kind==='school'?2:kind==='market'?2:kind==='pizza'?2:1+Math.floor(rand(2)*2);
-let h=(kind==='office'?floors*17:kind==='apartments'?floors*13:kind==='landmark'?84:kind==='factory'?31:kind==='school'?48:kind==='market'?42:kind==='pizza'?50:kind==='cafe'?35:kind==='oldhome'?42+floors*7:34+floors*8)*z;
+let floors=kind==='office'?3+Math.floor(rand(2)*3):kind==='apartments'?2+Math.floor(rand(2)*2):kind==='landmark'?3:kind==='factory'?1:kind==='school'?2:kind==='market'?2:kind==='pizza'?2:1+Math.floor(rand(2)*2);
+let h=(kind==='office'?floors*14:kind==='apartments'?floors*11:kind==='landmark'?84:kind==='factory'?31:kind==='school'?48:kind==='market'?42:kind==='pizza'?50:kind==='cafe'?35:kind==='oldhome'?38+floors*6:29+floors*6)*z;
 let w=(kind==='office'?24+rand(3)*8:kind==='factory'?31+rand(3)*8:kind==='school'||kind==='landmark'?30+rand(3)*8:25+rand(3)*12)*z;
 let d=(kind==='office'?19+rand(4)*7:kind==='factory'?27:17+rand(4)*10)*z;
 let base=p.y-4*z,ink='#59463e',left=shade(b.color,-34),right=shade(b.color,-12),roof=shade(b.color,24);
@@ -284,20 +284,52 @@ rounded(-3*z,-12*z,7*z,10*z,2*z,color,'#51433c');
 ctx.fillStyle='#f0bd8d';ctx.beginPath();ctx.arc(0,-15*z,3.3*z,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#6a4537';ctx.lineWidth=1*z;ctx.stroke();ctx.restore();
 }
 function drawCityLife(time){
-const speed=time*.000055,colors=['#e45c4f','#f0c44f','#4f8ecb','#f4f0df','#4f9b71','#d87c42'];
-for(let lane=3;lane<N;lane+=6){
-let x=1+((speed*(lane%2?1:.82)+lane*1.73)%(N-2));
-drawCar(x,lane+.18,time,colors[(lane/3|0)%colors.length],Math.atan2(.36,.72));
-let y=1+((speed*(lane%2?.76:1)+lane*2.11)%(N-2));
-drawCar(lane+.18,y,time,colors[(lane/3+2|0)%colors.length],Math.atan2(.36,-.72));
-}
-for(let i=0;i<34;i++){
-const lane=3+(i%12)*3,along=1+((time*.000018*(i%2?1:.72)+i*2.37)%(N-2));
-if(i%2===0)drawPedestrian(along,lane+.58,time,colors[i%colors.length],Math.atan2(.36,.72));
-else drawPedestrian(lane+.58,along,time,colors[i%colors.length],Math.atan2(.36,-.72));
+const colors=['#e45c4f','#f0c44f','#4f8ecb','#f4f0df','#4f9b71','#d87c42'];
+// Autos fahren auf zusammenhängenden Straßenringen und drehen an jeder Ecke mit.
+const rings=[3,15,27];
+rings.forEach((low,ri)=>{
+ const high=57-low,route=[{x:low,y:low},{x:high,y:low},{x:high,y:high},{x:low,y:high},{x:low,y:low}];
+ const lengths=route.slice(0,-1).map((p,i)=>Math.abs(route[i+1].x-p.x)+Math.abs(route[i+1].y-p.y));
+ const total=lengths.reduce((a,b)=>a+b,0);
+ for(let n=0;n<4;n++){
+  let distance=(time*.00082*(.78+((n+ri)%3)*.16)+n*total/4+ri*total/11)%total;
+  let seg=0;while(seg<3&&distance>lengths[seg]){distance-=lengths[seg];seg++;}
+  const a=route[seg],b=route[seg+1],len=lengths[seg],t=distance/len;
+  const x=a.x+(b.x-a.x)*t,y=a.y+(b.y-a.y)*t;
+  const dx=b.x-a.x,dy=b.y-a.y,angle=Math.atan2(dy*.36,dx*.72);
+  drawCar(x,y,time,colors[(n+ri*2)%colors.length],angle);
+ }
+});
+// Fußgänger bleiben auf den Bürgersteigen direkt neben den Fahrbahnen.
+for(let i=0;i<84;i++){
+ const lane=3+(i%19)*3,dir=i%2,along=1+((time*.00024*(i%3===0?1.12:.82)+i*7.31)%(N-2));
+ if(dir===0)drawPedestrian(along,lane-.36,time,colors[i%colors.length],Math.atan2(.36,.72));
+ else drawPedestrian(lane-.36,along,time,colors[i%colors.length],Math.atan2(.36,-.72));
 }
 }
 function shade(hex,amt){let n=parseInt(hex.slice(1),16),r=Math.max(0,Math.min(255,(n>>16)+amt)),g=Math.max(0,Math.min(255,((n>>8)&255)+amt)),b=Math.max(0,Math.min(255,(n&255)+amt));return'#'+(1<<24|r<<16|g<<8|b).toString(16).slice(1);}
+function drawSidewalk(t,p){
+ if(!t.road||t.x%3===0&&t.y%3===0)return;
+ const z=cam.zoom;
+ // Ein heller, gepflasterter Gehweg mit klarer Bordsteinkante.
+ ctx.save();ctx.lineCap='round';
+ if(t.y%3===0){
+  for(const side of [-1,1]){
+   const ox=-side*10*z,oy=side*5*z;
+   ctx.strokeStyle='#b9b7a8';ctx.lineWidth=8*z;ctx.beginPath();ctx.moveTo(p.x-13*z+ox,p.y-6*z+oy);ctx.lineTo(p.x+13*z+ox,p.y+6*z+oy);ctx.stroke();
+   ctx.strokeStyle='#e5ddc9';ctx.lineWidth=5*z;ctx.beginPath();ctx.moveTo(p.x-13*z+ox,p.y-6*z+oy);ctx.lineTo(p.x+13*z+ox,p.y+6*z+oy);ctx.stroke();
+   ctx.strokeStyle='#9b9b8c';ctx.lineWidth=1*z;ctx.beginPath();ctx.moveTo(p.x-13*z+ox,p.y-6*z+oy);ctx.lineTo(p.x+13*z+ox,p.y+6*z+oy);ctx.stroke();
+  }
+ }else{
+  for(const side of [-1,1]){
+   const ox=side*10*z,oy=side*5*z;
+   ctx.strokeStyle='#b9b7a8';ctx.lineWidth=8*z;ctx.beginPath();ctx.moveTo(p.x+6*z+ox,p.y-13*z+oy);ctx.lineTo(p.x-6*z+ox,p.y+13*z+oy);ctx.stroke();
+   ctx.strokeStyle='#e5ddc9';ctx.lineWidth=5*z;ctx.beginPath();ctx.moveTo(p.x+6*z+ox,p.y-13*z+oy);ctx.lineTo(p.x-6*z+ox,p.y+13*z+oy);ctx.stroke();
+   ctx.strokeStyle='#9b9b8c';ctx.lineWidth=1*z;ctx.beginPath();ctx.moveTo(p.x+6*z+ox,p.y-13*z+oy);ctx.lineTo(p.x-6*z+ox,p.y+13*z+oy);ctx.stroke();
+  }
+ }
+ ctx.restore();
+}
 function drawStreetProps(t,p){const z=cam.zoom;
 // Straßenlaternen an ausgewählten Gehweg-Ecken
 if(t.road&&(t.x*5+t.y*3)%8===0){const lx=p.x+19*z,ly=p.y-10*z;ctx.strokeStyle='#42504a';ctx.lineWidth=3*z;ctx.beginPath();ctx.moveTo(lx,ly+12*z);ctx.lineTo(lx,ly-22*z);ctx.lineTo(lx+8*z,ly-26*z);ctx.stroke();ctx.fillStyle='#ffe9a0';ctx.beginPath();ctx.arc(lx+8*z,ly-26*z,4*z,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff3bd';ctx.lineWidth=1*z;ctx.stroke();}
@@ -326,7 +358,7 @@ ctx.fillStyle='#f5e7c6';ctx.beginPath();ctx.arc(p.x,p.y,2.5*z,0,Math.PI*2);ctx.f
   // Ampeln an ausgewählten Kreuzungen
   if((t.x+t.y)%6===0){rounded(p.x+15*z,p.y-24*z,5*z,16*z,2*z,'#48534d','#28332e');for(let q=0;q<3;q++){ctx.fillStyle=['#e65b4f','#e9c95c','#72c66f'][q];ctx.beginPath();ctx.arc(p.x+17.5*z,p.y-21*z+q*5*z,1.3*z,0,Math.PI*2);ctx.fill();}}
 }
-drawStreetProps(t,p);
+drawSidewalk(t,p);drawStreetProps(t,p);
 }
 if(!road&&t.building){drawBuilding(t,time);drawFrontage(t,p);}
 if(!road&&t.space)drawPublicSpace(t,p);
