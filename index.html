@@ -111,7 +111,7 @@ if(b.kind==='park'){
   ctx.strokeStyle='#e8d5a2';ctx.lineWidth=5*z;ctx.beginPath();ctx.moveTo(p.x-25*z,p.y+5*z);ctx.lineTo(p.x+25*z,p.y-5*z);ctx.stroke();
   ctx.fillStyle='#e7d8a8';ctx.beginPath();ctx.arc(p.x-3*z,p.y-5*z,3*z,0,Math.PI*2);ctx.fill();return;
 }
-const kind=b.kind,wallColor=shade(wallColor,Math.floor(rand(90)*25)-12);
+const kind=b.kind,wallColor=shade(b.color,Math.floor(rand(90)*25)-12);
 let floors=kind==='office'?3+Math.floor(rand(2)*3):kind==='apartments'?2+Math.floor(rand(2)*2):kind==='landmark'?3:kind==='factory'?1:kind==='school'?2:kind==='market'?2:kind==='pizza'?2:1+Math.floor(rand(2)*2);
 let h=(kind==='office'?floors*14:kind==='apartments'?floors*11:kind==='landmark'?84:kind==='factory'?31:kind==='school'?48:kind==='market'?42:kind==='pizza'?50:kind==='cafe'?35:kind==='oldhome'?38+floors*6:29+floors*6)*z;
 let w=(kind==='office'?24+rand(3)*8:kind==='factory'?31+rand(3)*8:kind==='school'||kind==='landmark'?30+rand(3)*8:25+rand(3)*12)*z;
