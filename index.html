@@ -99,7 +99,7 @@ function makeCity(){
    isRoad(t.x-1,t.y-1)||isRoad(t.x+1,t.y-1)||isRoad(t.x-1,t.y+1)||isRoad(t.x+1,t.y+1);
   if(!besideRoad)continue;
   const roll=(((t.x*73856093)^(t.y*19349663))>>>0)%100;
-  if(roll>98)continue;
+  if(roll>99)continue;
   let kind=0;
   if(t.district==='industrial')kind=roll<35?9:roll<52?5:roll<68?3:roll<80?7:roll<89?8:6;
   else if(t.district==='downtown')kind=roll<15?3:roll<28?2:roll<42?8:roll<59?7:roll<74?5:roll<86?4:6;
@@ -214,40 +214,32 @@ if(kind==='school'){
   ctx.fillStyle='#f1dfb9';ctx.beginPath();ctx.arc(p.x,base-h-8*z,4*z,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle='#655748';ctx.lineWidth=1*z;ctx.beginPath();ctx.moveTo(p.x,base-h-11*z);ctx.lineTo(p.x,base-h-8*z);ctx.lineTo(p.x+2*z,base-h-7*z);ctx.stroke();
 }
-// Fensterreihen und Balkone geben jedem Haus eine eigene Fassade
-// Kleine Schornsteine und Dachdetails machen Wohnhäuser unverwechselbarer.
-if((kind==='home'||kind==='oldhome')&&rand(44)>.42){
- const cx=p.x+(rand(45)-.5)*w*.9,cy=base-h-d*.23;
- rounded(cx-2.5*z,cy-12*z,5*z,12*z,1*z,'#9b6652','#654b40');
- rounded(cx-3.5*z,cy-13*z,7*z,2*z,1*z,'#765044');
+// Fenster liegen exakt auf den schrägen isometrischen Wandflächen – nie über Gebäudeecken.
+const rows=Math.max(1,Math.min(3,Math.floor(floors/2)));
+function facadeOpening(side,u,v,uw,vh,door=false){
+ const point=(uu,vv)=>{
+  const top=side<0?base-h+uu*d*.52:base-h+d*.52*(1-uu);
+  const bottom=side<0?base+uu*d*.52:base+d*.52*(1-uu);
+  return {x:(side<0?p.x-w+uu*w:p.x+uu*w),y:top+(bottom-top)*vv};
+ };
+ const q=[point(u,v),point(u+uw,v),point(u+uw,v+vh),point(u,v+vh)];
+ poly(q,door?'#754b3d':'#83c5d3',ink);
+ ctx.strokeStyle=door?'#c6a47b':'#f4e5c6';ctx.lineWidth=1*z;
+ if(!door){const m1=point(u+uw*.5,v+.04),m2=point(u+uw*.5,v+vh-.04);ctx.beginPath();ctx.moveTo(m1.x,m1.y);ctx.lineTo(m2.x,m2.y);ctx.stroke();}
+ else{const handle=point(u+uw*.78,v+vh*.55);ctx.fillStyle='#ffe6a3';ctx.beginPath();ctx.arc(handle.x,handle.y,1.1*z,0,Math.PI*2);ctx.fill();}
 }
-// Fenster folgen den beiden sichtbaren isometrischen Fassaden.
-const rows=Math.max(1,Math.min(2,Math.floor(floors/2)));
 for(let r=0;r<rows;r++){
- const level=(r+1)/(rows+1);
- const wyOffset=(h/z)*level;
+ const v=.18+r*(.58/rows);
  for(const side of [-1,1]){
-  const count=1;
+  const count=(kind==='office'||kind==='apartments')?2:1;
   for(let col=0;col<count;col++){
-   const u=count===1?.32:(col===0?.32:.68);
-   const wx=side<0?p.x-w+2*w*u:p.x+w*u;
-   const groundY=side<0?base+d*.52*u:base+d*.52*(1-u);
-   const ww=(kind==='office'?6:6.5)*z,wh=(kind==='office'?7.5:8)*z;
-   const wy=groundY-wyOffset*z-wh;
-   if(wy<base-h+4*z||wy+wh>groundY-6*z)continue;
-   const glass=ctx.createLinearGradient(wx-ww/2,wy,wx+ww/2,wy+wh);
-   glass.addColorStop(0,'#fff0c2');glass.addColorStop(1,kind==='office'?'#75b8d0':'#8ccbd4');
-   rounded(wx-ww/2,wy,ww,wh,1*z,glass,ink);
-   ctx.strokeStyle='#f4e5c6';ctx.lineWidth=.7*z;ctx.beginPath();
-   ctx.moveTo(wx,wy+z);ctx.lineTo(wx,wy+wh-z);ctx.stroke();
-   if(false){ // Zusätzliche Fensterläden bewusst reduziert
-    const shutter=shade(wallColor,-28);
-    rounded(wx-ww/2-2*z,wy+z,1.5*z,wh-2*z,0,shutter,'#59483e');
-    rounded(wx+ww/2+.5*z,wy+z,1.5*z,wh-2*z,0,shutter,'#59483e');
-   }
+   const u=count===1?.30+rand(100+r+side)*.12:.18+col*.48;
+   const width=count===1?.22:.20;
+   facadeOpening(side,u,v,width,.18,false);
   }
  }
-}// Kleine individuelle Fassadendetails: Blumenkästen, Klimageräte und Dachtechnik.
+}
+// Kleine individuelle Fassadendetails: Blumenkästen, Klimageräte und Dachtechnik.
 if(false && (kind==='home'||kind==='oldhome'||kind==='apartments')){
   for(let box=0;box<2;box++){
     if(rand(120+box)>.38){
@@ -294,27 +286,21 @@ if(false && (kind==='office'||kind==='apartments')){
   // vertikale Fassadenstreifen und einzelne beleuchtete Fenster
   ctx.strokeStyle='#e4e0d2aa';ctx.lineWidth=1.2*z;ctx.beginPath();ctx.moveTo(p.x+2*z,base-h+5*z);ctx.lineTo(p.x+2*z,base-2*z);ctx.stroke();
 }
-// Eingang sitzt auf der rechten sichtbaren Wand und endet exakt an deren Bodenlinie.
-const doorU=.38,doorX=p.x+w*doorU,doorGround=base+d*.52*(1-doorU);
-const doorW=kind==='home'||kind==='oldhome'?8:9,doorH=kind==='home'||kind==='oldhome'?15:18;
-rounded(doorX-doorW*z/2,doorGround-doorH*z,doorW*z,doorH*z,1.5*z,'#754b3d',ink);
-ctx.fillStyle='#ffe6a3';ctx.beginPath();ctx.arc(doorX+doorW*.25*z,doorGround-doorH*.48*z,1.1*z,0,Math.PI*2);ctx.fill();
-ctx.strokeStyle='#c6a47b';ctx.lineWidth=1*z;ctx.beginPath();ctx.moveTo(doorX-doorW*.55*z,doorGround-doorH*z);ctx.lineTo(doorX-doorW*.55*z,doorGround);ctx.stroke();
+// Eingang als perspektivisch korrektes Türfeld auf der rechten Gebäudefassade.
+const doorW=kind==='home'||kind==='oldhome'?.19:.22;
+facadeOpening(1,.30,.58,doorW,.42,true);
 // Läden, Markisen, Schaufenster und individuelle Schilder
 if(['pizza','shop','market','cafe'].includes(kind)){
-  let aw=kind==='pizza'?'#d94737':kind==='cafe'?'#e7b65e':'#f4d46d';
-  const shopY=base-h+Math.min(27,(h/z)*.55)*z;
-  const shopWindowY=base-h+Math.min(36,(h/z)*.55+9)*z;
-  rounded(p.x-w*.65,shopY,w*1.3,8*z,2*z,aw,ink);
-  for(let k=0;k<5;k++){ctx.fillStyle=k%2?'#fff0ce':'#e95a46';ctx.fillRect(p.x-w*.63+k*w*.25,shopY,Math.max(2,3*z),8*z);}
-  rounded(p.x-w*.58,shopWindowY,w*1.16,12*z,1*z,'#b5e2e8',ink);
-  // Markisenkante, getrennte Schaufenster und kleine Auslage
-  ctx.strokeStyle='#fff0d2';ctx.lineWidth=1.5*z;ctx.beginPath();ctx.moveTo(p.x-w*.58,shopWindowY+12*z);ctx.lineTo(p.x+w*.58,shopWindowY+12*z);ctx.stroke();
-  ctx.strokeStyle='#6c594b';ctx.lineWidth=1*z;ctx.beginPath();ctx.moveTo(p.x,shopWindowY);ctx.lineTo(p.x,shopWindowY+12*z);ctx.stroke();
-  rounded(p.x-w*.25,shopWindowY+3*z,w*.5,6*z,1*z,'#f6e3b6','#8a7056');
-  ctx.fillStyle='#fff7df';ctx.beginPath();ctx.arc(p.x-w*.12,shopWindowY+6*z,1.2*z,0,Math.PI*2);ctx.arc(p.x+w*.12,shopWindowY+6*z,1.2*z,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#fff8df';ctx.font='bold '+(7*z)+'px system-ui';ctx.textAlign='center';
-  ctx.fillText(kind==='pizza'?'PIZZA':kind==='cafe'?'CAFÉ':kind==='market'?'MARKT':'SHOP',p.x,base-h+Math.min(24,(h/z)*.55-3)*z);
+  const aw=kind==='pizza'?'#d94737':kind==='cafe'?'#e7b65e':'#f4d46d';
+  // Markise, Schaufenster und Eingang bleiben vollständig auf derselben Fassadenseite.
+  const u=.12,v=.43,uw=.76,vh=.09;
+  const fascia=(uu,vv)=>({x:p.x+uu*w,y:base-h+d*.52*(1-uu)+vv*h});
+  const m=[fascia(u,v),fascia(u+uw,v),fascia(u+uw,v+vh),fascia(u,v+vh)];
+  poly(m,aw,ink);
+  for(let k=1;k<5;k++){const q1=fascia(u+uw*k/5,v),q2=fascia(u+uw*k/5,v+vh);ctx.strokeStyle=k%2?'#fff0ce':'#e95a46';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(q1.x,q1.y);ctx.lineTo(q2.x,q2.y);ctx.stroke();}
+  facadeOpening(1,.16,.55,.68,.20,false);
+  ctx.fillStyle='#fff8df';ctx.font='bold '+(6*z)+'px system-ui';ctx.textAlign='center';
+  const sign=fascia(.5,.37);ctx.fillText(kind==='pizza'?'PIZZA':kind==='cafe'?'CAFÉ':kind==='market'?'MARKT':'SHOP',sign.x,sign.y);
 }
 if(kind==='landmark'){
   // Rathauskuppel, Uhr und Eingangsportal als weithin sichtbares Wahrzeichen
