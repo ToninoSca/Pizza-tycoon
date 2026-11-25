@@ -222,11 +222,29 @@ function facadeOpening(side,u,v,uw,vh,door=false){
   const bottom=side<0?base+uu*d*.52:base+d*.52*(1-uu);
   return {x:(side<0?p.x-w+uu*w:p.x+uu*w),y:top+(bottom-top)*vv};
  };
+ const frame=[point(u-.025,v-.025),point(u+uw+.025,v-.025),point(u+uw+.025,v+vh+.025),point(u-.025,v+vh+.025)];
+ poly(frame,door?'#d0b28b':'#d8c8aa','#59483e');
  const q=[point(u,v),point(u+uw,v),point(u+uw,v+vh),point(u,v+vh)];
  poly(q,door?'#754b3d':'#83c5d3',ink);
  ctx.strokeStyle=door?'#c6a47b':'#f4e5c6';ctx.lineWidth=1*z;
- if(!door){const m1=point(u+uw*.5,v+.04),m2=point(u+uw*.5,v+vh-.04);ctx.beginPath();ctx.moveTo(m1.x,m1.y);ctx.lineTo(m2.x,m2.y);ctx.stroke();}
- else{const handle=point(u+uw*.78,v+vh*.55);ctx.fillStyle='#ffe6a3';ctx.beginPath();ctx.arc(handle.x,handle.y,1.1*z,0,Math.PI*2);ctx.fill();}
+ if(!door){
+  const m1=point(u+uw*.5,v+.04),m2=point(u+uw*.5,v+vh-.04);
+  ctx.beginPath();ctx.moveTo(m1.x,m1.y);ctx.lineTo(m2.x,m2.y);ctx.stroke();
+  const sill=[point(u-.035,v+vh+.035),point(u+uw+.035,v+vh+.035)];
+  ctx.strokeStyle='#f1dfc1';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(sill[0].x,sill[0].y);ctx.lineTo(sill[1].x,sill[1].y);ctx.stroke();
+ }else{
+  const handle=point(u+uw*.78,v+vh*.55);ctx.fillStyle='#ffe6a3';ctx.beginPath();ctx.arc(handle.x,handle.y,1.1*z,0,Math.PI*2);ctx.fill();
+  const threshold=[point(u-.035,v+vh+.035),point(u+uw+.035,v+vh+.035)];
+  ctx.strokeStyle='#d8c7a7';ctx.lineWidth=2.5*z;ctx.beginPath();ctx.moveTo(threshold[0].x,threshold[0].y);ctx.lineTo(threshold[1].x,threshold[1].y);ctx.stroke();
+ }
+}
+// Sockel und dezente Ecklisenen geben den Fassaden eine klare Gebäudekante.
+for(const side of [-1,1]){
+ const edgeA=side<0?{x:p.x-w,y:base}:{x:p.x+w,y:base};
+ const edgeB=side<0?{x:p.x,y:base+d*.52}:{x:p.x,y:base+d*.52};
+ ctx.strokeStyle='#59483e';ctx.globalAlpha=.32;ctx.lineWidth=2.2*z;
+ ctx.beginPath();ctx.moveTo(edgeA.x,edgeA.y-2*z);ctx.lineTo(edgeB.x,edgeB.y-2*z);ctx.stroke();
+ ctx.globalAlpha=1;
 }
 for(let r=0;r<rows;r++){
  const v=.18+r*(.58/rows);
