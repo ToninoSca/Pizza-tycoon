@@ -365,7 +365,7 @@ rings.forEach((low,ri)=>{
  const lengths=route.slice(0,-1).map((p,i)=>Math.abs(route[i+1].x-p.x)+Math.abs(route[i+1].y-p.y));
  const total=lengths.reduce((a,b)=>a+b,0);
  for(let n=0;n<4;n++){
-  let distance=(time*.00128*(.82+((n+ri)%3)*.18)+n*total/4+ri*total/11)%total;
+  let distance=(time*.00155*(.82+((n+ri)%3)*.18)+n*total/4+ri*total/11)%total;
   let seg=0;while(seg<3&&distance>lengths[seg]){distance-=lengths[seg];seg++;}
   const a=route[seg],b=route[seg+1],len=lengths[seg],t=distance/len;
   const x=a.x+(b.x-a.x)*t,y=a.y+(b.y-a.y)*t;
@@ -375,7 +375,7 @@ rings.forEach((low,ri)=>{
 });
 // Fußgänger bleiben auf den Bürgersteigen direkt neben den Fahrbahnen.
 for(let i=0;i<84;i++){
- const lane=3+(i%19)*3,dir=i%2,side=(Math.floor(i/2)%2===0?-8:8),along=1+((time*.00031*(i%3===0?1.12:.82)+i*7.31)%(N-2));
+ const lane=3+(i%19)*3,dir=i%2,side=(Math.floor(i/2)%2===0?-8:8),along=1+((time*.00038*(i%3===0?1.12:.82)+i*7.31)%(N-2));
  if(dir===0){const reverse=i%4===1,angle=Math.atan2(reverse?-.36:.36,reverse?-.72:.72);drawPedestrian(reverse?N-along:along,lane,time,colors[i%colors.length],angle,side);}
  else{const reverse=i%4===3,angle=Math.atan2(reverse?-.36:.36,reverse?.72:-.72);drawPedestrian(lane,reverse?N-along:along,time,colors[i%colors.length],angle,side);}
 }
@@ -383,23 +383,38 @@ for(let i=0;i<84;i++){
 function shade(hex,amt){let n=parseInt(hex.slice(1),16),r=Math.max(0,Math.min(255,(n>>16)+amt)),g=Math.max(0,Math.min(255,((n>>8)&255)+amt)),b=Math.max(0,Math.min(255,(n&255)+amt));return'#'+(1<<24|r<<16|g<<8|b).toString(16).slice(1);}
 function drawSidewalk(t,p){
  if(!t.road||t.x%3===0&&t.y%3===0)return;
- // Gepflasterte Gehwegstreifen als echte Flächen statt heller Linien.
- const strip=(points)=>{
+ // Breitere, gepflasterte Gehwege mit sichtbarer Bordsteinkante und einzelnen Steinplatten.
+ const z=cam.zoom;
+ const strip=(points,seed)=>{
   const pts=points.map(([x,y])=>screen(t.x+x,t.y+y));
   poly(pts,'#c9c3b2','#827f73');
-  ctx.strokeStyle='#e8e0cd';ctx.lineWidth=Math.max(.7,.9*cam.zoom);
-  for(let i=1;i<4;i++){
-   const f=i/4;
-   ctx.beginPath();ctx.moveTo(pts[0].x+(pts[3].x-pts[0].x)*f,pts[0].y+(pts[3].y-pts[0].y)*f);
-   ctx.lineTo(pts[1].x+(pts[2].x-pts[1].x)*f,pts[1].y+(pts[2].y-pts[1].y)*f);ctx.stroke();
+  // Fugen quer über den Gehweg: dadurch wirken die Flächen wie verlegte Platten.
+  ctx.strokeStyle='#eee7d8';ctx.lineWidth=Math.max(.7,.85*z);
+  for(let i=1;i<5;i++){
+   const f=i/5;
+   ctx.beginPath();
+   ctx.moveTo(pts[0].x+(pts[3].x-pts[0].x)*f,pts[0].y+(pts[3].y-pts[0].y)*f);
+   ctx.lineTo(pts[1].x+(pts[2].x-pts[1].x)*f,pts[1].y+(pts[2].y-pts[1].y)*f);
+   ctx.stroke();
   }
-  ctx.strokeStyle='#aaa493';ctx.lineWidth=Math.max(.8,1.2*cam.zoom);
+  // Dezente wechselnde Steinfarben statt einer einheitlichen grauen Fläche.
+  for(let i=0;i<3;i++){
+   const f=((seed+i*2)%7+1)/9;
+   const x=pts[0].x+(pts[1].x-pts[0].x)*f;
+   const y=pts[0].y+(pts[1].y-pts[0].y)*f;
+   ctx.fillStyle=i===1?'#bdb7a8':'#d4cebf';
+   ctx.beginPath();ctx.arc(x,y,Math.max(.45,.7*z),0,Math.PI*2);ctx.fill();
+  }
+  // Bordstein hebt den Gehweg sichtbar von der Fahrbahn ab.
+  ctx.strokeStyle='#f0e8d5';ctx.lineWidth=Math.max(1,2*z);
   ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);ctx.lineTo(pts[3].x,pts[3].y);ctx.stroke();
+  ctx.strokeStyle='#8e897d';ctx.lineWidth=Math.max(.6,.9*z);
+  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y+1*z);ctx.lineTo(pts[3].x,pts[3].y+1*z);ctx.stroke();
  };
  if(t.x%3===0){
-  for(const side of [-1,1])strip([[side*.48,-.49],[side*.68,-.49],[side*.68,.49],[side*.48,.49]]);
+  for(const side of [-1,1])strip([[side*.46,-.49],[side*.73,-.49],[side*.73,.49],[side*.46,.49]],t.x+t.y+side);
  }else{
-  for(const side of [-1,1])strip([[-.49,side*.48],[-.49,side*.68],[.49,side*.68],[.49,side*.48]]);
+  for(const side of [-1,1])strip([[-.49,side*.46],[-.49,side*.73],[.49,side*.73],[.49,side*.46]],t.x+t.y+side);
  }
 }
 function drawStreetProps(t,p){const z=cam.zoom;
