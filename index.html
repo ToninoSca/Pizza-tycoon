@@ -958,11 +958,12 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   box(g,.48,.08,.22,trim,.12,.08,d/2+.13);
   // Fenster sitzen bündig auf den Fassaden; Laden-Schaufenster bleiben darunter frei.
   const shopFront=['cafe','pizza','shop','market','wholesale','deli','hardware'].includes(kind);
-  const windowAt=(face,x,y)=>{const fw=.27,fh=.38,frameDepth=.035,glassDepth=.014;let px=x,pz=0,rx=fw,rz=frameDepth,gx=x,gz=0;
-   if(face==='front'){pz=d/2+.022;gz=pz+.021;}
-   else if(face==='back'){pz=-d/2-.022;gz=pz-.021;}
-   else {px=face==='right'?w/2+.022:-w/2-.022;pz=0;rx=frameDepth;rz=.31;gx=px+(face==='right'?.021:-.021);gz=0;}
-   box(g,rx,fh,rz,frame,px,y,pz);box(g,rx-.065,fh-.075,glassDepth,glassLit,gx,y,gz);
+  const windowAt=(face,x,y)=>{const fw=.27,fh=.38,win=new THREE.Group();
+   if(face==='front')win.position.set(x,y,d/2+.025);
+   else if(face==='back'){win.position.set(x,y,-d/2-.025);win.rotation.y=Math.PI;}
+   else if(face==='left'){win.position.set(-w/2-.025,y,0);win.rotation.y=-Math.PI/2;}
+   else {win.position.set(w/2+.025,y,0);win.rotation.y=Math.PI/2;}
+   box(win,fw,fh,.035,frame,0,0,0);box(win,fw-.065,fh-.075,.014,glassLit,0,0,.022);g.add(win);
   };
   const floors=h>3.7?[1.05,2.25,3.45].filter(y=>y<h-.35):h>2.5?[1.05,2.25].filter(y=>y<h-.35):[];
   if(!shopFront){const y=h>2.5?.98:.92;windowAt('front',-.34,y);windowAt('front',.34,y);}
