@@ -919,26 +919,30 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  function shadeFacade(hex,delta){const n=parseInt(String(hex).replace('#',''),16),r=Math.max(0,Math.min(255,(n>>16)+delta)),g=Math.max(0,Math.min(255,((n>>8)&255)+delta)),b=Math.max(0,Math.min(255,(n&255)+delta));return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');}
  function box(parent,w,h,d,m,x,y,z){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
  function slab(x,z,w,d,m,y=.015){const o=new THREE.Mesh(new THREE.BoxGeometry(w,.08,d),m);o.position.set(x,y,z);o.receiveShadow=true;city.add(o);return o;}
- function roadLine(x1,z1,x2,z2,width=1.02){const dx=x2-x1,dz=z2-z1,len=Math.hypot(dx,dz),o=slab((x1+x2)/2,(z1+z2)/2,dx===0?width:len,dz===0?width:len,road,.01);if(dx!==0&&dz!==0)o.rotation.y=Math.atan2(dz,dx);}
- function sidewalkLine(x1,z1,x2,z2,offsetX,offsetZ){const dx=x2-x1,dz=z2-z1,len=Math.hypot(dx,dz);slab((x1+x2)/2+offsetX,(z1+z2)/2+offsetZ,dx===0?.22:len,dz===0?.22:len,sidewalk,.065);}
  const vertical=[6,18,33,48,56],horizontal=[7,21,35,49,56];
  const verticalSegments=vertical.map(x=>({x,a:0,b:60})).concat([[12,8,20],[40,22,34],[26,36,48],[52,8,20]].map(([x,a,b])=>({x,a,b})));
  const horizontalSegments=horizontal.map(z=>({z,a:0,b:60})).concat([[14,7,17],[29,19,32],[42,34,47],[53,49,55]].map(([z,a,b])=>({z,a,b})));
- // Fahrbahnen bleiben durchgehend. Gehwege werden an jeder querenden Straße sauber unterbrochen,
- // damit an Kreuzungen keine vier Gehwegplatten zu einem geschlossenen Quadrat verschmelzen.
- verticalSegments.forEach(s=>roadLine(s.x,s.a,s.x,s.b));
- horizontalSegments.forEach(s=>roadLine(s.a,s.z,s.b,s.z));
- function clippedWalk(axis,fixed,start,end,side){
-  const cuts=axis==='v'
-   ?horizontalSegments.filter(h=>fixed>=h.a-.01&&fixed<=h.b+.01).map(h=>h.z)
-   :verticalSegments.filter(v=>fixed>=v.a-.01&&fixed<=v.b+.01).map(v=>v.x);
-  cuts.sort((a,b)=>a-b);let cursor=start;
-  for(const cross of cuts){const lo=Math.max(start,cross-.58),hi=Math.min(end,cross+.58);if(lo>cursor+.05){if(axis==='v')sidewalkLine(fixed,cursor,fixed,lo,side*.68,0);else sidewalkLine(cursor,fixed,lo,fixed,0,side*.68);}cursor=Math.max(cursor,hi);}
-  if(cursor<end-.05){if(axis==='v')sidewalkLine(fixed,cursor,fixed,end,side*.68,0);else sidewalkLine(cursor,fixed,end,fixed,0,side*.68);}
- }
- verticalSegments.forEach(s=>[-1,1].forEach(side=>clippedWalk('v',s.x,s.a,s.b,side)));
- horizontalSegments.forEach(s=>[-1,1].forEach(side=>clippedWalk('h',s.z,s.a,s.b,side)));
  const tiles=window.__pizzaCity?.tiles||[];
+ const roadTiles=new Set(tiles.filter(t=>t.road).map(t=>t.y*61+t.x));
+ // Straßen werden aus den tatsächlichen Straßenfeldern aufgebaut. So entstehen
+ // auch an T-Kreuzungen und Kreuzungen keine offenen Nähte zwischen Segmenten.
+ for(const t of tiles){
+  if(!t.road)continue;
+  slab(t.x,t.y,1.025,1.025,road,.01);
+ }
+ // Gehwegstücke liegen nur direkt neben einem echten Straßenfeld.
+ // Sobald dort eine andere Straße verläuft, wird das Stück ausgelassen.
+ for(const t of tiles){
+  if(!t.road)continue;
+  const sides=[[-1,0], [1,0], [0,-1], [0,1]];
+  for(const [dx,dz] of sides){
+   const nx=t.x+dx,nz=t.y+dz;
+   if(nx<0||nz<0||nx>=61||nz>=61||roadTiles.has(nz*61+nx))continue;
+   const sx=t.x+dx*.64,sz=t.y+dz*.64;
+   if(dx!==0)slab(sx,sz,.26,1.025,sidewalk,.065);
+   else slab(sx,sz,1.025,.26,sidewalk,.065);
+  }
+ }
  const typeHeight={home:1.8,oldhome:2.1,apartments:3.3,office:4.8,school:2.8,market:2.3,park:.2,shop:2.0,cafe:1.7,factory:1.8,landmark:4.0,wholesale:2.2,deli:1.8,hardware:2.0};
  function makeBuilding(t){
   const b=t.building;if(!b||b.kind==='park')return;
