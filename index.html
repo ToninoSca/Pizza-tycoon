@@ -904,9 +904,9 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 (()=>{
  const canvas=document.getElementById('city3d');if(!canvas)return;
- let renderer;try{renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:false});}catch(e){canvas.style.display='none';document.getElementById('world').style.display='block';return;}
- renderer.setPixelRatio(Math.min(devicePixelRatio||1,.8));renderer.shadowMap.enabled=false;renderer.outputColorSpace=THREE.SRGBColorSpace;
- const scene=new THREE.Scene();scene.background=new THREE.Color('#9bcde0');scene.fog=new THREE.Fog('#9bcde0',75,125);
+ let renderer;try{renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});}catch(e){canvas.style.display='none';document.getElementById('world').style.display='block';return;}
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.25));renderer.shadowMap.enabled=false;renderer.outputColorSpace=THREE.SRGBColorSpace;
+ const scene=new THREE.Scene();scene.background=new THREE.Color('#9bcde0');scene.fog=new THREE.Fog('#9bcde0',145,230);
  const camera=new THREE.OrthographicCamera(-24,24,24,-24,.1,220);
  const target=new THREE.Vector3(30,0,30);let zoom=1;
  function placeCamera(){const aspect=canvas.clientWidth/Math.max(1,canvas.clientHeight),span=43/zoom;camera.left=-span*aspect/2;camera.right=span*aspect/2;camera.top=span/2;camera.bottom=-span/2;camera.position.set(target.x+43,64,target.z+43);camera.lookAt(target.x,0,target.z);camera.updateProjectionMatrix();}
@@ -929,12 +929,12 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  const typeHeight={home:1.8,oldhome:2.1,apartments:3.3,office:4.8,school:2.8,market:2.3,park:.2,shop:2.0,cafe:1.7,factory:1.8,landmark:4.0,wholesale:2.2,deli:1.8,hardware:2.0};
  function makeBuilding(t){
   const b=t.building;if(!b||b.kind==='park')return;
-  const g=new THREE.Group();g.position.set(t.x,0,t.y);city.add(g);
+  const g=new THREE.Group();city.add(g);
   // Die Eingangsseite zeigt immer zur nächstgelegenen Straße.
   const fronts=[{x:t.x,y:t.y-1,a:Math.PI},{x:t.x+1,y:t.y,a:Math.PI/2},{x:t.x,y:t.y+1,a:0},{x:t.x-1,y:t.y,a:-Math.PI/2}];
   const front=fronts.find(p=>tiles.some(q=>q.x===p.x&&q.y===p.y&&q.road));
-  if(front)g.rotation.y=front.a;
-  const kind=b.kind,h=typeHeight[kind]||2.0,w=kind==='office'||kind==='landmark'?1.62:kind==='factory'?1.52:1.35,d=kind==='factory'?1.48:1.28;
+  if(front){g.rotation.y=front.a;g.position.set(t.x+(t.x-front.x)*.36,0,t.y+(t.y-front.y)*.36);}else g.position.set(t.x,0,t.y);
+  const kind=b.kind,h=typeHeight[kind]||2.0,w=kind==='office'||kind==='landmark'?1.48:kind==='factory'?1.38:1.25,d=kind==='factory'?1.3:1.15;
   const base=mat(b.color||'#c78c69'),side=base,roof=mat(kind==='oldhome'||t.district==='oldtown'?'#a85a48':kind==='factory'?'#687579':'#655b52');
   const trim=mat('#e9dfcb'),foundation=mat('#655b52'),frame=mat('#493f37'),glassLit=mat('#a9d9e8',.18),doorGlass=mat('#8fc5d4',.2);
   // Einheitliche Fassadenfarbe ohne helle Eckstreifen oder abweichende Seitenflächen.
@@ -955,8 +955,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   box(g,.34,.7,.08,frame,.12,.43,d/2+.035);box(g,.23,.58,.035,doorGlass,.12,.43,d/2+.085);
   box(g,.025,.16,.025,mat('#d7b66d'),.2,.4,d/2+.11);
   box(g,.48,.08,.22,trim,.12,.08,d/2+.13);
-  // Weniger, dafür größere und klar erkennbare Fenster: Front und eine Seitenfläche.
-  const rows=h>2.5?[.9,2.05].filter(y=>y<h-.25):[.82];
+  // Fenster sitzen bündig auf den Fassaden; Laden-Schaufenster bleiben darunter frei.
+  const shopFront=['cafe','pizza','shop','market','wholesale','deli','hardware'].includes(kind);const rows=h>2.5?[1.05,2.2].filter(y=>y<h-.35):[shopFront?1.42:.96].filter(y=>y<h-.35);
   for(const y of rows){
    for(const x of [-.43,.43]){
     const z=d/2+.055;
