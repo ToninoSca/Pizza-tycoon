@@ -186,34 +186,28 @@ if((kind==='home'||kind==='oldhome')&&rand(44)>.42){
  rounded(cx-3.5*z,cy-13*z,7*z,2*z,1*z,'#765044');
 }
 // Fenster folgen den beiden sichtbaren isometrischen Fassaden.
-const rows=Math.max(1,Math.min(5,Math.floor(h/(16*z))));
+const rows=Math.max(1,Math.min(3,Math.floor(h/(22*z))));
 for(let r=0;r<rows;r++){
  const level=(r+1)/(rows+1);
  const wyOffset=(h/z)*level;
  for(const side of [-1,1]){
-  const count=kind==='office'||kind==='apartments'?2:2;
+  const count=(kind==='office'||kind==='apartments')?2:1;
   for(let col=0;col<count;col++){
-   const u=count===1?.5:(col===0?.30:.70);
+   const u=count===1?.5:(col===0?.32:.68);
    const wx=side<0?p.x-w+2*w*u:p.x+w*u;
    const groundY=side<0?base+d*.52*u:base+d*.52*(1-u);
-   const ww=(kind==='office'?6.5:7.5)*z,wh=(kind==='office'?8:9)*z;
+   const ww=(kind==='office'?6:6.5)*z,wh=(kind==='office'?7.5:8)*z;
    const wy=groundY-wyOffset*z-wh;
-   if(wy<base-h+3*z||wy+wh>groundY-5*z)continue;
+   if(wy<base-h+4*z||wy+wh>groundY-6*z)continue;
    const glass=ctx.createLinearGradient(wx-ww/2,wy,wx+ww/2,wy+wh);
    glass.addColorStop(0,'#fff0c2');glass.addColorStop(1,kind==='office'?'#75b8d0':'#8ccbd4');
-   rounded(wx-ww/2,wy,ww,wh,1.2*z,glass,ink);
-   ctx.strokeStyle='#f4e5c6';ctx.lineWidth=.8*z;ctx.beginPath();
+   rounded(wx-ww/2,wy,ww,wh,1*z,glass,ink);
+   ctx.strokeStyle='#f4e5c6';ctx.lineWidth=.7*z;ctx.beginPath();
    ctx.moveTo(wx,wy+z);ctx.lineTo(wx,wy+wh-z);ctx.stroke();
-   if((kind==='home'||kind==='oldhome')&&rand(70+r*3+col+(side+1)*9)>.55){
+   if((kind==='home'||kind==='oldhome')&&rand(70+r*3+col+(side+1)*9)>.72){
     const shutter=shade(wallColor,-28);
-    rounded(wx-ww/2-2.5*z,wy+z,2*z,wh-2*z,0,shutter,'#59483e');
-    rounded(wx+ww/2+.5*z,wy+z,2*z,wh-2*z,0,shutter,'#59483e');
-   }
-   ctx.strokeStyle='#eee0c7';ctx.lineWidth=1.3*z;ctx.beginPath();
-   ctx.moveTo(wx-ww/2-1.5*z,wy+wh+z);ctx.lineTo(wx+ww/2+1.5*z,wy+wh+z);ctx.stroke();
-   if(kind==='apartments'||kind==='oldhome'){
-    ctx.strokeStyle='#6d5948';ctx.lineWidth=1.1*z;ctx.beginPath();
-    ctx.moveTo(wx-ww/2,wy+wh+2*z);ctx.lineTo(wx+ww/2,wy+wh+2*z);ctx.stroke();
+    rounded(wx-ww/2-2*z,wy+z,1.5*z,wh-2*z,0,shutter,'#59483e');
+    rounded(wx+ww/2+.5*z,wy+z,1.5*z,wh-2*z,0,shutter,'#59483e');
    }
   }
  }
@@ -452,10 +446,10 @@ ctx.fillStyle='#30353a';ctx.fillRect(-10*z,-9*z,6*z,3*z);ctx.fillRect(6*z,-9*z,6
 }
 function drawPedestrian(x,y,time,color,angle=0,lateral=0){
 let p=screen(x,y),z=cam.zoom;p.x-=Math.sin(angle)*lateral*z;p.y+=Math.cos(angle)*lateral*z;ctx.save();ctx.translate(p.x,p.y);if(Math.cos(angle)<0)ctx.scale(-1,1);
-ctx.fillStyle='#34433c55';ctx.beginPath();ctx.ellipse(0,3*z,5*z,2.5*z,0,0,Math.PI*2);ctx.fill();
-ctx.strokeStyle='#3c3940';ctx.lineWidth=2*z;let step=Math.sin(time*.012+x*4+y*3)*2.2;ctx.beginPath();ctx.moveTo(-1*z,-2*z);ctx.lineTo((-2+step)*z,3*z);ctx.moveTo(1*z,-2*z);ctx.lineTo((3-step)*z,3*z);ctx.stroke();
-rounded(-3*z,-12*z,7*z,10*z,2*z,color,'#51433c');
-ctx.fillStyle='#f0bd8d';ctx.beginPath();ctx.arc(0,-15*z,3.3*z,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#6a4537';ctx.lineWidth=1*z;ctx.stroke();ctx.restore();
+ctx.fillStyle='#34433c66';ctx.beginPath();ctx.ellipse(0,7*z,4.5*z,2*z,0,0,Math.PI*2);ctx.fill();
+ctx.strokeStyle='#34343a';ctx.lineWidth=2.2*z;let step=Math.sin(time*.012+x*4+y*3)*2.5;ctx.beginPath();ctx.moveTo(-1*z,-1*z);ctx.lineTo((-2+step)*z,7*z);ctx.moveTo(1*z,-1*z);ctx.lineTo((3-step)*z,7*z);ctx.stroke();
+rounded(-3*z,-13*z,7*z,11*z,2*z,color,'#51433c');
+ctx.fillStyle='#f0bd8d';ctx.beginPath();ctx.arc(0,-16*z,3.3*z,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#6a4537';ctx.lineWidth=1*z;ctx.stroke();ctx.restore();
 }
 function cityActors(time){
  const actors=new Map(),colors=['#e45c4f','#f0c44f','#4f8ecb','#f4f0df','#4f9b71','#d87c42','#8c6ab1','#d77ca5'];
@@ -481,7 +475,7 @@ function cityActors(time){
   const x=vertical?lane:(reverse?N-along:along),y=vertical?(reverse?N-along:along):lane;
   const dx=vertical?0:(reverse?-1:1),dy=vertical?(reverse?-1:1):0;
   const angle=Math.atan2((dx+dy)*.36,(dx-dy)*.72);
-  add(x,y,'ped',colors[i%colors.length],angle,(i%4<2?-1:1)*17);
+  add(x,y,'ped',colors[i%colors.length],angle,(i%4<2?-1:1)*13);
  }
  return actors;
 }
