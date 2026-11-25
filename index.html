@@ -422,16 +422,25 @@ if(['home','oldhome','apartments'].includes(kind)){
     ctx.fillStyle=kind==='pizza'?'#fff0d2':'#57483a';ctx.font='bold '+(5*z)+'px system-ui';ctx.textAlign='center';
     ctx.fillText(kind==='pizza'?'PIZZA':kind==='cafe'?'CAFÉ':'SHOP',sx,sy);
   }
-  // Pflanzkübel am Eingang
-  for(const side of [-1,1]){rounded(p.x+side*25*z-3*z,p.y+7*z,6*z,5*z,1*z,'#b56e4d','#704b39');ctx.fillStyle='#4b9856';ctx.beginPath();ctx.arc(p.x+side*25*z,p.y+5*z,4*z,0,Math.PI*2);ctx.fill();}
+  // Niedrige bepflanzte Beete rahmen den Eingang ein und lassen den Zugang frei.
+  for(const side of [-1,1]){
+    const x=p.x+side*23*z,y=p.y+7*z;
+    poly([{x:x-8*z,y:y-2*z},{x:x+8*z,y:y+1*z},{x:x+8*z,y:y+5*z},{x:x-8*z,y:y+2*z}],'#477b49','#315b3a');
+    ctx.fillStyle='#5b9a53';ctx.beginPath();ctx.ellipse(x,y,5*z,2.5*z,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=side<0?'#e8b85e':'#e58c83';ctx.beginPath();ctx.arc(x+side*3*z,y-1*z,1.5*z,0,Math.PI*2);ctx.fill();
+  }
 }else if(kind==='school'||kind==='factory'||kind==='office'){
-  // Ruhiger Grünstreifen am Grundstück; keine schwebenden bunten Punkte.
-  rounded(p.x-25*z,p.y+8*z,50*z,4*z,2*z,kind==='factory'?'#8a9b79':'#72a96a','#52794f');
   if(kind==='school'){
+    // Vorgarten als zwei eingefasste Beete links und rechts des Eingangswegs.
     for(const side of [-1,1]){
-      rounded(p.x+side*16*z,p.y+5*z,6*z,5*z,2*z,'#477e49','#365f3b');
-      ctx.fillStyle='#5c9b55';ctx.beginPath();ctx.arc(p.x+side*16*z,p.y+4*z,3*z,0,Math.PI*2);ctx.fill();
+      const x=p.x+side*18*z,y=p.y+8*z;
+      poly([{x:x-9*z,y:y-3*z},{x:x+7*z,y:y},{x:x+7*z,y:y+4*z},{x:x-9*z,y:y+1*z}],'#477b49','#315b3a');
+      ctx.fillStyle='#5a9850';ctx.beginPath();ctx.ellipse(x-3*z,y-1*z,4*z,2.5*z,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=side<0?'#e8c15d':'#df8d83';ctx.beginPath();ctx.arc(x+3*z,y-1*z,1.5*z,0,Math.PI*2);ctx.fill();
     }
+  }else{
+    // Schlichter, eingefasster Grünrand für Büro und Werkhalle.
+    poly([{x:p.x-25*z,y:p.y+6*z},{x:p.x,y:p.y+10*z},{x:p.x+25*z,y:p.y+6*z},{x:p.x,y:p.y+2*z}],'#78966a','#52794f');
   }
 }
 
