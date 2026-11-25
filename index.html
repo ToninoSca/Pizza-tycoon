@@ -129,6 +129,10 @@ if(roofType==='gable'||roofType==='shed'){
   let ridge=kind==='factory'?d*.72:d*.62;
   poly([{x:p.x-w-3*z,y:base-h},{x:p.x,y:base-h-ridge*z},{x:p.x+w+3*z,y:base-h},{x:p.x,y:base-h+d*.52}],kind==='school'?'#b95143':shade(wallColor,31),ink);
   ctx.strokeStyle=shade(wallColor,-25);ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(p.x,base-h-ridge*z);ctx.lineTo(p.x,base-h-ridge*z+5*z);ctx.stroke();
+  // Feine Dachziegel-Linien auf den sichtbaren Dachflächen
+  ctx.save();ctx.strokeStyle=shade(wallColor,-16);ctx.lineWidth=.8*z;ctx.globalAlpha=.58;
+  for(let row=1;row<=3;row++){let yy=base-h-ridge*z+row*ridge*z*.22;ctx.beginPath();ctx.moveTo(p.x-w+row*2*z,yy+row*ridge*z*.22);ctx.lineTo(p.x+row*2*z,yy+row*ridge*z*.22);ctx.stroke();}
+  ctx.restore();
 }else{
   poly([{x:p.x-w-3*z,y:base-h},{x:p.x,y:base-h-d*.55},{x:p.x+w+3*z,y:base-h},{x:p.x,y:base-h+d*.52}],roof,ink);
   // Dachkante, Lüfter und kleine Aufbauten
@@ -152,6 +156,12 @@ for(let r=0;r<rows;r++)for(let col=0;col<cols;col++){
   const ww=(kind==='office'?7:8)*z,wh=(kind==='office'?9:10)*z;
   let glass=ctx.createLinearGradient(wx,wy,wx+ww,wy+wh);glass.addColorStop(0,'#fff0c2');glass.addColorStop(1,kind==='office'?'#75b8d0':'#8ccbd4');
   rounded(wx,wy,ww,wh,1.4*z,glass,ink);
+  // Fensterrahmen, Mittelsteg und zufällige Fensterläden
+  ctx.strokeStyle='#f4e5c6';ctx.lineWidth=.9*z;ctx.beginPath();ctx.moveTo(wx+ww*.5,wy+1*z);ctx.lineTo(wx+ww*.5,wy+wh-1*z);ctx.stroke();
+  if((kind==='home'||kind==='oldhome')&&rand(70+r*3+col)>.48){
+    const shutter=shade(wallColor,-28);rounded(wx-3*z,wy+1*z,2.5*z,wh-1*z,0,shutter,'#59483e');rounded(wx+ww+.5*z,wy+1*z,2.5*z,wh-1*z,0,shutter,'#59483e');
+  }
+  ctx.strokeStyle='#eee0c7';ctx.lineWidth=1.5*z;ctx.beginPath();ctx.moveTo(wx-2*z,wy+wh+1*z);ctx.lineTo(wx+ww+2*z,wy+wh+1*z);ctx.stroke();
   if(kind==='apartments'||kind==='oldhome'){
     ctx.strokeStyle='#6d5948';ctx.lineWidth=1.3*z;ctx.beginPath();ctx.moveTo(wx-1*z,wy+wh+2*z);ctx.lineTo(wx+ww+1*z,wy+wh+2*z);ctx.stroke();
   }
@@ -184,6 +194,11 @@ if(['pizza','shop','market','cafe'].includes(kind)){
   rounded(p.x-w*.65,shopY,w*1.3,8*z,2*z,aw,ink);
   for(let k=0;k<5;k++){ctx.fillStyle=k%2?'#fff0ce':'#e95a46';ctx.fillRect(p.x-w*.63+k*w*.25,shopY,Math.max(2,3*z),8*z);}
   rounded(p.x-w*.58,shopWindowY,w*1.16,12*z,1*z,'#b5e2e8',ink);
+  // Markisenkante, getrennte Schaufenster und kleine Auslage
+  ctx.strokeStyle='#fff0d2';ctx.lineWidth=1.5*z;ctx.beginPath();ctx.moveTo(p.x-w*.58,shopWindowY+12*z);ctx.lineTo(p.x+w*.58,shopWindowY+12*z);ctx.stroke();
+  ctx.strokeStyle='#6c594b';ctx.lineWidth=1*z;ctx.beginPath();ctx.moveTo(p.x,shopWindowY);ctx.lineTo(p.x,shopWindowY+12*z);ctx.stroke();
+  rounded(p.x-w*.25,shopWindowY+3*z,w*.5,6*z,1*z,'#f6e3b6','#8a7056');
+  ctx.fillStyle='#fff7df';ctx.beginPath();ctx.arc(p.x-w*.12,shopWindowY+6*z,1.2*z,0,Math.PI*2);ctx.arc(p.x+w*.12,shopWindowY+6*z,1.2*z,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#fff8df';ctx.font='bold '+(7*z)+'px system-ui';ctx.textAlign='center';
   ctx.fillText(kind==='pizza'?'PIZZA':kind==='cafe'?'CAFÉ':kind==='market'?'MARKT':'SHOP',p.x,base-h+Math.min(24,(h/z)*.55-3)*z);
 }
@@ -209,6 +224,16 @@ if(['home','oldhome','school','market','cafe','shop'].includes(kind)){
   if(kind==='school'){
     for(let flag=0;flag<3;flag++){ctx.fillStyle=['#d85b4e','#e8c75e','#6c9fc2'][flag];ctx.fillRect(p.x-w*.55+flag*9*z,base-h+5*z,6*z,4*z);}
   }
+}
+if(kind==='home'||kind==='oldhome'){
+  // Kleine Dachgaube und dekorative Fassadenkante variieren die Wohnhäuser
+  if(rand(81)>.38){
+    const dx=p.x+(rand(82)-.5)*w*.55,dy=base-h-d*.12;
+    rounded(dx-5*z,dy-8*z,10*z,9*z,1*z,shade(wallColor,18),ink);
+    poly([{x:dx-6*z,y:dy-8*z},{x:dx,y:dy-14*z},{x:dx+6*z,y:dy-8*z}],shade(wallColor,-8),ink);
+    rounded(dx-2*z,dy-6*z,4*z,5*z,'#9ed0d5','#5c5147');
+  }
+  ctx.strokeStyle='#f0d9b5';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(p.x-w*.92,base-h+3*z);ctx.lineTo(p.x+w*.92,base-h+3*z);ctx.stroke();
 }
 if(kind==='oldhome'){
   // Erker und kleine Dachgaube
