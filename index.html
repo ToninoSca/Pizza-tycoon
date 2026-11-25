@@ -932,11 +932,10 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   const front=fronts.find(p=>tiles.some(q=>q.x===p.x&&q.y===p.y&&q.road));
   if(front)g.rotation.y=front.a;
   const kind=b.kind,h=typeHeight[kind]||2.0,w=kind==='office'||kind==='landmark'?1.62:kind==='factory'?1.52:1.35,d=kind==='factory'?1.48:1.28;
-  const base=mat(b.color||'#c78c69'),side=mat(new THREE.Color(b.color||'#c78c69').multiplyScalar(.78)),roof=mat(kind==='oldhome'||t.district==='oldtown'?'#a85a48':kind==='factory'?'#687579':'#655b52');
-  const trim=mat('#eee0c9'),frame=mat('#55483d'),glassLit=mat('#b5d9d6',.3),doorGlass=mat('#8fb9ba',.32);
-  // Main structure, visible foundation and contrasting corner trim
-  box(g,w,h,d,base,0,h/2+.08,0);box(g,w+.16,.16,d+.16,side,0,.13,0);
-  box(g,.07,h,d+.03,trim,-w/2+.035,h/2+.08,0);box(g,.07,h,d+.03,trim,w/2-.035,h/2+.08,0);
+  const base=mat(b.color||'#c78c69'),side=base,roof=mat(kind==='oldhome'||t.district==='oldtown'?'#a85a48':kind==='factory'?'#687579':'#655b52');
+  const trim=mat('#e9dfcb'),foundation=mat('#655b52'),frame=mat('#493f37'),glassLit=mat('#a9d9e8',.18),doorGlass=mat('#8fc5d4',.2);
+  // Einheitliche Fassadenfarbe ohne helle Eckstreifen oder abweichende Seitenflächen.
+  box(g,w,h,d,base,0,h/2+.08,0);box(g,w+.08,.13,d+.08,foundation,0,.12,0);
   // Roof silhouette and building-specific roof details
   if(['oldhome','school','landmark'].includes(kind)){const r=box(g,w+.16,.3,d+.16,roof,0,h+.23,0);r.rotation.z=0;}
   else box(g,w+.12,.18,d+.12,roof,0,h+.18,0);
@@ -953,16 +952,27 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   box(g,.34,.7,.08,frame,.12,.43,d/2+.035);box(g,.23,.58,.035,doorGlass,.12,.43,d/2+.085);
   box(g,.025,.16,.025,mat('#d7b66d'),.2,.4,d/2+.11);
   box(g,.48,.08,.22,trim,.12,.08,d/2+.13);
-  // Repeated windows with frames, sills and warm interiors
-  const rows=Math.min(2,Math.max(1,Math.floor((h-.35)/.95)));
-  for(let row=0;row<rows;row++){
-   const y=.78+row*.72;if(y>h-.1)continue;
+  // Gut sichtbare Fenster auf allen vier Fassadenseiten, damit sie aus jeder Kamerarichtung erscheinen.
+  const rows=h>2.5?[.82,1.72,2.62].filter(y=>y<h-.18):[.78];
+  for(const y of rows){
    for(const x of [-.43,.43]){
-    box(g,.32,.37,.07,frame,x,y,d/2+.045);box(g,.25,.29,.025,glassLit,x,y,d/2+.09);
-    box(g,.34,.045,.1,trim,x,y-.2,d/2+.08);
-    box(g,.025,.37,.025,trim,x,y,d/2+.11);
+    // Vorder- und Rückseite
+    for(const sign of [-1,1]){
+     const z=sign*(d/2+.055);
+     box(g,.39,.46,.075,frame,x,y,z);
+     box(g,.31,.36,.025,glassLit,x,y,z+sign*.043);
+     box(g,.41,.055,.11,trim,x,y-.25,z);
+     box(g,.025,.46,.025,trim,x,y,z+sign*.06);
+    }
+    // Linke und rechte Seitenwand
+    for(const sign of [-1,1]){
+     const sx=sign*(w/2+.055);
+     box(g,.075,.46,.39,frame,sx,y,x);
+     box(g,.025,.36,.31,glassLit,sx+sign*.043,y,x);
+     box(g,.11,.055,.41,trim,sx,y-.25,x);
+     box(g,.025,.46,.025,trim,sx+sign*.06,y,x);
+    }
    }
-   if((kind==='office'||kind==='apartments')&&row===0)box(g,.055,.3,d*.72,glassLit,w/2+.035,y,0);
   }
   // Shops get a real storefront, display glazing and projecting sign/awning
   if(['cafe','pizza','shop','market','wholesale','deli','hardware'].includes(kind)){
@@ -973,8 +983,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    box(g,.8,.055,.06,trim,0,h*.27,d/2+.13);
   }
   if(kind==='landmark'){for(let k=-1;k<=1;k++)box(g,.16,.65,.16,roof,k*.43,h+.55,0);}
-  // Side wall windows add depth from the isometric camera angle
-  if(kind==='office'||kind==='apartments'||kind==='school')for(let y=.8;y<h-.1;y+=.72)box(g,.045,.3,.34,glassLit,w/2+.04,y,0);
+  // Seitenfenster werden bereits im gemeinsamen Fensterblock erzeugt.
   if(kind==='pizza'&&t===window.__pizzaCity?.tiles?.find(q=>q.building?.kind==='pizza'))box(g,.42,.42,.42,mat('#b84d37'),0,h+.42,0);
   g.userData.tile=t;
  }
