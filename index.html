@@ -1010,7 +1010,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  bench(24.7,27.1,Math.PI/2);bench(26.2,28.4,0);bin(25.5,26.1);waySign(24.1,28.8,Math.PI/2);
  bench(34.2,16.2,Math.PI/2);bin(35.1,16.8);bench(13.2,40.1,0);
  // Bushaltestellen mit Dach und Haltestellenschild an ausgewählten Hauptstraßen.
- function busStop(x,z,rot=0){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;city.add(g);box(g,.95,.08,.38,metal,0,1.65,0);for(const sx of [-.42,.42])box(g,.055,1.65,.055,metal,sx,.82,0);box(g,.84,.72,.035,glassLit,0,1.02,-.16);box(g,.58,.08,.28,wood,0,.48,0);box(g,.055,1.55,.055,metal,-.58,.78,.12);box(g,.3,.25,.06,signBlue,-.58,1.55,.12);}
+ function busStop(x,z,rot=0){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;city.add(g);box(g,.95,.08,.38,metal,0,1.65,0);for(const sx of [-.42,.42])box(g,.055,1.65,.055,metal,sx,.82,0);box(g,.84,.72,.035,windowMat,0,1.02,-.16);box(g,.58,.08,.28,wood,0,.48,0);box(g,.055,1.55,.055,metal,-.58,.78,.12);box(g,.3,.25,.06,signBlue,-.58,1.55,.12);}
  busStop(19.15,21.95,0);busStop(47.05,35.9,Math.PI/2);
  // Dezente Straßenbäume in lockeren Gruppen statt in einer geraden Reihe.
  for(const [x,z,s] of [[10,18,.8],[15,25,.72],[22,12,.82],[29,18,.72],[38,12,.9],[44,28,.78],[51,31,.82],[17,46,.9],[37,47,.78],[53,43,.9]])tree(x,z,s);
