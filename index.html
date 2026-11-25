@@ -105,7 +105,7 @@ ctx.fillStyle='#79bd67';ctx.beginPath();ctx.arc(-2,-41,11,0,Math.PI*2);ctx.fill(
 ctx.strokeStyle='#285d3d';ctx.lineWidth=2;ctx.stroke();ctx.restore();
 }
 function drawBuilding(tile,time){
-let p=screen(tile.x+.5,tile.y+.5),z=cam.zoom,b=tile.building;if(!b)return;
+let p=screen(tile.x,tile.y),z=cam.zoom,b=tile.building;if(!b)return;
 if(tile===state.owned)b={name:state.company,emoji:'🍕',color:'#ed8a42',kind:'pizza'};
 const seed=tile.id*9301+17,rand=n=>{let v=Math.sin(seed+n*127.1)*43758.5453;return v-Math.floor(v);};
 if(b.kind==='park'){
@@ -572,7 +572,7 @@ if(moving)for(const actor of moving){
 if(!road&&t.building){
  const z=cam.zoom;
  if(['home','oldhome','apartments'].includes(t.building.kind)){ctx.strokeStyle='#7d866f88';ctx.lineWidth=1*z;ctx.beginPath();ctx.moveTo(p.x-24*z,p.y);ctx.lineTo(p.x,p.y+12*z);ctx.lineTo(p.x+24*z,p.y);ctx.stroke();}
- const lotCenter=screen(t.x+.5,t.y+.5);drawBuilding(t,time);drawFrontage(t,lotCenter);
+ drawBuilding(t,time);drawFrontage(t,p);
 }
 if(!road&&t.space)drawPublicSpace(t,p);
 if(!road&&!t.building&&!t.space){
