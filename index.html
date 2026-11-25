@@ -181,22 +181,16 @@ if(roofType==='gable'||roofType==='shed'){
   // Zwei durchgehende Dachflächen statt zweier Dreiecke mit falscher Tiefe.
   poly([eaveL,backRidge,frontRidge,frontEave],shade(roofBase,-13),ink);
   poly([frontEave,frontRidge,backRidge,eaveR],shade(roofBase,9),ink);
-  ctx.strokeStyle=shade(roofBase,-28);ctx.lineWidth=2*z;
-  ctx.beginPath();
-  ctx.moveTo(eaveL.x,eaveL.y);ctx.lineTo(backRidge.x,backRidge.y);
-  ctx.lineTo(frontRidge.x,frontRidge.y);ctx.lineTo(eaveR.x,eaveR.y);
-  ctx.stroke();
-  ctx.strokeStyle=shade(roofBase,-18);ctx.lineWidth=2.2*z;
-  ctx.beginPath();ctx.moveTo(backRidge.x,backRidge.y);ctx.lineTo(frontRidge.x,frontRidge.y);ctx.stroke();
+
 
 }else if(roofType==='hip'){
   poly([{x:p.x-w-3*z,y:base-h+3*z},{x:p.x,y:base-h-d*.42},{x:p.x+w+3*z,y:base-h+3*z},{x:p.x,y:base-h+d*.52}],roof,ink);
   poly([{x:p.x-w-3*z,y:base-h+3*z},{x:p.x,y:base-h+3*z+d*.18},{x:p.x,y:base-h+d*.52},{x:p.x-w,y:base-h+d*.52}],shade(roof,-13),ink);
-  ctx.strokeStyle=shade(roof,-25);ctx.lineWidth=1.4*z;ctx.beginPath();ctx.moveTo(p.x-w,base-h+3*z);ctx.lineTo(p.x,base-h-d*.42);ctx.lineTo(p.x+w,base-h+3*z);ctx.stroke();
+
 }else{
   poly([{x:p.x-w-3*z,y:base-h},{x:p.x,y:base-h-d*.55},{x:p.x+w+3*z,y:base-h},{x:p.x,y:base-h+d*.52}],roof,ink);
   // Dachkante, Lüfter und kleine Aufbauten
-  ctx.strokeStyle='#f1dfbd';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(p.x-w,base-h);ctx.lineTo(p.x,base-h+d*.52);ctx.lineTo(p.x+w,base-h);ctx.stroke();
+
   if(kind==='office'||kind==='apartments'){
     rounded(p.x-8*z,base-h-d*.12,13*z,8*z,1*z,'#687e83','#40565a');
     rounded(p.x+13*z,base-h-d*.05,7*z,6*z,1*z,'#9da8a0','#53635f');
@@ -256,14 +250,7 @@ function facadeOpening(side,u,v,uw,vh,door=false){
   ctx.strokeStyle='#d8c7a7';ctx.lineWidth=2.5*z;ctx.beginPath();ctx.moveTo(threshold[0].x,threshold[0].y);ctx.lineTo(threshold[1].x,threshold[1].y);ctx.stroke();
  }
 }
-// Sockel und dezente Ecklisenen geben den Fassaden eine klare Gebäudekante.
-for(const side of [-1,1]){
- const edgeA=side<0?{x:p.x-w,y:base}:{x:p.x+w,y:base};
- const edgeB=side<0?{x:p.x,y:base+d*.52}:{x:p.x,y:base+d*.52};
- ctx.strokeStyle='#59483e';ctx.globalAlpha=.32;ctx.lineWidth=2.2*z;
- ctx.beginPath();ctx.moveTo(edgeA.x,edgeA.y-2*z);ctx.lineTo(edgeB.x,edgeB.y-2*z);ctx.stroke();
- ctx.globalAlpha=1;
-}
+
 for(let r=0;r<rows;r++){
  const v=.18+r*(.58/rows);
  for(const side of [-1,1]){
@@ -319,15 +306,7 @@ if((kind==='apartments'||kind==='oldhome')&&rand(177)>.30){
     if(rand(30+br)>.45){ctx.fillStyle='#4c9855';ctx.beginPath();ctx.arc(bx+balconyW*z*.55,balconyY-9*z,2.5*z,0,Math.PI*2);ctx.fill();}
   }
 }
-if(kind==='office'){
-  // Dezente horizontale Geschossbänder auf dem Bürohaus.
-  ctx.strokeStyle='#d7e0d8';ctx.globalAlpha=.42;ctx.lineWidth=1.5*z;
-  for(let floor=1;floor<floors;floor++){
-    const yy=base-h+floor*(h/floors);
-    ctx.beginPath();ctx.moveTo(p.x+2*z,yy);ctx.lineTo(p.x+w*.92,yy-d*.48);ctx.stroke();
-  }
-  ctx.globalAlpha=1;
-}
+
 // Eingang als perspektivisch korrektes Türfeld auf der rechten Gebäudefassade.
 const doorW=kind==='home'||kind==='oldhome'?.19:.22;
 const doorU=['pizza','shop','market','cafe'].includes(kind)?.08:.30;
