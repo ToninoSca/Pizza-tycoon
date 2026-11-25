@@ -437,29 +437,33 @@ ctx.strokeStyle='#3c3940';ctx.lineWidth=2*z;let step=Math.sin(time*.012+x*4+y*3)
 rounded(-3*z,-12*z,7*z,10*z,2*z,color,'#51433c');
 ctx.fillStyle='#f0bd8d';ctx.beginPath();ctx.arc(0,-15*z,3.3*z,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#6a4537';ctx.lineWidth=1*z;ctx.stroke();ctx.restore();
 }
-function drawCityLife(time){
-const colors=['#e45c4f','#f0c44f','#4f8ecb','#f4f0df','#4f9b71','#d87c42','#8c6ab1','#d77ca5'];
-// Autos fahren auf zusammenhängenden Straßenringen und drehen an jeder Ecke mit.
-const rings=[3,15,27];
-rings.forEach((low,ri)=>{
- const high=57-low,route=[{x:low,y:low},{x:high,y:low},{x:high,y:high},{x:low,y:high},{x:low,y:low}];
- const lengths=route.slice(0,-1).map((p,i)=>Math.abs(route[i+1].x-p.x)+Math.abs(route[i+1].y-p.y));
- const total=lengths.reduce((a,b)=>a+b,0);
- for(let n=0;n<4;n++){
-  let distance=(time*.00155*(.82+((n+ri)%3)*.18)+n*total/4+ri*total/11)%total;
-  let seg=0;while(seg<3&&distance>lengths[seg]){distance-=lengths[seg];seg++;}
-  const a=route[seg],b=route[seg+1],len=lengths[seg],t=distance/len;
-  const x=a.x+(b.x-a.x)*t,y=a.y+(b.y-a.y)*t;
-  const dx=b.x-a.x,dy=b.y-a.y,angle=Math.atan2(dy*.36,dx*.72);
-  drawCar(x,y,time,colors[(n+ri*2)%colors.length],angle);
+function cityActors(time){
+ const actors=new Map(),colors=['#e45c4f','#f0c44f','#4f8ecb','#f4f0df','#4f9b71','#d87c42','#8c6ab1','#d77ca5'];
+ const add=(x,y,type,color,angle=0,lateral=0)=>{
+  const tx=Math.max(0,Math.min(N-1,Math.round(x))),ty=Math.max(0,Math.min(N-1,Math.round(y))),id=ty*N+tx;
+  if(!actors.has(id))actors.set(id,[]);
+  actors.get(id).push({x,y,type,color,angle,lateral});
+ };
+ [3,15,27].forEach((low,ri)=>{
+  const high=57-low,route=[{x:low,y:low},{x:high,y:low},{x:high,y:high},{x:low,y:high},{x:low,y:low}];
+  const lengths=route.slice(0,-1).map((p,i)=>Math.abs(route[i+1].x-p.x)+Math.abs(route[i+1].y-p.y));
+  const total=lengths.reduce((a,b)=>a+b,0);
+  for(let n=0;n<4;n++){
+   let distance=(time*.00125*(.82+((n+ri)%3)*.18)+n*total/4+ri*total/11)%total;
+   let seg=0;while(seg<3&&distance>lengths[seg]){distance-=lengths[seg];seg++;}
+   const a=route[seg],b=route[seg+1],t=distance/lengths[seg],x=a.x+(b.x-a.x)*t,y=a.y+(b.y-a.y)*t,dx=b.x-a.x,dy=b.y-a.y;
+   add(x,y,'car',colors[(n+ri*2)%colors.length],Math.atan2((dx+dy)*.36,(dx-dy)*.72));
+  }
+ });
+ for(let i=0;i<92;i++){
+  const lane=3+(i%17)*3,vertical=i%2===1,reverse=i%4>=2;
+  const along=3+((time*.00030*(i%3===0?1.1:.82)+i*7.31)%(N-6));
+  const x=vertical?lane:(reverse?N-along:along),y=vertical?(reverse?N-along:along):lane;
+  const dx=vertical?0:(reverse?-1:1),dy=vertical?(reverse?-1:1):0;
+  const angle=Math.atan2((dx+dy)*.36,(dx-dy)*.72);
+  add(x,y,'ped',colors[i%colors.length],angle,(i%4<2?-1:1)*17);
  }
-});
-// Fußgänger bleiben auf den Bürgersteigen direkt neben den Fahrbahnen.
-for(let i=0;i<112;i++){
- const lane=3+(i%19)*3,dir=i%2,side=(Math.floor(i/2)%2===0?-8:8),along=1+((time*.00038*(i%3===0?1.12:.82)+i*7.31)%(N-2));
- if(dir===0){const reverse=i%4===1,angle=Math.atan2(reverse?-.36:.36,reverse?-.72:.72);drawPedestrian(reverse?N-along:along,lane,time,colors[i%colors.length],angle,side);}
- else{const reverse=i%4===3,angle=Math.atan2(reverse?-.36:.36,reverse?.72:-.72);drawPedestrian(lane,reverse?N-along:along,time,colors[i%colors.length],angle,side);}
-}
+ return actors;
 }
 function shade(hex,amt){let n=parseInt(hex.slice(1),16),r=Math.max(0,Math.min(255,(n>>16)+amt)),g=Math.max(0,Math.min(255,((n>>8)&255)+amt)),b=Math.max(0,Math.min(255,(n&255)+amt));return'#'+(1<<24|r<<16|g<<8|b).toString(16).slice(1);}
 function drawSidewalk(t,p){
@@ -511,12 +515,12 @@ if(t.x%3===0&&t.y%3===0&&(t.x+t.y)%12===0){
 if(t.road&&(t.x*5+t.y*3)%8===0){const lx=p.x+19*z,ly=p.y-10*z;ctx.strokeStyle='#42504a';ctx.lineWidth=3*z;ctx.beginPath();ctx.moveTo(lx,ly+12*z);ctx.lineTo(lx,ly-22*z);ctx.lineTo(lx+8*z,ly-26*z);ctx.stroke();ctx.fillStyle='#ffe9a0';ctx.beginPath();ctx.arc(lx+8*z,ly-26*z,4*z,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff3bd';ctx.lineWidth=1*z;ctx.stroke();}
 // Kleine Bushaltestellen mit Dach und Haltestellenschild
 if(t.x===3&&t.y===4||t.x===6&&t.y===7){rounded(p.x-17*z,p.y-17*z,28*z,3*z,1*z,'#e7e9df','#52605a');ctx.strokeStyle='#52605a';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(p.x-14*z,p.y-14*z);ctx.lineTo(p.x-14*z,p.y+5*z);ctx.moveTo(p.x+8*z,p.y-14*z);ctx.lineTo(p.x+8*z,p.y+5*z);ctx.stroke();rounded(p.x+13*z,p.y-21*z,3*z,23*z,1*z,'#52605a');rounded(p.x+10*z,p.y-24*z,9*z,8*z,2*z,'#f4d46d','#52605a');ctx.fillStyle='#33443c';ctx.font='bold '+(5*z)+'px system-ui';ctx.textAlign='center';ctx.fillText('BUS',p.x+14.5*z,p.y-18*z);}
-// Geparkte Autos am Straßenrand
-if(t.road&&t.y%3===0&&t.x%3===1&&t.x<9){drawCar(t.x+.12,t.y+.42,0,t.x%2?'#d95c4d':'#4c86b8');}
+// Parkende Fahrzeuge kommen später auf eigene markierte Stellplätze.
 }
 function drawMapBase(time){ctx.fillStyle='#4babc5';ctx.fillRect(0,0,W,H);for(let i=0;i<22;i++){let x=(i*137+time*.009)%(W+100)-50,y=(i*83+Math.sin(time*.001+i)*8)%(H+30);ctx.strokeStyle='#b8e8e766';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+24,y-3);ctx.stroke();}const corners=[[3,3],[N-3,3],[N-3,N-3],[3,N-3]].map(([x,y])=>screen(x,y));poly(corners,'#c9b47b','#8caa72');const inner=[[3.5,3.5],[N-3.5,3.5],[N-3.5,N-3.5],[3.5,N-3.5]].map(([x,y])=>screen(x,y));poly(inner,'#83bd69','#e6d29a');}
 function draw(time=0){if(!W)return;ctx.clearRect(0,0,W,H);drawMapBase(time);
 const ordered=[...tiles].sort((a,b)=>a.x+a.y-(b.x+b.y));
+const actors=cityActors(time);
 for(const t of ordered){let p=screen(t.x,t.y);if(p.x<-100||p.x>W+100||p.y<-130||p.y>H+100)continue;
 let road=t.road,coastal=t.x<3||t.y<3||t.x>=N-3||t.y>=N-3;if(coastal&&!road)continue;diamond(t.x,t.y,coastal?'#9a7954':(road?'#747b80':(t.plot?t.ground:'#879b78')));if(road&&!coastal)drawSidewalk(t,p);if(coastal&&road){const z=cam.zoom;ctx.strokeStyle='#e2c18a';ctx.lineWidth=2*z;for(let k=-1;k<=1;k++){ctx.beginPath();ctx.moveTo(p.x-17*z,p.y+k*7*z);ctx.lineTo(p.x+17*z,p.y+k*7*z);ctx.stroke();}ctx.strokeStyle='#5b5144';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(p.x-18*z,p.y-11*z);ctx.lineTo(p.x+18*z,p.y+11*z);ctx.moveTo(p.x-18*z,p.y+11*z);ctx.lineTo(p.x+18*z,p.y-11*z);ctx.stroke();}
 if(road){
@@ -531,10 +535,25 @@ if(t.x%3===0&&t.y%3===0){
 ctx.strokeStyle='#fff4d8';ctx.lineWidth=2*z;
 for(let k=-2;k<=2;k++){ctx.beginPath();ctx.moveTo(p.x-15*z+k*5*z,p.y-8*z);ctx.lineTo(p.x-15*z+k*5*z,p.y+8*z);ctx.stroke();}
 ctx.fillStyle='#f5e7c6';ctx.beginPath();ctx.arc(p.x,p.y,2.5*z,0,Math.PI*2);ctx.fill();
-  // Ampeln an ausgewählten Kreuzungen
-  if((t.x+t.y)%6===0){rounded(p.x+15*z,p.y-24*z,5*z,16*z,2*z,'#48534d','#28332e');for(let q=0;q<3;q++){ctx.fillStyle=['#e65b4f','#e9c95c','#72c66f'][q];ctx.beginPath();ctx.arc(p.x+17.5*z,p.y-21*z+q*5*z,1.3*z,0,Math.PI*2);ctx.fill();}}
+  // Ampel auf dem Gehweg mit Mast, Gehäuse und echter Lichtphase.
+  if((t.x+t.y)%6===0){
+   const ax=p.x+22*z,ay=p.y+12*z;
+   ctx.strokeStyle='#38443f';ctx.lineWidth=3*z;ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax,ay-39*z);ctx.stroke();
+   rounded(ax-4*z,ay-40*z,8*z,23*z,2*z,'#303a37','#1e2925');
+   const phase=Math.floor(time/1800)%3,lamps=['#ed5148','#efc34f','#55c879'];
+   for(let q=0;q<3;q++){
+    ctx.fillStyle=q===phase?lamps[q]:'#5b625d';
+    ctx.beginPath();ctx.arc(ax,ay-35*z+q*7*z,2.1*z,0,Math.PI*2);ctx.fill();
+    if(q===phase){ctx.strokeStyle=lamps[q];ctx.lineWidth=1*z;ctx.beginPath();ctx.arc(ax,ay-35*z+q*7*z,3.2*z,0,Math.PI*2);ctx.stroke();}
+   }
+  }
 }
 drawStreetProps(t,p);
+const moving=actors.get(t.id);
+if(moving)for(const actor of moving){
+ if(actor.type==='car')drawCar(actor.x,actor.y,time,actor.color,actor.angle);
+ else drawPedestrian(actor.x,actor.y,time,actor.color,actor.angle,actor.lateral);
+}
 }
 if(!road&&t.building){
  const z=cam.zoom;
@@ -552,7 +571,6 @@ ctx.fillStyle='#f4c66d';ctx.beginPath();ctx.arc(p.x-12*z,p.y-3*z,2.5*z,0,Math.PI
 }
 if(t===selected){let w=T*.72*cam.zoom,h=T*.36*cam.zoom;poly([{x:p.x,y:p.y-h},{x:p.x+w,y:p.y},{x:p.x,y:p.y+h},{x:p.x-w,y:p.y}], '#d5ef7a33','#f3ff9a');}
 }
-drawCityLife(time);
 requestAnimationFrame(draw);
 }
 function toast(msg){$('toast').textContent=msg;$('toast').style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').style.display='none',2100);}
