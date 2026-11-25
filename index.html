@@ -139,6 +139,14 @@ drawPedestrian(x,y,time,['#e85c4d','#4c83c2','#f2c14e','#f1e9d5'][i%4]);
 }
 }
 function shade(hex,amt){let n=parseInt(hex.slice(1),16),r=Math.max(0,Math.min(255,(n>>16)+amt)),g=Math.max(0,Math.min(255,((n>>8)&255)+amt)),b=Math.max(0,Math.min(255,(n&255)+amt));return'#'+(1<<24|r<<16|g<<8|b).toString(16).slice(1);}
+function drawStreetProps(t,p){const z=cam.zoom;
+// Straßenlaternen an ausgewählten Gehweg-Ecken
+if(t.road&&(t.x*5+t.y*3)%8===0){const lx=p.x+19*z,ly=p.y-10*z;ctx.strokeStyle='#42504a';ctx.lineWidth=3*z;ctx.beginPath();ctx.moveTo(lx,ly+12*z);ctx.lineTo(lx,ly-22*z);ctx.lineTo(lx+8*z,ly-26*z);ctx.stroke();ctx.fillStyle='#ffe9a0';ctx.beginPath();ctx.arc(lx+8*z,ly-26*z,4*z,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff3bd';ctx.lineWidth=1*z;ctx.stroke();}
+// Kleine Bushaltestellen mit Dach und Haltestellenschild
+if(t.x===3&&t.y===4||t.x===6&&t.y===7){rounded(p.x-17*z,p.y-17*z,28*z,3*z,1*z,'#e7e9df','#52605a');ctx.strokeStyle='#52605a';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(p.x-14*z,p.y-14*z);ctx.lineTo(p.x-14*z,p.y+5*z);ctx.moveTo(p.x+8*z,p.y-14*z);ctx.lineTo(p.x+8*z,p.y+5*z);ctx.stroke();rounded(p.x+13*z,p.y-21*z,3*z,23*z,1*z,'#52605a');rounded(p.x+10*z,p.y-24*z,9*z,8*z,2*z,'#f4d46d','#52605a');ctx.fillStyle='#33443c';ctx.font='bold '+(5*z)+'px system-ui';ctx.textAlign='center';ctx.fillText('BUS',p.x+14.5*z,p.y-18*z);}
+// Geparkte Autos am Straßenrand
+if(t.road&&t.y%3===0&&t.x%3===1&&t.x<9){drawCar(t.x+.12,t.y+.42,0,t.x%2?'#d95c4d':'#4c86b8');}
+}
 function draw(time=0){if(!W)return;ctx.clearRect(0,0,W,H);let sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#77c9eb');sky.addColorStop(.62,'#c9e8d6');sky.addColorStop(1,'#f5df9d');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
 ctx.fillStyle='#83bd69';ctx.fillRect(0,H*.68,W,H*.32);
 drawCityLife(time);
@@ -158,6 +166,7 @@ ctx.strokeStyle='#fff4d8';ctx.lineWidth=2*z;
 for(let k=-2;k<=2;k++){ctx.beginPath();ctx.moveTo(p.x-15*z+k*5*z,p.y-8*z);ctx.lineTo(p.x-15*z+k*5*z,p.y+8*z);ctx.stroke();}
 ctx.fillStyle='#f5e7c6';ctx.beginPath();ctx.arc(p.x,p.y,2.5*z,0,Math.PI*2);ctx.fill();
 }
+drawStreetProps(t,p);
 }
 if(!road&&t.building)drawBuilding(t,time);
 if(!road&&!t.building){
