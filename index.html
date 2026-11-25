@@ -56,7 +56,7 @@ const buildings=[
  {name:'Rathaus',emoji:'🏛️',color:'#d6c39b',kind:'landmark'}
 ];
 const ROAD_X=[6,18,33,48,56],ROAD_Y=[7,21,35,49,56];
-const BUILDING_X=[4,8,12,16,23,27,31,37,41,45,50,54,58],BUILDING_Y=[4,8,12,16,23,27,31,37,41,45,50,54,58];
+const BUILDING_X=[4,7,10,13,16,22,25,28,31,37,40,43,46,49,52,55,58],BUILDING_Y=[4,7,10,13,16,22,25,28,31,37,40,43,46,49,52,55,58];
 const ROUNDABOUT_RING=[[32,34],[33,34],[34,34],[34,35],[34,36],[33,36],[32,36],[32,35]];
 function isRoundaboutRoad(x,y){return ROUNDABOUT_RING.some(([rx,ry])=>rx===x&&ry===y);}
 function isVerticalRoad(x,y){return ROAD_X.includes(x)||(x===12&&y>=8&&y<=20)||(x===40&&y>=22&&y<=34)||(x===26&&y>=36&&y<=48)||(x===52&&y>=8&&y<=20);}
@@ -558,10 +558,16 @@ if(!road&&t.space==='roundabout'){
  }else if(!road&&t.space)drawPublicSpace(t,p);
 if(!road&&!t.building&&!t.space){
 const z=cam.zoom;
-if((t.x*3+t.y*5)%4===0){drawTree(p.x+12*z,p.y-7*z,.55*z);}
-if((t.x*7+t.y*2)%5===0){
-ctx.fillStyle='#e5d5a7';ctx.beginPath();ctx.ellipse(p.x-12*z,p.y+2*z,5*z,2*z,0,0,Math.PI*2);ctx.fill();
-ctx.fillStyle='#f4c66d';ctx.beginPath();ctx.arc(p.x-12*z,p.y-3*z,2.5*z,0,Math.PI*2);ctx.fill();
+const scatter=(n)=>{const v=Math.sin((t.x*127.1+t.y*311.7+n*74.7)*.731)*43758.5453;return v-Math.floor(v);};
+const treeRoll=scatter(1);
+if(treeRoll<.19){
+ const tx=p.x+(scatter(2)-.5)*30*z,ty=p.y+(scatter(3)-.5)*14*z;
+ drawTree(tx,ty,(.42+scatter(4)*.28)*z);
+}
+if(scatter(5)<.10){
+ const fx=p.x+(scatter(6)-.5)*27*z,fy=p.y+(scatter(7)-.5)*12*z;
+ ctx.fillStyle='#e5d5a7';ctx.beginPath();ctx.ellipse(fx,fy,4*z,1.8*z,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#f4c66d';ctx.beginPath();ctx.arc(fx,fy-2.5*z,2*z,0,0,Math.PI*2);ctx.fill();
 }
 }
 if(t===selected){let w=T*.72*cam.zoom,h=T*.36*cam.zoom;poly([{x:p.x,y:p.y-h},{x:p.x+w,y:p.y},{x:p.x,y:p.y+h},{x:p.x-w,y:p.y}], '#d5ef7a33','#f3ff9a');}
