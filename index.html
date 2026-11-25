@@ -271,6 +271,7 @@ ctx.fillStyle='#f5e7c6';ctx.beginPath();ctx.arc(p.x,p.y,2.5*z,0,Math.PI*2);ctx.f
 }
 drawStreetProps(t,p);
 }
+if(!road&&t.building)drawBuilding(t,time);
 if(!road&&t.space)drawPublicSpace(t,p);
 if(!road&&!t.building&&!t.space){
 const z=cam.zoom;
@@ -283,7 +284,6 @@ ctx.fillStyle='#f4c66d';ctx.beginPath();ctx.arc(p.x-12*z,p.y-3*z,2.5*z,0,Math.PI
 if(t===selected){let w=T*.72*cam.zoom,h=T*.36*cam.zoom;poly([{x:p.x,y:p.y-h},{x:p.x+w,y:p.y},{x:p.x,y:p.y+h},{x:p.x-w,y:p.y}], '#d5ef7a33','#f3ff9a');}
 }
 drawCityLife(time);
-for(let i=0;i<8;i++){let x=(i*173+time*.012)%(W+100)-50,y=H*.28+(i%4)*48;ctx.fillStyle='#fff8';ctx.beginPath();ctx.ellipse(x,y,20,5,0,0,Math.PI*2);ctx.fill();}
 requestAnimationFrame(draw);
 }
 function toast(msg){$('toast').textContent=msg;$('toast').style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').style.display='none',2100);}
