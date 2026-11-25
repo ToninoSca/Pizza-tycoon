@@ -337,7 +337,7 @@ if(kind==='school'||kind==='factory'){
   ctx.fillText(kind==='school'?'SCHULE':'WERK',p.x,base-h+20*z);
 }
 // Fassadenleisten und farbige Details machen Häuser unterscheidbar
-if(['home','oldhome','school','market','cafe','shop'].includes(kind)){
+if(['home','oldhome','market','cafe','shop'].includes(kind)){
   ctx.strokeStyle=shade(wallColor,-42);ctx.lineWidth=1.4*z;
   ctx.beginPath();ctx.moveTo(p.x-w+3*z,base-3*z);ctx.lineTo(p.x+w-3*z,base-3*z);ctx.stroke();
   if(kind==='home'||kind==='oldhome'){
@@ -425,9 +425,14 @@ if(['home','oldhome','apartments'].includes(kind)){
   // Pflanzkübel am Eingang
   for(const side of [-1,1]){rounded(p.x+side*25*z-3*z,p.y+7*z,6*z,5*z,1*z,'#b56e4d','#704b39');ctx.fillStyle='#4b9856';ctx.beginPath();ctx.arc(p.x+side*25*z,p.y+5*z,4*z,0,Math.PI*2);ctx.fill();}
 }else if(kind==='school'||kind==='factory'||kind==='office'){
-  // Schmale Grünstreifen statt leerer Grundstückskanten
+  // Ruhiger Grünstreifen am Grundstück; keine schwebenden bunten Punkte.
   rounded(p.x-25*z,p.y+8*z,50*z,4*z,2*z,kind==='factory'?'#8a9b79':'#72a96a','#52794f');
-  for(let i=0;i<5;i++){ctx.fillStyle=i%2?'#f0d16e':'#e98e83';ctx.beginPath();ctx.arc(p.x-19*z+i*9*z,p.y+7*z,1.5*z,0,Math.PI*2);ctx.fill();}
+  if(kind==='school'){
+    for(const side of [-1,1]){
+      rounded(p.x+side*16*z,p.y+5*z,6*z,5*z,2*z,'#477e49','#365f3b');
+      ctx.fillStyle='#5c9b55';ctx.beginPath();ctx.arc(p.x+side*16*z,p.y+4*z,3*z,0,Math.PI*2);ctx.fill();
+    }
+  }
 }
 
 // Zusätzliche Einkaufsstraßen-Details: Markisen, Menütafeln, Fahrradständer und gemütliche Terrassen.
