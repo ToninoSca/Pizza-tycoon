@@ -121,8 +121,10 @@ function makeCity(){
   // Gebäude stehen nur an einer echten Straßenkante, nicht diagonal in Hinterhöfen.
   const besideRoad=isRoad(t.x-1,t.y)||isRoad(t.x+1,t.y)||isRoad(t.x,t.y-1)||isRoad(t.x,t.y+1);
   if(!besideRoad)continue;
+  // Freie Grundstücke zwischen den Häusern lassen: die Bebauung folgt den Straßen statt jede Fläche zu füllen.
+  const placeRoll=(((t.x*73856093)^(t.y*19349663)^0x5bd1e995)>>>0)%100;
+  if(placeRoll>58)continue;
   const roll=(((t.x*73856093)^(t.y*19349663))>>>0)%100;
-  if(roll>99)continue;
   let kind=0;
   if(t.district==='industrial')kind=roll<35?9:roll<52?5:roll<68?3:roll<80?7:roll<89?8:6;
   else if(t.district==='downtown')kind=roll<15?3:roll<28?2:roll<42?8:roll<59?7:roll<74?5:roll<86?4:6;
@@ -909,7 +911,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  const target=new THREE.Vector3(30,0,30);let zoom=1;
  function placeCamera(){const aspect=canvas.clientWidth/Math.max(1,canvas.clientHeight),span=43/zoom;camera.left=-span*aspect/2;camera.right=span*aspect/2;camera.top=span/2;camera.bottom=-span/2;camera.position.set(target.x+43,64,target.z+43);camera.lookAt(target.x,0,target.z);camera.updateProjectionMatrix();}
  scene.add(new THREE.HemisphereLight(0xe7f5ff,0x52634b,2.0));const sun=new THREE.DirectionalLight(0xfff0d5,2.4);sun.position.set(-35,70,25);sun.castShadow=false;scene.add(sun);
- const mat=(c,r=.86)=>new THREE.MeshStandardMaterial({color:c,roughness:r});
+ const materialCache=new Map();
+ const mat=(c,r=.86)=>{const key=String(c)+'|'+r;if(!materialCache.has(key))materialCache.set(key,new THREE.MeshStandardMaterial({color:c,roughness:r}));return materialCache.get(key);};
  const grass=mat('#86a96d'),road=mat('#555d60'),sidewalk=mat('#c8c0ad'),line=mat('#f7eed6'),trunk=mat('#765037'),leaf=mat('#4b8d50'),windowMat=mat('#9acbd0',.28),doorMat=mat('#624431'),roofRed=mat('#a85a48');
  const ground=new THREE.Mesh(new THREE.PlaneGeometry(61,61),grass);ground.rotation.x=-Math.PI/2;ground.position.set(30,-.12,30);ground.receiveShadow=true;scene.add(ground);
  const city=new THREE.Group();scene.add(city);
@@ -952,27 +955,17 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   box(g,.34,.7,.08,frame,.12,.43,d/2+.035);box(g,.23,.58,.035,doorGlass,.12,.43,d/2+.085);
   box(g,.025,.16,.025,mat('#d7b66d'),.2,.4,d/2+.11);
   box(g,.48,.08,.22,trim,.12,.08,d/2+.13);
-  // Gut sichtbare Fenster auf allen vier Fassadenseiten, damit sie aus jeder Kamerarichtung erscheinen.
-  const rows=h>2.5?[.82,1.72,2.62].filter(y=>y<h-.18):[.78];
+  // Weniger, dafür größere und klar erkennbare Fenster: Front und eine Seitenfläche.
+  const rows=h>2.5?[.9,2.05].filter(y=>y<h-.25):[.82];
   for(const y of rows){
    for(const x of [-.43,.43]){
-    // Vorder- und Rückseite
-    for(const sign of [-1,1]){
-     const z=sign*(d/2+.055);
-     box(g,.39,.46,.075,frame,x,y,z);
-     box(g,.31,.36,.025,glassLit,x,y,z+sign*.043);
-     box(g,.41,.055,.11,trim,x,y-.25,z);
-     box(g,.025,.46,.025,trim,x,y,z+sign*.06);
-    }
-    // Linke und rechte Seitenwand
-    for(const sign of [-1,1]){
-     const sx=sign*(w/2+.055);
-     box(g,.075,.46,.39,frame,sx,y,x);
-     box(g,.025,.36,.31,glassLit,sx+sign*.043,y,x);
-     box(g,.11,.055,.41,trim,sx,y-.25,x);
-     box(g,.025,.46,.025,trim,sx+sign*.06,y,x);
-    }
+    const z=d/2+.055;
+    box(g,.39,.48,.065,frame,x,y,z);
+    box(g,.31,.39,.025,glassLit,x,y,z+.043);
    }
+   const sx=w/2+.055;
+   box(g,.065,.48,.39,frame,sx,y,0);
+   box(g,.025,.39,.31,glassLit,sx+.043,y,0);
   }
   // Shops get a real storefront, display glazing and projecting sign/awning
   if(['cafe','pizza','shop','market','wholesale','deli','hardware'].includes(kind)){
