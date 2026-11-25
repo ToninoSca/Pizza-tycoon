@@ -61,7 +61,7 @@ const ROUNDABOUT_RING=[[32,34],[33,34],[34,34],[34,35],[34,36],[33,36],[32,36],[
 function isRoundaboutRoad(x,y){return ROUNDABOUT_RING.some(([rx,ry])=>rx===x&&ry===y);}
 function isVerticalRoad(x,y){return ROAD_X.includes(x)||(x===12&&y>=8&&y<=20)||(x===40&&y>=22&&y<=34)||(x===26&&y>=36&&y<=48)||(x===52&&y>=8&&y<=20);}
 function isHorizontalRoad(x,y){return ROAD_Y.includes(y)||(y===14&&x>=7&&x<=17)||(y===29&&x>=19&&x<=32)||(y===42&&x>=34&&x<=47)||(y===53&&x>=49&&x<=55);}
-function isRoad(x,y){return isRoundaboutRoad(x,y)||(x===33&&y===35)?false:(isVerticalRoad(x,y)||isHorizontalRoad(x,y));}
+function isRoad(x,y){return (x===33&&y===35)?false:(isRoundaboutRoad(x,y)||isVerticalRoad(x,y)||isHorizontalRoad(x,y));}
 function hasTrafficSignal(x,y){return ROAD_X.includes(x)&&ROAD_Y.includes(y)&&(ROAD_X.indexOf(x)+ROAD_Y.indexOf(y))%2===0&&!(x===33&&y===35);}
 function signalPhase(x,y,time){const v=((time+x*193+y*97)%10000+10000)%10000;return v<4200?0:v<5200?1:2;}
 function makeCity(){
