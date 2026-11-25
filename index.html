@@ -60,12 +60,13 @@ function makeCity(){
   const road=(x%3===0||y%3===0),edge=x===0||y===0||x===N-1||y===N-1,plot=!road&&!edge;
   const roll=(x*37+y*71+x*y*13)%100;
   let kind=0;
-  // Stadtviertel mit eigener Bebauung statt überall gleicher Mischung
-  if(x>=39&&y>=39) kind=roll<48?9:roll<67?2:roll<82?7:0;                 // Gewerbegebiet
-  else if(x>=22&&x<=39&&y>=20&&y<=40) kind=roll<38?3:roll<60?2:roll<76?8:roll<88?7:0; // Zentrum
-  else if(x<22&&y<24) kind=roll<45?1:roll<68?8:roll<82?7:0;            // Altstadt
-  else if(y>42&&x>18&&x<43) kind=roll<28?5:roll<52?7:roll<72?8:0;      // Einkaufsviertel
-  else kind=roll<32?0:roll<53?1:roll<68?2:roll<78?6:roll<88?7:8;      // Wohnviertel
+  // Deutlich erkennbare Stadtviertel: Wohnen ist nur ein Teil der Stadt.
+  if(x>=39&&y>=39) kind=roll<42?9:roll<58?5:roll<72?3:roll<84?7:roll<94?8:6; // Gewerbepark
+  else if(x>=22&&x<=39&&y>=20&&y<=40) kind=roll<30?3:roll<47?2:roll<63?8:roll<77?7:roll<88?5:roll<95?4:6; // Innenstadt
+  else if(x<22&&y<24) kind=roll<30?1:roll<53?8:roll<73?7:roll<85?5:roll<94?0:6; // Altstadt mit Läden
+  else if(y>42&&x>18&&x<43) kind=roll<30?5:roll<54?7:roll<75?8:roll<86?3:roll<94?6:0; // Einkaufsviertel
+  else if(x>=39&&y<25) kind=roll<28?4:roll<48?3:roll<65?5:roll<80?8:roll<92?6:7; // öffentlicher / Bürobereich
+  else kind=roll<24?0:roll<39?1:roll<50?2:roll<64?6:roll<76?7:roll<87?8:roll<94?4:5; // gemischte Wohnviertel
   // Öffentliche Plätze und Parkflächen lockern das starre Straßenraster auf
   let space=null;
   if(plot&&x>=24&&x<=26&&y>=27&&y<=29) space='plaza';
