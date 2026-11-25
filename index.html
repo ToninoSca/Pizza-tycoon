@@ -165,12 +165,25 @@ poly([{x:p.x,y:base+d*.52},{x:p.x+w,y:base},{x:p.x+w,y:base-h},{x:p.x,y:base-h+d
 const district=tile.district||'residential';
 const roofType=kind==='office'||kind==='apartments'?'flat':kind==='factory'?'shed':kind==='oldhome'?'gable':kind==='school'||kind==='landmark'?'gable':district==='oldtown'?(rand(8)<.82?'gable':'hip'):district==='industrial'?(kind==='factory'?'shed':'flat'):district==='civic'?(rand(8)<.78?'flat':'hip'):district==='shopping'?(rand(8)<.62?'flat':'gable'):kind==='home'?(rand(5)<.72?'gable':rand(6)<.5?'flat':'hip'):(rand(5)<.38?'gable':rand(7)<.5?'flat':'hip');
 if(roofType==='gable'||roofType==='shed'){
-  let ridge=kind==='factory'?d*.72:d*.62;
-  poly([{x:p.x-w-3*z,y:base-h},{x:p.x,y:base-h-ridge*z},{x:p.x+w+3*z,y:base-h},{x:p.x,y:base-h+d*.52}],kind==='school'?'#b95143':shade(wallColor,31),ink);
-  ctx.strokeStyle=shade(wallColor,-25);ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(p.x,base-h-ridge*z);ctx.lineTo(p.x,base-h-ridge*z+5*z);ctx.stroke();
-  // Schlichte Dachflächen statt überladener Ziegelmuster
-  ctx.save();ctx.strokeStyle=shade(wallColor,-16);ctx.lineWidth=.8*z;ctx.globalAlpha=.58;
-  for(let row=1;row<=1;row++){let yy=base-h-ridge*z+row*ridge*z*.22;ctx.beginPath();ctx.moveTo(p.x-w+row*2*z,yy+row*ridge*z*.22);ctx.lineTo(p.x+row*2*z,yy+row*ridge*z*.22);ctx.stroke();}
+  const ridge=kind==='factory'?d*.72:d*.62;
+  const eaveL={x:p.x-w-3*z,y:base-h},eaveR={x:p.x+w+3*z,y:base-h};
+  const ridgeTop={x:p.x,y:base-h-ridge*z},front={x:p.x,y:base-h+d*.52};
+  const roofBase=kind==='school'?'#b95143':shade(wallColor,31);
+  // Zwei getrennte Dachflächen treffen sich exakt an derselben Firstlinie.
+  poly([eaveL,ridgeTop,front],shade(roofBase,-13),ink);
+  poly([ridgeTop,eaveR,front],shade(roofBase,9),ink);
+  ctx.strokeStyle=shade(roofBase,-28);ctx.lineWidth=2*z;
+  ctx.beginPath();ctx.moveTo(eaveL.x,eaveL.y);ctx.lineTo(ridgeTop.x,ridgeTop.y);ctx.lineTo(eaveR.x,eaveR.y);ctx.stroke();
+  ctx.strokeStyle=shade(roofBase,-18);ctx.lineWidth=2.2*z;
+  ctx.beginPath();ctx.moveTo(ridgeTop.x,ridgeTop.y);ctx.lineTo(front.x,front.y);ctx.stroke();
+  // Dezente Dachlinien folgen der jeweiligen Dachfläche.
+  ctx.save();ctx.strokeStyle=shade(roofBase,-22);ctx.lineWidth=.8*z;ctx.globalAlpha=.48;
+  for(let row=1;row<=2;row++){
+    const t=row/3;
+    const lx={x:eaveL.x+(ridgeTop.x-eaveL.x)*t,y:eaveL.y+(ridgeTop.y-eaveL.y)*t};
+    const rx={x:eaveR.x+(ridgeTop.x-eaveR.x)*t,y:eaveR.y+(ridgeTop.y-eaveR.y)*t};
+    ctx.beginPath();ctx.moveTo(lx.x,lx.y);ctx.lineTo(rx.x,rx.y);ctx.stroke();
+  }
   ctx.restore();
 }else if(roofType==='hip'){
   poly([{x:p.x-w-3*z,y:base-h+3*z},{x:p.x,y:base-h-d*.42},{x:p.x+w+3*z,y:base-h+3*z},{x:p.x,y:base-h+d*.52}],roof,ink);
@@ -214,6 +227,10 @@ if(kind==='school'){
   ctx.fillStyle='#f1dfb9';ctx.beginPath();ctx.arc(p.x,base-h-8*z,4*z,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle='#655748';ctx.lineWidth=1*z;ctx.beginPath();ctx.moveTo(p.x,base-h-11*z);ctx.lineTo(p.x,base-h-8*z);ctx.lineTo(p.x+2*z,base-h-7*z);ctx.stroke();
 }
+// Ein durchgehender Sockelabschluss verbindet beide sichtbaren Fassaden.
+ctx.strokeStyle=shade(wallColor,-48);ctx.lineWidth=2.2*z;ctx.globalAlpha=.72;
+ctx.beginPath();ctx.moveTo(p.x-w,base-2*z);ctx.lineTo(p.x,base+d*.52-2*z);ctx.lineTo(p.x+w,base-2*z);ctx.stroke();
+ctx.globalAlpha=1;
 // Fenster liegen exakt auf den schrägen isometrischen Wandflächen – nie über Gebäudeecken.
 const rows=Math.max(1,Math.min(3,Math.floor(floors/2)));
 function facadeOpening(side,u,v,uw,vh,door=false){
