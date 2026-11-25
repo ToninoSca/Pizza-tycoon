@@ -146,6 +146,35 @@ if(roofType==='gable'||roofType==='shed'){
     rounded(p.x+13*z,base-h-d*.05,7*z,6*z,1*z,'#9da8a0','#53635f');
   }
 }
+// Individuelle Dachaufbauten je Gebäudetyp – kleine Silhouetten statt identischer Dächer.
+if(kind==='home'&&rand(150)>.48){
+  // Solarpaneele auf einem Teil der Einfamilienhäuser.
+  const sx=p.x-w*.42,sy=base-h-d*.12;
+  poly([{x:sx,y:sy},{x:sx+12*z,y:sy-4*z},{x:sx+22*z,y:sy+1*z},{x:sx+10*z,y:sy+5*z}],'#42677a','#304c58');
+  ctx.strokeStyle='#a9d2d9';ctx.lineWidth=.8*z;
+  ctx.beginPath();ctx.moveTo(sx+6*z,sy-2*z);ctx.lineTo(sx+16*z,sy+3*z);ctx.moveTo(sx+12*z,sy-3*z);ctx.lineTo(sx+8*z,sy+4*z);ctx.stroke();
+}
+if(kind==='factory'){
+  // Fabrikhallen bekommen Oberlichter und einen markanten Schornstein.
+  rounded(p.x+w*.48,base-h-17*z,7*z,19*z,1*z,'#a66b50','#62483e');
+  rounded(p.x+w*.43,base-h-19*z,17*z,3*z,1*z,'#754b40','#493b35');
+  ctx.fillStyle='#d9d4c5';ctx.globalAlpha=.35;ctx.beginPath();ctx.ellipse(p.x+w*.52,base-h-25*z,5*z,3*z,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+  for(let skylight=0;skylight<3;skylight++){
+    const xx=p.x-w*.48+skylight*10*z;
+    poly([{x:xx,y:base-h-5*z},{x:xx+5*z,y:base-h-9*z},{x:xx+10*z,y:base-h-5*z},{x:xx+5*z,y:base-h-1*z}],'#9bcbd2','#52666a');
+  }
+}
+if(kind==='market'){
+  // Marktgebäude: sichtbare Lüftungsanlage auf dem Flachdach.
+  rounded(p.x-5*z,base-h-d*.1,13*z,7*z,1*z,'#a8aaa0','#60665f');
+  ctx.strokeStyle='#626c68';ctx.lineWidth=1*z;
+  for(let vent=0;vent<3;vent++){ctx.beginPath();ctx.moveTo(p.x-3*z,base-h-d*.1+2*z+vent*1.5*z);ctx.lineTo(p.x+6*z,base-h-d*.1+2*z+vent*1.5*z);ctx.stroke();}
+}
+if(kind==='school'){
+  // Schulgebäude mit kleinem Uhrengiebel.
+  ctx.fillStyle='#f1dfb9';ctx.beginPath();ctx.arc(p.x,base-h-8*z,4*z,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#655748';ctx.lineWidth=1*z;ctx.beginPath();ctx.moveTo(p.x,base-h-11*z);ctx.lineTo(p.x,base-h-8*z);ctx.lineTo(p.x+2*z,base-h-7*z);ctx.stroke();
+}
 // Fensterreihen und Balkone geben jedem Haus eine eigene Fassade
 // Kleine Schornsteine und Dachdetails machen Wohnhäuser unverwechselbarer.
 if((kind==='home'||kind==='oldhome')&&rand(44)>.42){
