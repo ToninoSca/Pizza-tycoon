@@ -99,7 +99,7 @@ function makeCity(){
    isRoad(t.x-1,t.y-1)||isRoad(t.x+1,t.y-1)||isRoad(t.x-1,t.y+1)||isRoad(t.x+1,t.y+1);
   if(!besideRoad)continue;
   const roll=(((t.x*73856093)^(t.y*19349663))>>>0)%100;
-  if(roll>94)continue;
+  if(roll>98)continue;
   let kind=0;
   if(t.district==='industrial')kind=roll<35?9:roll<52?5:roll<68?3:roll<80?7:roll<89?8:6;
   else if(t.district==='downtown')kind=roll<15?3:roll<28?2:roll<42?8:roll<59?7:roll<74?5:roll<86?4:6;
@@ -537,14 +537,16 @@ function draw(time=0){if(!W)return;ctx.clearRect(0,0,W,H);drawMapBase(time);
 const ordered=[...tiles].sort((a,b)=>a.x+a.y-(b.x+b.y));
 const actors=cityActors(time);
 for(const t of ordered){let p=screen(t.x,t.y);if(p.x<-100||p.x>W+100||p.y<-130||p.y>H+100)continue;
-let road=t.road,coastal=t.x<3||t.y<3||t.x>=N-3||t.y>=N-3;if(coastal&&!road)continue;diamond(t.x,t.y,coastal?'#9a7954':(road?'#747b80':(t.plot?t.ground:'#879b78')),coastal||!t.plot);if(road&&!coastal)drawSidewalk(t,p);if(coastal&&road){const z=cam.zoom;ctx.strokeStyle='#e2c18a';ctx.lineWidth=2*z;for(let k=-1;k<=1;k++){ctx.beginPath();ctx.moveTo(p.x-17*z,p.y+k*7*z);ctx.lineTo(p.x+17*z,p.y+k*7*z);ctx.stroke();}ctx.strokeStyle='#5b5144';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(p.x-18*z,p.y-11*z);ctx.lineTo(p.x+18*z,p.y+11*z);ctx.moveTo(p.x-18*z,p.y+11*z);ctx.lineTo(p.x+18*z,p.y-11*z);ctx.stroke();}
+let road=t.road,coastal=t.x<3||t.y<3||t.x>=N-3||t.y>=N-3;if(coastal&&!road)continue;diamond(t.x,t.y,coastal?'#9a7954':(road?'#747b80':(t.plot?t.ground:'#879b78')),coastal||(!road&&!t.plot));if(road&&!coastal)drawSidewalk(t,p);if(coastal&&road){const z=cam.zoom;ctx.strokeStyle='#e2c18a';ctx.lineWidth=2*z;for(let k=-1;k<=1;k++){ctx.beginPath();ctx.moveTo(p.x-17*z,p.y+k*7*z);ctx.lineTo(p.x+17*z,p.y+k*7*z);ctx.stroke();}ctx.strokeStyle='#5b5144';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(p.x-18*z,p.y-11*z);ctx.lineTo(p.x+18*z,p.y+11*z);ctx.moveTo(p.x-18*z,p.y+11*z);ctx.lineTo(p.x+18*z,p.y-11*z);ctx.stroke();}
 if(road){
 const z=cam.zoom;
 if(isVerticalRoad(t.x,t.y)&&!isHorizontalRoad(t.x,t.y)){
-ctx.strokeStyle='#ffffffd9';ctx.lineWidth=2.2*z;ctx.setLineDash([9*z,8*z]);ctx.beginPath();ctx.moveTo(p.x-4*z,p.y-18*z);ctx.lineTo(p.x-4*z,p.y+18*z);ctx.stroke();ctx.setLineDash([]);
+ const a=screen(t.x,t.y-.5),b=screen(t.x,t.y+.5);
+ ctx.strokeStyle='#fffdf5';ctx.lineWidth=2.5*z;ctx.lineCap='round';ctx.setLineDash([7*z,5*z]);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);
 }
 if(isHorizontalRoad(t.x,t.y)&&!isVerticalRoad(t.x,t.y)){
-ctx.strokeStyle='#f7e8b866';ctx.lineWidth=2*z;ctx.setLineDash([7*z,7*z]);ctx.beginPath();ctx.moveTo(p.x+4*z,p.y-18*z);ctx.lineTo(p.x+4*z,p.y+18*z);ctx.stroke();ctx.setLineDash([]);
+ const a=screen(t.x-.5,t.y),b=screen(t.x+.5,t.y);
+ ctx.strokeStyle='#fffdf5';ctx.lineWidth=2.5*z;ctx.lineCap='round';ctx.setLineDash([7*z,5*z]);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);
 }
 if(isVerticalRoad(t.x,t.y)&&isHorizontalRoad(t.x,t.y)){
  // Fußgängerüberwege an echten Kreuzungen.
