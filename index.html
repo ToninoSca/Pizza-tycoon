@@ -66,8 +66,15 @@ function makeCity(){
   else if(x<22&&y<24) kind=roll<45?1:roll<68?8:roll<82?7:0;            // Altstadt
   else if(y>42&&x>18&&x<43) kind=roll<28?5:roll<52?7:roll<72?8:0;      // Einkaufsviertel
   else kind=roll<32?0:roll<53?1:roll<68?2:roll<78?6:roll<88?7:8;      // Wohnviertel
-  const empty=plot&&roll>92;
-  tiles.push({x,y,road,plot,building:plot&&!empty?buildings[kind]:null,price:900+((x*73+y*91)%8)*180,traffic:35+((x*19+y*13)%60),rent:120+((x*31+y*17)%100),id:y*N+x});
+  // Öffentliche Plätze und Parkflächen lockern das starre Straßenraster auf
+  let space=null;
+  if(plot&&x>=24&&x<=26&&y>=27&&y<=29) space='plaza';
+  else if(plot&&x>=33&&x<=35&&y>=15&&y<=17) space='garden';
+  else if(plot&&x>=42&&x<=44&&y>=33&&y<=35) space='parking';
+  else if(plot&&x>=12&&x<=14&&y>=39&&y<=41) space='garden';
+  else if(plot&&x>=45&&x<=47&&y>=12&&y<=14) space='parking';
+  const empty=plot&&(roll>92||!!space);
+  tiles.push({x,y,road,plot,space,building:plot&&!empty?buildings[kind]:null,price:900+((x*73+y*91)%8)*180,traffic:35+((x*19+y*13)%60),rent:120+((x*31+y*17)%100),id:y*N+x});
  }
  // Ein markantes Rathaus als Orientierungspunkt im Zentrum
  const landmark=tiles.find(t=>t.x===30&&t.y===27);
@@ -174,6 +181,35 @@ if(kind==='oldhome'){
   poly([{x:p.x+6*z,y:base-h+8*z},{x:p.x+12*z,y:base-h+2*z},{x:p.x+19*z,y:base-h+8*z}], '#a95e4d',ink);
 }
 }
+function drawPublicSpace(tile,p){
+const z=cam.zoom,kind=tile.space;
+if(!kind)return;
+if(kind==='plaza'){
+  // Gepflasterter kleiner Stadtplatz mit Brunnen, Beeten und Sitzbänken
+  diamond(tile.x,tile.y,'#cdbb98');
+  ctx.strokeStyle='#a89472';ctx.lineWidth=1*z;
+  for(let k=-1;k<=1;k++){ctx.beginPath();ctx.moveTo(p.x-17*z,p.y+k*8*z);ctx.lineTo(p.x+17*z,p.y+k*8*z);ctx.stroke();}
+  ctx.fillStyle='#6ca9bd';ctx.beginPath();ctx.ellipse(p.x,p.y-3*z,8*z,5*z,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#e8e0c7';ctx.lineWidth=2*z;ctx.stroke();
+  ctx.fillStyle='#bfe4df';ctx.beginPath();ctx.arc(p.x,p.y-7*z,2.5*z,0,Math.PI*2);ctx.fill();
+  for(const side of [-1,1]){rounded(p.x+side*15*z-5*z,p.y-2*z,10*z,3*z,1*z,'#8b6548','#5a4938');drawTree(p.x+side*21*z,p.y-6*z,.36*z);}
+  return;
+}
+if(kind==='garden'){
+  diamond(tile.x,tile.y,'#75ad66');
+  // Geschwungener Weg und kleine Blumenbeete
+  ctx.strokeStyle='#dfc99a';ctx.lineWidth=5*z;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(p.x-20*z,p.y+5*z);ctx.quadraticCurveTo(p.x,p.y-12*z,p.x+20*z,p.y+3*z);ctx.stroke();ctx.lineCap='butt';
+  drawTree(p.x-13*z,p.y-7*z,.48*z);drawTree(p.x+14*z,p.y-1*z,.42*z);
+  for(let i=0;i<4;i++){ctx.fillStyle=['#f2cf68','#e98c83','#fff0c5','#b7a0d6'][i];ctx.beginPath();ctx.arc(p.x-3*z+i*3*z,p.y+7*z+(i%2)*2*z,1.7*z,0,Math.PI*2);ctx.fill();}
+  return;
+}
+if(kind==='parking'){
+  diamond(tile.x,tile.y,'#aab0ad');
+  ctx.strokeStyle='#f7f0d7';ctx.lineWidth=1.5*z;
+  for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(p.x+i*10*z-4*z,p.y-13*z);ctx.lineTo(p.x+i*10*z-4*z,p.y+12*z);ctx.stroke();}
+  drawCar(tile.x-.15,tile.y+.1,0,tile.id%2?'#d95c4d':'#4c86b8',Math.atan2(.36,.72));
+  return;
+}
+}
 function drawCar(x,y,time,color,angle=0){
 let p=screen(x,y),z=cam.zoom;
 ctx.save();ctx.translate(p.x,p.y);ctx.rotate(angle);
@@ -230,11 +266,13 @@ if(t.x%3===0&&t.y%3===0){
 ctx.strokeStyle='#fff4d8';ctx.lineWidth=2*z;
 for(let k=-2;k<=2;k++){ctx.beginPath();ctx.moveTo(p.x-15*z+k*5*z,p.y-8*z);ctx.lineTo(p.x-15*z+k*5*z,p.y+8*z);ctx.stroke();}
 ctx.fillStyle='#f5e7c6';ctx.beginPath();ctx.arc(p.x,p.y,2.5*z,0,Math.PI*2);ctx.fill();
+  // Ampeln an ausgewählten Kreuzungen
+  if((t.x+t.y)%6===0){rounded(p.x+15*z,p.y-24*z,5*z,16*z,2*z,'#48534d','#28332e');for(let q=0;q<3;q++){ctx.fillStyle=['#e65b4f','#e9c95c','#72c66f'][q];ctx.beginPath();ctx.arc(p.x+17.5*z,p.y-21*z+q*5*z,1.3*z,0,Math.PI*2);ctx.fill();}}
 }
 drawStreetProps(t,p);
 }
-if(!road&&t.building)drawBuilding(t,time);
-if(!road&&!t.building){
+if(!road&&t.space)drawPublicSpace(t,p);
+if(!road&&!t.building&&!t.space){
 const z=cam.zoom;
 if((t.x*3+t.y*5)%4===0){drawTree(p.x+12*z,p.y-7*z,.55*z);}
 if((t.x*7+t.y*2)%5===0){
