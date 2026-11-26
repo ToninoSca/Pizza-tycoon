@@ -221,7 +221,10 @@ ctx.strokeStyle='#285d3d';ctx.lineWidth=2;ctx.stroke();ctx.restore();
 function drawBuilding(tile,time){
 let b=tile.building;if(!b)return;
 // Auch die 2D-Ansicht zeichnet Gebäude auf ihrem tatsächlichen Grundstück.
-let p=screen(tile.x,tile.y),z=cam.zoom;
+const fronts=[{x:tile.x,y:tile.y-1},{x:tile.x+1,y:tile.y},{x:tile.x,y:tile.y+1},{x:tile.x-1,y:tile.y}];
+const roadFront=fronts.find(f=>isRoad(f.x,f.y));
+const displayX=tile.x+(roadFront?tile.x-roadFront.x:0)*.72,displayY=tile.y+(roadFront?tile.y-roadFront.y:0)*.72;
+let p=screen(displayX,displayY),z=cam.zoom;
 if(tile===state.owned)b={name:state.company,emoji:state.brandLogo||'🍕',color:state.brandColor||'#ed8a42',kind:'pizza'};
 const seed=tile.id*9301+17,rand=n=>{let v=Math.sin(seed+n*127.1)*43758.5453;return v-Math.floor(v);};
 if(b.kind==='pool'){
@@ -639,14 +642,14 @@ function cityActors(time){
  // Bewohner folgen Tagesplaenen und festen Wegen zwischen Wohnvierteln, Arbeitsplaetzen, Schulen und Parks.
  const weekday=((state.day||1)-1)%7,weekend=weekday>=5;
  const routePoint=(a,b,progress)=>{const pts=[a,{x:b.x,y:a.y},b],lens=[Math.abs(b.x-a.x),Math.abs(b.y-a.y)],total=lens[0]+lens[1]||1;let d=Math.max(0,Math.min(.9999,progress))*total;for(let k=0;k<2;k++){if(d<=lens[k]){const f=lens[k]?d/lens[k]:0;return{x:pts[k].x+(pts[k+1].x-pts[k].x)*f,y:pts[k].y+(pts[k+1].y-pts[k].y)*f,angle:Math.atan2(pts[k+1].x-pts[k].x,pts[k+1].y-pts[k].y)};}d-=lens[k];}return{x:b.x,y:b.y,angle:0};};
- const commute=(start,end,from,to)=>{if(minute<start||minute>=end)return{point:to,walking:false};return{point:routePoint(from,to,(minute-start)/(end-start)),walking:true};};const stroll=(base,index)=>routePoint({x:base.x-1.35,y:base.y},{x:base.x+1.35,y:base.y},((Number(time)||0)*.00012+index*.173)%1);
+ const commute=(start,end,from,to)=>{if(minute<start||minute>=end)return{point:to,walking:false};return{point:routePoint(from,to,(minute-start)/(end-start)),walking:true};};const stroll=(base,index)=>{const phase=(((Number(time)||0)*.00012+index*.173)%2+2)%2;const progress=phase<=1?phase:2-phase;return routePoint({x:base.x-1.35,y:base.y},{x:base.x+1.35,y:base.y},progress);};
  const siteNode=(k,fallback)=>{const t=tiles.find(q=>q.building?.kind===k);if(!t)return fallback;return{x:ROAD_X.reduce((a,b)=>Math.abs(b-t.x)<Math.abs(a-t.x)?b:a,ROAD_X[0]),y:ROAD_Y.reduce((a,b)=>Math.abs(b-t.y)<Math.abs(a-t.y)?b:a,ROAD_Y[0])};};
  const schoolNode=siteNode('school',{x:33,y:21}),parkNode=siteNode('park',{x:33,y:49}),cafeNode=siteNode('cafe',{x:48,y:35}),workNodes=[siteNode('office',{x:48,y:21}),siteNode('factory',{x:56,y:49})];
  for(let i=0;i<72;i++){const actorClass=i>=64?'mafia':i>=42?'retiree':i>=24?'child':'worker',home={x:ROAD_X[(i*3+1)%5],y:ROAD_Y[(i*2+1)%5]},work=workNodes[i%workNodes.length],school=schoolNode,park=parkNode,cafe=cafeNode;let from=home,to=home,walking=false,point={...home,angle:0};
  if(actorClass==='worker'){if(!weekend&&minute>=420&&minute<540){from=home;to=work;const q=commute(420,540,from,to);point=q.point;walking=q.walking;}else if(!weekend&&minute>=540&&minute<960)point={...work,angle:0};else if(!weekend&&minute>=960&&minute<1080){from=work;to=home;const q=commute(960,1080,from,to);point=q.point;walking=q.walking;}else{const q=routePoint(home,work,((minute*.00055+i*.137)%1));point=q;walking=true;}}
  else if(actorClass==='child'){if(weekend||minute<450||minute>=840){point={...home,angle:0};}else if(minute<510){from=home;to=school;const q=commute(450,510,from,to);point=q.point;walking=q.walking;}else if(minute<780)point={...school,angle:0};else{from=school;to=home;const q=commute(780,840,from,to);point=q.point;walking=q.walking;}}
  else if(actorClass==='retiree'){if(minute>=570&&minute<630){from=home;to=park;const q=commute(570,630,from,to);point=q.point;walking=q.walking;}else if(minute>=630&&minute<780)point={...park,angle:0};else if(minute>=780&&minute<840){from=park;to=cafe;const q=commute(780,840,from,to);point=q.point;walking=q.walking;}else if(minute>=840&&minute<930)point={...cafe,angle:0};else if(minute>=930&&minute<990){from=cafe;to=home;const q=commute(930,990,from,to);point=q.point;walking=q.walking;}else point={...home,angle:0};}
- else{const night=minute>=1140||minute<300;if(night){from=home;to=work;const start=minute>=1140?1140:0,end=minute>=1140?1260:180;const q=commute(start,end,from,to);point=q.point;walking=q.walking;}else point={...home,angle:0};}
+ else{if(minute>=1140&&minute<1260){from=home;to=work;const q=commute(1140,1260,from,to);point=q.point;walking=q.walking;}else if(minute>=1260||minute<180){point={...work,angle:0};}else if(minute>=180&&minute<300){from=work;to=home;const q=commute(180,300,from,to);point=q.point;walking=q.walking;}else point={...home,angle:0};}
  if(!walking){const base=actorClass==='worker'&&minute>=540&&minute<960?work:actorClass==='child'&&minute>=510&&minute<780?school:actorClass==='retiree'&&minute>=630&&minute<780?park:actorClass==='retiree'&&minute>=840&&minute<930?cafe:home;point=stroll(base,i);walking=true;}
  const side=i%2===0?1:-1,offset=.72*side,actorAngle=point.angle||0;let x=point.x+Math.cos(actorAngle)*offset,y=point.y-Math.sin(actorAngle)*offset;const crowdX=((i%3)-1)*.16,crowdY=((Math.floor(i/3)%3)-1)*.16;x+=crowdX;y+=crowdY;const pedColor=actorClass==='mafia'?'#24282c':actorClass==='retiree'?'#788b91':actorClass==='child'?['#e4a34c','#5d91b4','#bd6c68'][i%3]:colors[i%colors.length];add(x,y,'ped',pedColor,actorAngle,!walking,'ped-'+i,actorClass);}
  return actors;
@@ -1292,7 +1295,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   const d=profile?profile.depth:baseDepth*(.82+seed2*.34);
   // Jedes Gebäude bleibt fest auf seinem eigenen Grundstück. Große Zusatzverschiebungen
   // lassen benachbarte Gebäude ineinander rutschen.
-  g.position.set(t.x,0,t.y);
+  const plotOffset=front?.72:0;
+  g.position.set(t.x+(front?t.x-front.x:0)*plotOffset,0,t.y+(front?t.y-front.y:0)*plotOffset);
   const base=mat(b.color||'#c78c69'),side=mat(shadeFacade(b.color||'#c78c69',-22)),roof=mat(profile?.roof||(kind==='oldhome'||t.district==='oldtown'?'#a85a48':kind==='factory'?'#687579':'#655b52'));
   const trim=mat('#e9dfcb'),foundation=mat('#655b52'),frame=mat('#493f37'),glassLit=mat('#a9d9e8',.18),doorGlass=mat('#8fc5d4',.2);
   // Vorderseite heller, Seiten und Rückseite mit eigener Fassadenfarbe.
