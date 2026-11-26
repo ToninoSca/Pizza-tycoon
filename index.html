@@ -1046,17 +1046,32 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    box(g,.08,.52,.08,mat('#59666a'),.38,h+.42,.28);
    box(g,.5,.06,.5,trim,.38,h+.69,.28);
   }else if(kind==='school'){
-   // Schule: breiter Campus-Mitteltrakt mit zwei Seitenflügeln, Uhr, Pausenhof und Flaggenmast.
-   box(g,w+.2,.2,d+.18,trim,0,h+.16,0);
-   box(g,w*.72,h*.62,d*.58,side,0,h*.36,-d*.16);
-   for(const sx of [-1,1]){box(g,w*.24,h*.44,d*.68,base,sx*w*.31,h*.26,-d*.08);box(g,w*.26,.12,d*.7,roof,sx*w*.31,h*.49,-d*.08);}
-   box(g,.52,.72,.24,side,0,.42,d/2+.08);
-   box(g,.3,.28,.05,mat('#e4d4a0'),0,h+.38,d/2+.03);
-   const clock=new THREE.Mesh(new THREE.CircleGeometry(.13,20),mat('#f3e8c9'));clock.position.set(0,h+.44,d/2+.08);g.add(clock);
-   box(g,w*.72,.16,.22,roof,0,h+.7,-d*.2);
-   box(g,1.05,.035,.7,mat('#8c9d91'),w*.62,.04,d*.58);
-   box(g,.06,.85,.06,mat('#87949a'),-w*.62,.42,d*.55);
-   box(g,.42,.24,.035,mat('#d9d2bb'),-w*.62,.86,d*.55);
+   // Eigenständiger Schulcampus: Mittelbau, Klassenflügel, Sporthalle und Schulhof.
+   const schoolWall=mat('#d7c8a3'),schoolAccent=mat('#bd9b53'),schoolRoof=mat('#647b83'),schoolGlass=mat('#9cc9d5',.22),court=mat('#849c9a');
+   box(g,w*.62,h*.62,d*.62,schoolWall,0,h*.34,-d*.08);
+   box(g,w*.66,.16,d*.68,schoolRoof,0,h*.66,-d*.08);
+   box(g,.52,.72,.25,schoolAccent,0,.42,d/2+.08);
+   box(g,.38,.42,.06,trim,0,.5,d/2+.12);
+   const clock=new THREE.Mesh(new THREE.CircleGeometry(.15,24),mat('#f6edcf'));clock.position.set(0,h*.76,d/2+.04);g.add(clock);
+   for(const sx of [-1,1]){
+    const wing=new THREE.Group();wing.position.set(sx*w*.34,0,-d*.18);g.add(wing);
+    box(wing,w*.27,h*.46,d*.58,base,0,h*.24,0);
+    box(wing,w*.29,.14,d*.62,schoolRoof,0,h*.48,0);
+    box(wing,.34,.48,.035,schoolGlass,0,h*.24,d*.29);
+    for(const wx of [-.32,.32])for(const wy of [.65,1.15])if(wy<h*.45)box(wing,.18,.2,.035,schoolGlass,wx,wy,d*.29);
+   }
+   const gym=new THREE.Group();gym.position.set(w*.63,0,-d*.26);g.add(gym);
+   box(gym,w*.24,h*.48,d*.62,schoolWall,0,h*.24,0);
+   box(gym,w*.26,.18,d*.66,schoolRoof,0,h*.49,0);
+   box(gym,w*.22,.36,.035,schoolGlass,0,h*.3,d*.32);
+   box(g,.9,.035,.72,court,-w*.18,.035,d*.64);
+   box(g,.58,.025,.38,mat('#bd9b79'),-w*.18,.06,d*.64);
+   for(const sx of [-1,1]){
+    box(g,.24,.07,.18,mat('#71966b'),sx*w*.52,.05,d*.52);
+    box(g,.055,.65,.055,mat('#87949a'),sx*w*.58,.34,d*.58);
+   }
+   box(g,.44,.23,.035,mat('#d9d2bb'),-w*.58,.78,d*.58);
+   box(g,.12,.04,.12,schoolAccent,0,h+.74,-d*.08);
  }else if(kind==='factory'){
    // Fabrik: Sheddach, hohe Lüftungsrohre und breites Industrietor.
    for(const x of [-.42,0,.42]){
@@ -1166,7 +1181,12 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    box(g,.8,.055,.06,trim,0,h*.27,d/2+.13);
    if(kind==='cafe'||kind==='pizza'){box(g,.16,.16,.12,trim,-.38,h*.93,d/2+.28);box(g,.16,.16,.12,trim,.38,h*.93,d/2+.28);}
   }
-  if(kind==='landmark'){for(let k=-1;k<=1;k++)box(g,.16,.65,.16,roof,k*.43,h+.55,0);}
+  if(kind==='school'){
+   box(g,.92,.18,.06,mat('#b39a42'),0,h*.86,d/2+.06);
+   for(let n=0;n<3;n++)box(g,.12,.025,.3,mat(['#c65b51','#e1bf55','#5d91b4'][n]),-.3+n*.3,.08,d*.65);
+   for(let n=0;n<4;n++){const rack=new THREE.Group();rack.position.set(-.55+n*.24,0,d*.58);g.add(rack);box(rack,.035,.3,.035,mat('#687879'),0,.15,0);box(rack,.2,.035,.035,mat('#687879'),0,.3,0);}
+ }
+ if(kind==='landmark'){for(let k=-1;k<=1;k++)box(g,.16,.65,.16,roof,k*.43,h+.55,0);}
   // Seitenfenster werden bereits im gemeinsamen Fensterblock erzeugt.
   if(kind==='pizza'&&t===window.__pizzaCity?.tiles?.find(q=>q.building?.kind==='pizza'))box(g,.42,.42,.42,mat('#b84d37'),0,h+.42,0);
   // Großzügige unsichtbare Trefferfläche macht Gebäude auf dem Handy leichter antippbar.
