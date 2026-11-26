@@ -912,21 +912,29 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  const sun=new THREE.DirectionalLight(0xffe8c5,2.6);sun.position.set(-5,12,8);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
  const M=(c,r=.8)=>new THREE.MeshStandardMaterial({color:c,roughness:r});
  const wood=M('#805237'),wood2=M('#b17a4e'),cream=M('#ead8b8'),wall=M('#d8c5a7'),brick=M('#a9573f'),metal=M('#59676b',.35),green=M('#527b50'),dark=M('#403b36'),glass=M('#9dcbd0',.25);
- let room=new THREE.Group();scene.add(room);let people=[],customers=[],tableObstacles=[],clock=0,nextGuest=2.5,activeKind='pizza',accent=M('#b94f35'),currentUpgrades={};
+ let room=new THREE.Group();scene.add(room);let people=[],customers=[],tableObstacles=[],clock=0,nextGuest=2.5,activeKind='pizza',accent=M('#b94f35'),currentUpgrades={},kitchenJob=null;
  function mesh(parent,geo,mat,x,y,z){const o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
  function cube(parent,w,h,d,mat,x,y,z){return mesh(parent,new THREE.BoxGeometry(w,h,d),mat,x,y,z);}
  function cylinder(parent,r,h,mat,x,y,z){return mesh(parent,new THREE.CylinderGeometry(r,r,h,18),mat,x,y,z);}
  function person(x,z,shirt,appearance='adult'){
   const g=new THREE.Group();g.position.set(x,0,z);room.add(g);
   const isChild=appearance==='Schulkind',isSenior=appearance==='Rentner',isMafia=appearance==='Mafioso';
-  const body=M(isMafia?'#252b31':isSenior?'#687b83':shirt),skin=M(isSenior?'#c99f82':'#d9aa83'),trouser=M(isMafia?'#20242b':isSenior?'#4b5154':'#35404b'),hair=M(isSenior?'#c5c8c5':isChild?'#75472e':isMafia?'#292725':'#49372d'),shoe=M('#292d30');
+  const body=M(isMafia?'#252b31':isSenior?'#687b83':shirt),skin=M(isSenior?'#c99f82':'#d9aa83'),trouser=M(isMafia?'#20242b':isSenior?'#4b5154':'#35404b'),hair=M(isSenior?'#c5c8c5':isChild?'#75472e':isMafia?'#292725':'#49372d'),shoe=M('#292d30'),detail=M(isMafia?'#b9a78e':isSenior?'#d2d0c9':'#e5d7bd');
   cylinder(g,.2,.66,body,0,1.02,0);
-  mesh(g,new THREE.SphereGeometry(.19,16,12),skin,0,1.57,0);
+  cylinder(g,.075,.16,skin,0,1.39,0);
+  mesh(g,new THREE.SphereGeometry(.19,20,16),skin,0,1.57,0);
+  mesh(g,new THREE.SphereGeometry(.035,10,8),skin,0,1.54,.19);
+  for(const sx of [-1,1]){mesh(g,new THREE.SphereGeometry(.045,10,8),skin,sx*.19,1.55,0);cube(g,.055,.018,.025,hair,sx*.07,1.65,.17);}
+  cube(g,.075,.018,.018,dark,0,1.48,.185);
   mesh(g,new THREE.SphereGeometry(.195,16,10,0,Math.PI*2,0,Math.PI*.48),hair,0,1.66,-.015);
   cube(g,.035,.035,.025,dark,.07,1.59,.17);cube(g,.035,.035,.025,dark,-.07,1.59,.17);
   cube(g,.13,.48,.15,trouser,-.09,.31,0);cube(g,.13,.48,.15,trouser,.09,.31,0);
-  cube(g,.16,.08,.28,shoe,-.09,.06,.06);cube(g,.16,.08,.28,shoe,.09,.06,.06);
-  const arm1=cube(g,.1,.48,.12,body,-.25,1.02,0),arm2=cube(g,.1,.48,.12,body,.25,1.02,0);
+  cube(g,.17,.075,.3,shoe,-.09,.055,.07);cube(g,.17,.075,.3,shoe,.09,.055,.07);
+  cube(g,.12,.035,.25,detail,-.09,.018,.07);cube(g,.12,.035,.25,detail,.09,.018,.07);
+  cube(g,.36,.055,.22,trouser,0,.67,0);
+  const arm1=cube(g,.115,.43,.13,body,-.25,1.02,0),arm2=cube(g,.115,.43,.13,body,.25,1.02,0);
+  const hand1=mesh(g,new THREE.SphereGeometry(.075,12,10),skin,-.25,.76,.015),hand2=mesh(g,new THREE.SphereGeometry(.075,12,10),skin,.25,.76,.015);
+  cube(g,.07,.12,.15,detail,-.105,1.27,.11);cube(g,.07,.12,.15,detail,.105,1.27,.11);
   cylinder(g,.055,.13,skin,-.25,.75,0);cylinder(g,.055,.13,skin,.25,.75,0);
   if(isChild){
    // Bunte Kinderkleidung, Rucksack und Kappe machen Schulkinder sofort erkennbar.
@@ -947,7 +955,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    cube(g,.13,.045,.035,M('#17191b'),0,1.6,.2);cube(g,.09,.045,.035,M('#17191b'),-.09,1.6,.2);cube(g,.09,.045,.035,M('#17191b'),.09,1.6,.2);
    cylinder(g,.25,.045,M('#17191b'),0,1.79,0);cylinder(g,.14,.19,M('#24272a'),0,1.88,0);
   }
-  return {g,arm1,arm2,homeX:x,homeZ:z,appearance};
+  return {g,arm1,arm2,hand1,hand2,homeX:x,homeZ:z,appearance};
  }
  function seat(x,z,rot=0){
   const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;room.add(g);
@@ -963,7 +971,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  }
  function wallPanel(x,y,z,w,h,d,color){cube(room,w,h,d,M(color),x,y,z);}
  function build(kind,color,upgrades={}){
-  room.clear();people=[];customers=[];tableObstacles=[];activeKind=kind||'pizza';currentUpgrades=upgrades||{};accent=M(color||'#b94f35');
+  room.clear();people=[];customers=[];tableObstacles=[];kitchenJob=null;activeKind=kind||'pizza';currentUpgrades=upgrades||{};accent=M(color||'#b94f35');
   const mat2=(c,r=.82)=>M(c,r),creamWall=mat2('#f0dfc4'),plaster=mat2('#ead9bd'),plasterSide=mat2('#d9c3a2'),tileDark=mat2('#b77d55'),tileLight=mat2('#ead9bd'),brass=mat2('#b58a4e',.38),woodDark=mat2('#60402e'),woodMid=mat2('#91603e'),woodLight=mat2('#bd8b5a'),steel=mat2('#68777a',.35),black=mat2('#252b2b',.4),leafMat=mat2('#39784c'),glassPane=new THREE.MeshStandardMaterial({color:'#9ccbd0',roughness:.18,metalness:.12});
   // Solider Boden mit sichtbaren Fugen, umlaufendem Sockel und warmem Holzbereich.
   cube(room,14,.25,12,mat2('#aa8b68'),0,-.15,0);
@@ -1044,6 +1052,13 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    // Klassische Kochmütze als sichtbares Rollenmerkmal.
    cube(chef.g,.34,.12,.34,mat2('#fffdf4'),0,1.82,0);mesh(chef.g,new THREE.SphereGeometry(.18,12,10),mat2('#fffdf4'),0,1.88,0);
    const cashier=person(-4.1,.8,'#314c62');cashier.role='cashier';people.push(cashier);
+   const pizza=new THREE.Group();
+   cylinder(pizza,.37,.075,mat2('#d8a45e'),0,0,0);cylinder(pizza,.325,.018,mat2('#c94d37'),0,.045,0);cylinder(pizza,.29,.018,mat2('#f2d778'),0,.058,0);
+   for(const [px,pz] of [[-.15,-.12],[.12,-.15],[.19,.1],[-.1,.16],[.02,.02]]){cylinder(pizza,.055,.025,mat2('#bd4938'),px,.08,pz);mesh(pizza,new THREE.SphereGeometry(.035,8,6),mat2('#5b8c4c'),px+.035,.095,pz+.025);}
+   room.add(pizza);pizza.position.set(1.55,1.12,-3.8);
+   const ovenGlow=new THREE.Mesh(new THREE.BoxGeometry(.55,.24,.035),new THREE.MeshStandardMaterial({color:'#ff8b36',emissive:'#ff5a16',emissiveIntensity:1.2}));ovenGlow.position.set(-1.45,.72,-2.985);room.add(ovenGlow);ovenGlow.visible=false;
+   const tillLight=new THREE.Mesh(new THREE.BoxGeometry(.16,.08,.045),new THREE.MeshStandardMaterial({color:'#64d58a',emissive:'#28b968',emissiveIntensity:.2}));tillLight.position.set(-4.85,1.42,-.18);room.add(tillLight);
+   kitchenJob={chef,cashier,pizza,ovenGlow,tillLight,phase:'prep',timer:0,phaseOrder:['prep','toOven','insert','bake','remove','deliver','handoff'],durations:{prep:3.8,toOven:2.2,insert:1.25,bake:5.2,remove:1.2,deliver:2.2,handoff:1.4}};
   }else{
    for(const x of [-4.5,-1.5,1.5,4.5]){
     cube(room,1.15,2.3,.55,dark,x,1.15,-4.65);
@@ -1079,12 +1094,30 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   p.g.rotation.y=Math.atan2(dx,dz);return false;
  }
  function updatePeople(dt){
-  for(const p of people){if(p.role==='chef'){const q=Math.sin(clock*1.25);p.g.position.x=-3.3+q*.65;p.g.position.z=-2.5+Math.cos(clock*.8)*.25;p.arm1.rotation.z=Math.sin(clock*5)*.5;p.arm2.rotation.z=-Math.sin(clock*5)*.5;}else if(p.role==='cashier'){p.g.position.x=-4.1+Math.sin(clock*.7)*.12;p.arm1.rotation.z=Math.sin(clock*2)*.2;}}
+  for(const p of people){if(p.role==='chef'&&kitchenJob){
+    const job=kitchenJob;job.timer+=dt;const phase=job.phase,idx=job.phaseOrder.indexOf(phase);
+    if(job.timer>=job.durations[phase]){job.timer=0;job.phase=job.phaseOrder[(idx+1)%job.phaseOrder.length];}
+    const targets={prep:[1.05,-3.05],toOven:[-1.45,-2.12],insert:[-1.45,-2.12],bake:[-1.45,-2.12],remove:[-1.45,-2.12],deliver:[-3.25,-.85],handoff:[-3.8,-.55]};
+    const target=targets[job.phase]||targets.prep,blend=Math.min(1,dt*2.5),dx=target[0]-p.g.position.x,dz=target[1]-p.g.position.z;
+    p.g.position.x+=dx*blend;p.g.position.z+=dz*blend;if(Math.hypot(dx,dz)>.12)p.g.rotation.y=Math.atan2(dx,dz);
+    const working=job.phase==='prep'||job.phase==='insert'||job.phase==='remove'||job.phase==='handoff',swing=Math.sin(clock*(job.phase==='prep'?7:10));
+    p.arm1.rotation.z=working?-.48+Math.max(0,swing)*.48:job.phase==='toOven'||job.phase==='deliver'?.42:Math.sin(clock*2)*.08;
+    p.arm2.rotation.z=working?.48-Math.max(0,swing)*.48:job.phase==='toOven'||job.phase==='deliver'?.42:-Math.sin(clock*2)*.08;
+    p.arm1.rotation.x=working?-.32:0;p.arm2.rotation.x=working?-.32:0;p.g.position.y=job.phase==='prep'?Math.abs(swing)*.025:0;
+    const pizza=job.pizza,handX=p.g.position.x+.34,handZ=p.g.position.z+.22;
+    if(job.phase==='prep'){pizza.visible=true;pizza.position.set(1.55,1.13,-3.8);pizza.rotation.y=clock*.12;job.ovenGlow.visible=false;}
+    else if(job.phase==='toOven'||job.phase==='deliver'){pizza.visible=true;pizza.position.set(handX,1.18,handZ);pizza.rotation.y=p.g.rotation.y;job.ovenGlow.visible=false;}
+    else if(job.phase==='insert'){pizza.visible=true;const t=Math.min(1,job.timer/job.durations.insert);pizza.position.set(-1.45,1.05,-2.7-t*.48);pizza.rotation.y=0;job.ovenGlow.visible=true;}
+    else if(job.phase==='bake'){pizza.visible=true;pizza.position.set(-1.45,.82,-3.17);pizza.rotation.y=Math.sin(clock*2)*.04;job.ovenGlow.visible=true;}
+    else if(job.phase==='remove'){pizza.visible=true;const t=Math.min(1,job.timer/job.durations.remove);pizza.position.set(-1.45,1.0,-3.17+t*.42);job.ovenGlow.visible=true;}
+    else if(job.phase==='handoff'){pizza.visible=true;pizza.position.set(-4.0,1.17,-.35);pizza.rotation.y=0;job.ovenGlow.visible=false;if(job.timer>.75)pizza.visible=false;}
+  }else if(p.role==='cashier'&&kitchenJob){const job=kitchenJob;p.g.position.x=-4.1+Math.sin(clock*.7)*.035;p.arm1.rotation.z=job.cashierBusy>0?-.72+Math.sin(clock*12)*.12:Math.sin(clock*1.5)*.08;p.arm2.rotation.z=job.cashierBusy>0?.62+Math.sin(clock*12)*.1:-Math.sin(clock*1.5)*.08;if(job.cashierBusy>0){job.cashierBusy=Math.max(0,job.cashierBusy-dt);job.tillLight.material.emissiveIntensity=.9;}else job.tillLight.material.emissiveIntensity=.2;}}
   for(let i=customers.length-1;i>=0;i--){
    const p=customers[i];p.timer+=dt;p.g.position.y=Math.abs(Math.sin(clock*5+i))*0.025;
    if(p.state==='enter'){const waypoint=p.route?.[p.routeIndex]||p.target;if(moveToward(p,waypoint[0],waypoint[1],dt)){p.routeIndex=(p.routeIndex||0)+1;if(p.routeIndex>=(p.route?.length||1)){p.state='eat';p.timer=0;}}}
    else if(p.state==='eat'&&p.timer>5){p.state='pay';p.timer=0;}
-   else if(p.state==='pay'&&moveToward(p,-4.2,.9,dt,1.7)){p.state='leave';p.timer=0;}
+   else if(p.state==='pay'&&moveToward(p,-4.2,.9,dt,1.7)){p.state='paying';p.timer=0;if(kitchenJob)kitchenJob.cashierBusy=1.65;}
+   else if(p.state==='paying'&&p.timer>1.8){p.state='leave';p.timer=0;}
    else if(p.state==='leave'&&moveToward(p,0,5.6,dt,1.6)){room.remove(p.g);customers.splice(i,1);}
   }
   if(activeKind==='pizza'){const data=window.__pizzaCity?.getClockData?.()||{minute:480};const h=data.minute/60;const night=h<7||h>=23;const rush=(h>=7&&h<9)||(h>=12&&h<14)||(h>=17&&h<20);nextGuest-=dt*(night?.15:rush?1.55:1);if(nextGuest<=0){spawnCustomer();nextGuest=(night?28: rush?3.2:7)+Math.random()*(night?18: rush?2:5);}}
