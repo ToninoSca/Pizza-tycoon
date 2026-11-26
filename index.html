@@ -677,9 +677,9 @@ function cityActors(time){
   const side=Number(lane)||.62,offsetPath=path.map((p,i)=>{
    const prev=path[Math.max(0,i-1)],next=path[Math.min(path.length-1,i+1)];
    const dx1=p.x-prev.x,dy1=p.y-prev.y,dx2=next.x-p.x,dy2=next.y-p.y;
-   const n1=i===0?{x:dy2,y:-dx2}:{x:dy1,y:-dx1};
-   const n2=i===path.length-1?n1:{x:dy2,y:-dx2};
-   if(i===0||i===path.length-1)return{x:p.x+n1.x*side,y:p.y+n1.y*side};
+   // An Start und Ziel wird weich auf die feste Standposition (Versatz nach +X) übergeleitet.
+   const n1=i===0?{x:1,y:0}:{x:dy1,y:-dx1};
+   const n2=i===path.length-1?{x:1,y:0}:{x:dy2,y:-dx2};
    let mx=n1.x+n2.x,my=n1.y+n2.y,ml=Math.hypot(mx,my);
    if(ml<.001)return{x:p.x+n2.x*side,y:p.y+n2.y*side};
    mx/=ml;my/=ml;const denom=mx*n2.x+my*n2.y,scale=Math.abs(denom)>.001?side/denom:side;
