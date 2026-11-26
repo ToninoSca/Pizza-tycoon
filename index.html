@@ -123,7 +123,7 @@ function makeCity(){
   if(!besideRoad)continue;
   // Freie Grundstücke zwischen den Häusern lassen: die Bebauung folgt den Straßen statt jede Fläche zu füllen.
   const placeRoll=(((t.x*73856093)^(t.y*19349663)^0x5bd1e995)>>>0)%100;
-  if(placeRoll>58)continue;
+  if(placeRoll>43)continue;
   const roll=(((t.x*73856093)^(t.y*19349663))>>>0)%100;
   let kind=0;
   if(t.district==='industrial')kind=roll<35?9:roll<52?5:roll<68?3:roll<80?7:roll<89?8:6;
@@ -972,9 +972,9 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    else slab(sx,sz,1.025,.26,sidewalk,.065);
   }
  }
- const typeHeight={home:1.8,oldhome:2.1,apartments:3.3,office:4.8,school:2.8,market:2.3,park:.2,shop:2.0,cafe:2.0,factory:1.8,landmark:4.0,wholesale:2.65,deli:1.95,hardware:2.2,pizza:2.45};
+ const typeHeight={home:1.8,oldhome:2.1,apartments:3.3,office:4.8,school:3.65,market:2.3,park:.2,shop:2.0,cafe:2.0,factory:1.8,landmark:4.0,wholesale:2.65,deli:1.95,hardware:2.2,pizza:2.45};
  // Zentrale Gebäudesteckbriefe: neue Gebäudetypen bekommen hier später ihre eigene Silhouette.
- const buildingProfiles={pizza:{width:1.42,depth:1.2,roof:'#9d4938',sign:'PIZZERIA',logo:'🍕',signColor:'#b83e2d',style:'pizza'},wholesale:{width:1.5,depth:1.42,roof:'#526b75',sign:'GROSSHANDEL',logo:'📦',signColor:'#27677d',style:'warehouse'},deli:{width:1.28,depth:1.16,roof:'#87563e',sign:'FEINKOST',logo:'🥫',signColor:'#8b4d32',style:'deli'},hardware:{width:1.42,depth:1.22,roof:'#a38b3e',sign:'BAUMARKT',logo:'🔨',signColor:'#987b27',style:'hardware'},cafe:{width:1.3,depth:1.12,roof:'#89583c',sign:'CAFÉ',logo:'☕',signColor:'#8d4e31',style:'cafe'},market:{width:1.42,depth:1.25,roof:'#73864d',sign:'MARKT',logo:'🛒',signColor:'#617d3d',style:'market'}};
+ const buildingProfiles={pizza:{width:1.42,depth:1.2,roof:'#9d4938',sign:'PIZZERIA',logo:'🍕',signColor:'#b83e2d',style:'pizza'},wholesale:{width:1.5,depth:1.42,roof:'#526b75',sign:'GROSSHANDEL',logo:'📦',signColor:'#27677d',style:'warehouse'},deli:{width:1.28,depth:1.16,roof:'#87563e',sign:'FEINKOST',logo:'🥫',signColor:'#8b4d32',style:'deli'},hardware:{width:1.42,depth:1.22,roof:'#a38b3e',sign:'BAUMARKT',logo:'🔨',signColor:'#987b27',style:'hardware'},cafe:{width:1.3,depth:1.12,roof:'#89583c',sign:'CAFÉ',logo:'☕',signColor:'#8d4e31',style:'cafe'},market:{width:1.42,depth:1.25,roof:'#73864d',sign:'MARKT',logo:'🛒',signColor:'#617d3d',style:'market'},school:{width:1.62,depth:1.42,roof:'#b5a45f',sign:'GRUNDSCHULE',logo:'🏫',signColor:'#b39a42',style:'school'}};
  function makeBuilding(t){
   const b=t.building;if(!b||b.kind==='park')return;
   const g=new THREE.Group();city.add(g);
@@ -987,8 +987,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   const heightRange={home:.88,oldhome:.9,apartments:.84,office:.86,school:.9,factory:.88,shop:.86,cafe:.9,market:.92};
   const heightFactor=profile?1:(heightRange[kind]??.9)+seed*.3;
   const h=(typeHeight[kind]||2.0)*heightFactor;
-  const baseWidth=kind==='office'||kind==='landmark'?1.34:kind==='factory'?1.3:kind==='apartments'?1.22:kind==='school'?1.28:1.14;
-  const baseDepth=kind==='factory'?1.28:kind==='apartments'?1.18:kind==='school'?1.2:1.08;
+  const baseWidth=kind==='office'||kind==='landmark'?1.34:kind==='factory'?1.3:kind==='apartments'?1.22:kind==='school'?1.5:1.14;
+  const baseDepth=kind==='factory'?1.28:kind==='apartments'?1.18:kind==='school'?1.35:1.08;
   const w=profile?profile.width:baseWidth*(.82+seed*.34);
   const d=profile?profile.depth:baseDepth*(.82+seed2*.34);
   const base=mat(b.color||'#c78c69'),side=mat(shadeFacade(b.color||'#c78c69',-22)),roof=mat(profile?.roof||(kind==='oldhome'||t.district==='oldtown'?'#a85a48':kind==='factory'?'#687579':'#655b52'));
@@ -1046,13 +1046,18 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    box(g,.08,.52,.08,mat('#59666a'),.38,h+.42,.28);
    box(g,.5,.06,.5,trim,.38,h+.69,.28);
   }else if(kind==='school'){
-   // Schule: breiter Eingangsbereich, Mitteltrakt und Uhr am Dach.
-   box(g,w+.16,.14,d+.12,trim,0,h+.13,0);
-   box(g,.72,.72,.24,side,0,.52,d/2+.1);
-   box(g,.34,.34,.06,mat('#e4d4a0'),0,h+.43,d/2+.04);
-   const clock=new THREE.Mesh(new THREE.CircleGeometry(.12,20),mat('#f3e8c9'));clock.position.set(0,h+.43,d/2+.08);g.add(clock);
-   box(g,w*.72,.12,.18,roof,0,h+.62,-d*.2);
-  }else if(kind==='factory'){
+   // Schule: breiter Campus-Mitteltrakt mit zwei Seitenflügeln, Uhr, Pausenhof und Flaggenmast.
+   box(g,w+.2,.2,d+.18,trim,0,h+.16,0);
+   box(g,w*.78,h*.72,d*.62,side,0,h*.42,-d*.16);
+   for(const sx of [-1,1]){box(g,w*.28,h*.52,d*.72,base,sx*w*.34,h*.31,-d*.08);box(g,w*.3,.16,d*.76,roof,sx*w*.34,h*.58,-d*.08);}
+   box(g,.7,.82,.28,side,0,.48,d/2+.12);
+   box(g,.36,.34,.06,mat('#e4d4a0'),0,h+.44,d/2+.04);
+   const clock=new THREE.Mesh(new THREE.CircleGeometry(.13,20),mat('#f3e8c9'));clock.position.set(0,h+.44,d/2+.08);g.add(clock);
+   box(g,w*.72,.16,.22,roof,0,h+.7,-d*.2);
+   box(g,1.05,.035,.7,mat('#8c9d91'),w*.62,.04,d*.58);
+   box(g,.06,.85,.06,mat('#87949a'),-w*.62,.42,d*.55);
+   box(g,.42,.24,.035,mat('#d9d2bb'),-w*.62,.86,d*.55);
+ }else if(kind==='factory'){
    // Fabrik: Sheddach, hohe Lüftungsrohre und breites Industrietor.
    for(const x of [-.42,0,.42]){
     const shed=new THREE.Mesh(new THREE.ConeGeometry(.34,.36,4),roof);shed.scale.set(1,.65,1);shed.position.set(x,h+.34,-.08);shed.rotation.y=Math.PI/4;g.add(shed);
