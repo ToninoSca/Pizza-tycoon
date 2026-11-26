@@ -239,7 +239,8 @@ function drawBuilding(tile,time){
 let b=tile.building;if(!b)return;
 // Auch die 2D-Ansicht zeichnet Gebäude auf ihrem tatsächlichen Grundstück.
 // Die 2D-Karte verwendet wie die 3D-Stadt exakt das Grundstückszentrum.
-// Gebäude bleiben mittig auf ihrem Grundstück. Ein künstlicher Versatz schiebt große Fassaden in Nachbarflächen und Gehwege.\nlet p=screen(tile.x,tile.y),z=cam.zoom;
+// Gebäude bleiben mittig auf ihrem Grundstück. Ein künstlicher Versatz schiebt große Fassaden in Nachbarflächen und Gehwege.
+let p=screen(tile.x,tile.y),z=cam.zoom;
 if(tile===state.owned)b={name:state.company,emoji:state.brandLogo||'🍕',color:state.brandColor||'#ed8a42',kind:'pizza'};
 const seed=tile.id*9301+17,rand=n=>{let v=Math.sin(seed+n*127.1)*43758.5453;return v-Math.floor(v);};
 if(b.kind==='pool'){
@@ -1341,7 +1342,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   // lassen benachbarte Gebäude ineinander rutschen.
   // Das Grundstückszentrum ist die feste Position. Ein zusätzlicher Versatz
   // verschiebt das Gebäude um mehrere Meter und lässt es auf Nachbargrundstücke rutschen.
-  // Gebäude stehen zentriert auf ihrem Grundstück; der Straßenabstand entsteht durch die freie Gehweg-Kachel.\n  g.position.set(t.x,0,t.y);
+  // Gebäude stehen zentriert auf ihrem Grundstück; der Straßenabstand entsteht durch die freie Gehweg-Kachel.
+  g.position.set(t.x,0,t.y);
   const base=mat(b.color||'#c78c69'),side=mat(shadeFacade(b.color||'#c78c69',-22)),roof=mat(profile?.roof||(kind==='oldhome'||t.district==='oldtown'?'#a85a48':kind==='factory'?'#687579':'#655b52'));
   const trim=mat('#e9dfcb'),foundation=mat('#655b52'),frame=mat('#493f37'),glassLit=mat('#a9d9e8',.18),doorGlass=mat('#8fc5d4',.2);
   // Vorderseite heller, Seiten und Rückseite mit eigener Fassadenfarbe.
