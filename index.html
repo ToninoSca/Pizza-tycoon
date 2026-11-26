@@ -77,6 +77,7 @@ const buildings=[
 {name:'Großhandel',emoji:'📦',color:'#6d9eb1',kind:'wholesale'},
  {name:'Feinkost',emoji:'🥫',color:'#ba8d61',kind:'deli'},
  {name:'Baumarkt',emoji:'🔨',color:'#b5a263',kind:'hardware'},
+ {name:'Kino',emoji:'🎬',color:'#765a91',kind:'cinema'},
 ];
 const ROAD_X=[6,18,33,48,56],ROAD_Y=[7,21,35,49,56];
 const BUILDING_X=Array.from({length:28},(_,i)=>4+i*2),BUILDING_Y=Array.from({length:28},(_,i)=>4+i*2);
@@ -151,7 +152,11 @@ function makeCity(){
   if(kind===null)continue;
   t.building=buildings[kind];placed.push({x:t.x,y:t.y,kind});
  }
-  // Besondere Geschäfte als feste, gut auffindbare Stadtziele
+  // Großes Freizeitareal: ein zusammenhängender Stadtpark mit Wegen und Grünflächen.
+ for(const t of tiles){if(t.x>=42&&t.x<=46&&t.y>=26&&t.y<=30){t.building=null;t.space='largepark';t.ground='#75a967';t.plot=true;}}
+ const parkCenter=tiles.find(t=>t.x===44&&t.y===28);if(parkCenter)parkCenter.building={name:'Stadtpark',emoji:'🌳',color:'#4e895c',kind:'park',siteId:'citypark'};
+ // Besondere Freizeit- und Einkaufsziele als feste, gut auffindbare Stadtziele.
+ const cinema=tiles.find(t=>t.x===39&&t.y===27);if(cinema){cinema.building={name:'Lichtspielhaus',emoji:'🎬',color:'#765a91',kind:'cinema',siteId:'cinema'};cinema.space=null;cinema.plot=true;cinema.ground='#b8b09c';cinema.traffic=90;}
  const specialSites=[{x:8,y:8,name:'Großhandel',emoji:'📦',color:'#6d9eb1',kind:'wholesale',siteId:'wholesale'},{x:20,y:48,name:'Feinkost',emoji:'🥫',color:'#ba8d61',kind:'deli',siteId:'deli'},{x:27,y:46,name:'Baumarkt',emoji:'🔨',color:'#b5a263',kind:'hardware',siteId:'hardware'}];
  for(const site of specialSites){const t=tiles.find(q=>q.x===site.x&&q.y===site.y);if(t){t.building={name:site.name,emoji:site.emoji,color:site.color,kind:site.kind,siteId:site.siteId};t.plot=true;t.space=null;t.ground='#b8b09c';t.traffic=75;}}
  // Ein markantes Rathaus als Orientierungspunkt im Zentrum
@@ -201,9 +206,9 @@ if(b.kind==='park'){
   ctx.fillStyle='#e7d8a8';ctx.beginPath();ctx.arc(p.x-3*z,p.y-5*z,3*z,0,Math.PI*2);ctx.fill();return;
 }
 const kind=b.kind,wallColor=shade(b.color,Math.floor(rand(90)*25)-12);
-let floors=kind==='office'?2+Math.floor(rand(2)*3):kind==='apartments'?2+Math.floor(rand(2)*2):kind==='landmark'?3:kind==='factory'?1:kind==='school'?2:kind==='market'?1+Math.floor(rand(2)):kind==='pizza'?2:1+Math.floor(rand(3));
-let h=(kind==='office'?floors*15:kind==='apartments'?floors*12:kind==='landmark'?88:kind==='factory'?29:kind==='school'?43:kind==='market'?39:kind==='pizza'?48:kind==='cafe'?32:kind==='oldhome'?36+floors*6:25+floors*6)*z;
-let w=(kind==='office'?24+rand(3)*10:kind==='factory'?29+rand(3)*4:kind==='school'?30+rand(3)*5:kind==='landmark'?31+rand(3)*8:kind==='market'?32+rand(3)*8:kind==='cafe'?19+rand(3)*7:kind==='pizza'?25+rand(3)*8:kind==='oldhome'?23+rand(3)*12:kind==='home'?19+rand(3)*12:25+rand(3)*10)*z;
+let floors=kind==='cinema'?2:kind==='office'?2+Math.floor(rand(2)*3):kind==='apartments'?2+Math.floor(rand(2)*2):kind==='landmark'?3:kind==='factory'?1:kind==='school'?2:kind==='market'?1+Math.floor(rand(2)):kind==='pizza'?2:1+Math.floor(rand(3));
+let h=(kind==='office'?floors*15:kind==='apartments'?floors*12:kind==='landmark'?88:kind==='factory'?29:kind==='school'?43:kind==='market'?39:kind==='cinema'?58:kind==='pizza'?48:kind==='cafe'?32:kind==='oldhome'?36+floors*6:25+floors*6)*z;
+let w=(kind==='office'?24+rand(3)*10:kind==='factory'?29+rand(3)*4:kind==='school'?30+rand(3)*5:kind==='landmark'?31+rand(3)*8:kind==='market'?32+rand(3)*8:kind==='cafe'?19+rand(3)*7:kind==='cinema'?42+rand(3)*5:kind==='pizza'?25+rand(3)*8:kind==='oldhome'?23+rand(3)*12:kind==='home'?19+rand(3)*12:25+rand(3)*10)*z;
 let d=(kind==='office'?19+rand(4)*9:kind==='factory'?24+rand(4)*4:kind==='school'?21+rand(4)*5:kind==='market'?23+rand(4)*7:kind==='cafe'?15+rand(4)*6:kind==='oldhome'?18+rand(4)*11:14+rand(4)*12)*z;
 let groundY=p.y,base=groundY-8*z,plinth=8*z,ink='#59463e',left=shade(wallColor,-34),right=shade(wallColor,-12),roof=shade(wallColor,24);
 ctx.fillStyle='#263d3655';ctx.beginPath();ctx.ellipse(p.x,base+8*z,w*1.05, d*.58,0,0,Math.PI*2);ctx.fill();
@@ -216,7 +221,7 @@ poly([{x:p.x-w,y:base},{x:p.x,y:base+d*.52},{x:p.x,y:base+d*.52+plinth},{x:p.x-w
 poly([{x:p.x,y:base+d*.52},{x:p.x+w,y:base},{x:p.x+w,y:base+plinth},{x:p.x,y:base+d*.52+plinth}],shade(wallColor,-58),ink);
 // Unterschiedliche Dächer: Satteldach, Flachdach, Mansarde und Hallendach
 const district=tile.district||'residential';
-const roofType=kind==='office'||kind==='apartments'?'flat':kind==='factory'?'shed':kind==='oldhome'?'gable':kind==='school'||kind==='landmark'?'gable':district==='oldtown'?(rand(8)<.82?'gable':'hip'):district==='industrial'?(kind==='factory'?'shed':'flat'):district==='civic'?(rand(8)<.78?'flat':'hip'):district==='shopping'?(rand(8)<.62?'flat':'gable'):kind==='home'?(rand(5)<.72?'gable':rand(6)<.5?'flat':'hip'):(rand(5)<.38?'gable':rand(7)<.5?'flat':'hip');
+const roofType=kind==='office'||kind==='apartments'?'flat':kind==='factory'?'shed':kind==='oldhome'?'gable':kind==='school'||kind==='landmark'?'gable':kind==='cinema'?'flat':district==='oldtown'?(rand(8)<.82?'gable':'hip'):district==='industrial'?(kind==='factory'?'shed':'flat'):district==='civic'?(rand(8)<.78?'flat':'hip'):district==='shopping'?(rand(8)<.62?'flat':'gable'):kind==='home'?(rand(5)<.72?'gable':rand(6)<.5?'flat':'hip'):(rand(5)<.38?'gable':rand(7)<.5?'flat':'hip');
 if(roofType==='gable'||roofType==='shed'){
   // Dach folgt exakt dem oberen Wand-Fußabdruck: linke, vordere,
   // rechte und hintere Ecke liegen auf denselben Koordinaten wie die Wände.
@@ -374,6 +379,10 @@ if(['pizza','shop','market','cafe'].includes(kind)){
   ctx.fillStyle='#fff8df';ctx.font='bold '+(6*z)+'px system-ui';ctx.textAlign='center';
   const sign=fascia(.5,.37);ctx.fillText(kind==='pizza'?(b.rivalId?(b.brand||'PIZZA').toUpperCase():(b.name||'PIZZA').toUpperCase()):kind==='cafe'?'CAFÉ':kind==='market'?'MARKT':'SHOP',sign.x,sign.y);
 }
+if(kind==='cinema'){
+  ctx.fillStyle='#f4d46f';ctx.font='bold '+(10*z)+'px system-ui';ctx.textAlign='center';ctx.fillText('★ KINO ★',p.x,base-h+20*z);
+  ctx.fillStyle='#392d4b';ctx.fillRect(p.x-w*.62,base-h+28*z,w*1.24,9*z);ctx.fillStyle='#f6d987';ctx.font='bold '+(6*z)+'px system-ui';ctx.fillText('FILM · POPCORN · PREMIERE',p.x,base-h+35*z);
+}
 if(kind==='landmark'){
   // Rathauskuppel, Uhr und Eingangsportal als weithin sichtbares Wahrzeichen
   ctx.fillStyle='#8c765b';ctx.beginPath();ctx.ellipse(p.x,base-h-10*z,12*z,8*z,0,Math.PI,Math.PI*2);ctx.fill();
@@ -416,6 +425,14 @@ if(kind==='oldhome'){
 function drawPublicSpace(tile,p){
 const z=cam.zoom,kind=tile.space;
 if(!kind)return;
+if(kind==='largepark'){
+  diamond(tile.x,tile.y,'#75ad66');
+  const seed=tile.x*31+tile.y*17;
+  if(seed%3===0)drawTree(p.x-8*z,p.y-5*z,.42*z);
+  if(seed%4===0)drawTree(p.x+10*z,p.y+2*z,.36*z);
+  ctx.strokeStyle='#e4d1a5';ctx.lineWidth=3*z;ctx.beginPath();ctx.moveTo(p.x-23*z,p.y+7*z);ctx.lineTo(p.x+23*z,p.y-7*z);ctx.stroke();
+  return;
+}
 if(kind==='plaza'){
   // Gepflasterter kleiner Stadtplatz mit Brunnen, Beeten und Sitzbänken
   diamond(tile.x,tile.y,'#cdbb98');
@@ -982,9 +999,9 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    else slab(sx,sz,1.025,.26,sidewalk,.065);
   }
  }
- const typeHeight={home:1.8,oldhome:2.1,apartments:3.3,office:4.8,school:3.65,market:2.3,park:.2,shop:2.0,cafe:2.0,factory:1.8,landmark:4.0,wholesale:2.65,deli:1.95,hardware:2.2,pizza:2.45};
+ const typeHeight={home:1.8,oldhome:2.1,apartments:3.3,office:4.8,school:3.65,cinema:3.0,market:2.3,park:.2,shop:2.0,cafe:2.0,factory:1.8,landmark:4.0,wholesale:2.65,deli:1.95,hardware:2.2,pizza:2.45};
  // Zentrale Gebäudesteckbriefe: neue Gebäudetypen bekommen hier später ihre eigene Silhouette.
- const buildingProfiles={pizza:{width:1.42,depth:1.2,roof:'#9d4938',sign:'PIZZERIA',logo:'🍕',signColor:'#b83e2d',style:'pizza'},wholesale:{width:1.5,depth:1.42,roof:'#526b75',sign:'GROSSHANDEL',logo:'📦',signColor:'#27677d',style:'warehouse'},deli:{width:1.28,depth:1.16,roof:'#87563e',sign:'FEINKOST',logo:'🥫',signColor:'#8b4d32',style:'deli'},hardware:{width:1.42,depth:1.22,roof:'#a38b3e',sign:'BAUMARKT',logo:'🔨',signColor:'#987b27',style:'hardware'},cafe:{width:1.3,depth:1.12,roof:'#89583c',sign:'CAFÉ',logo:'☕',signColor:'#8d4e31',style:'cafe'},market:{width:1.42,depth:1.25,roof:'#73864d',sign:'MARKT',logo:'🛒',signColor:'#617d3d',style:'market'},school:{width:2.05,depth:1.35,roof:'#b5a45f',sign:'GRUNDSCHULE',logo:'🏫',signColor:'#b39a42',style:'school'}};
+ const buildingProfiles={pizza:{width:1.42,depth:1.2,roof:'#9d4938',sign:'PIZZERIA',logo:'🍕',signColor:'#b83e2d',style:'pizza'},wholesale:{width:1.5,depth:1.42,roof:'#526b75',sign:'GROSSHANDEL',logo:'📦',signColor:'#27677d',style:'warehouse'},deli:{width:1.28,depth:1.16,roof:'#87563e',sign:'FEINKOST',logo:'🥫',signColor:'#8b4d32',style:'deli'},hardware:{width:1.42,depth:1.22,roof:'#a38b3e',sign:'BAUMARKT',logo:'🔨',signColor:'#987b27',style:'hardware'},cafe:{width:1.3,depth:1.12,roof:'#89583c',sign:'CAFÉ',logo:'☕',signColor:'#8d4e31',style:'cafe'},market:{width:1.42,depth:1.25,roof:'#73864d',sign:'MARKT',logo:'🛒',signColor:'#617d3d',style:'market'},school:{width:2.05,depth:1.35,roof:'#b5a45f',sign:'GRUNDSCHULE',logo:'🏫',signColor:'#b39a42',style:'school'},cinema:{width:2.35,depth:1.7,roof:'#40364f',sign:'LICHTSPIELHAUS',logo:'🎬',signColor:'#59416f',style:'cinema'}};
  function makeBuilding(t){
   const b=t.building;if(!b||b.kind==='park')return;
   const kind=b.kind;
@@ -1049,6 +1066,17 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
     box(g,.42,.055,.2,mat('#a9a69b'),0,y-.18,d/2+.1);
     for(const x of [-.19,.19])box(g,.035,.22,.035,frame,x,y-.07,d/2+.19);
    }
+  }else if(kind==='cinema'){
+   // Kino mit breiter dunkler Fassade, leuchtendem Vordach und Filmplakatwänden.
+   const cinemaWall=mat('#51445f'),marquee=mat('#e4b85f'),poster=mat('#d9a66e');
+   box(g,w*.86,.2,.34,cinemaWall,0,h*.78,d/2+.12);
+   box(g,w*.72,.16,.24,marquee,0,h*.9,d/2+.25);
+   box(g,.58,.9,.055,doorGlass,-.42,.52,d/2+.09);box(g,.58,.9,.055,doorGlass,.42,.52,d/2+.09);
+   box(g,.045,.9,.06,trim,0,.52,d/2+.13);
+   for(const sx of [-.82,.82]){box(g,.42,.68,.055,poster,sx,.9,d/2+.1);box(g,.32,.48,.025,mat('#8b526f'),sx,.9,d/2+.14);}
+   box(g,1.25,.055,.08,marquee,0,h*.78,d/2+.32);
+   for(let lx=-.52;lx<=.53;lx+=.26){const bulb=new THREE.Mesh(new THREE.SphereGeometry(.045,8,8),mat('#fff0a8',.25));bulb.position.set(lx,h*.78+.04,d/2+.37);g.add(bulb);}
+   box(g,.18,.48,.18,mat('#3f374b'),w*.34,h+.25,-d*.25);
   }else if(kind==='office'){
    // Büro: vertikale Glasfelder, zurückspringende Technikzentrale und Dachantenne.
    for(const x of [-.48,0,.48])box(g,.11,h*.78,.045,mat('#b4d4d8',.28),x,h*.52,d/2+.035);
@@ -1155,6 +1183,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    const mast=mat('#485052');box(g,.055,.72,.055,mast,0,h+.48,0);
    const board=new THREE.Mesh(new THREE.PlaneGeometry(1.12,.42),signMaterial);board.position.set(0,h+.94,.035);g.add(board);
    box(g,1.16,.045,.07,mast,0,h+.72,0);
+   if(profile.style==='cinema'){box(g,.06,.48,.06,mast,0,h+1.15,.04);box(g,.72,.34,.07,mat('#30263d'),0,h+1.42,.04);}
    if(profile.style==='pizza'){
     // Runder, roter Dachaufsatz erinnert zusätzlich an ein Pizza-Signet.
     const badge=new THREE.Mesh(new THREE.CylinderGeometry(.25,.25,.1,24),mat('#e6c46f'));badge.rotation.x=Math.PI/2;badge.position.set(.56,h+.55,.12);g.add(badge);
@@ -1231,6 +1260,18 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   g.userData.tile=t;g.userData.rivalBuilding=!!b.rivalId;
  }
  for(const t of tiles)if(t.building&&t.building.kind!=='park')makeBuilding(t);
+ // Großpark: zusammenhängende Wege, zentraler Springbrunnen, Bänke und Spielbereich.
+ const parkTile=tiles.find(t=>t.building?.siteId==='citypark');
+ if(parkTile){const pg=new THREE.Group();pg.position.set(44,0,28);city.add(pg);pg.userData.tile=parkTile;
+  const pathMat=mat('#d9c69d'),water=mat('#65b5c4',.32),stone=mat('#a7aaa0');
+  box(pg,4.55,.055,.72,pathMat,0,.055,0);box(pg,.72,.055,4.55,pathMat,0,.057,0);
+  const basin=new THREE.Mesh(new THREE.CylinderGeometry(.62,.72,.18,24),stone);basin.position.set(0,.13,0);pg.add(basin);
+  const pool=new THREE.Mesh(new THREE.CylinderGeometry(.48,.48,.08,24),water);pool.position.set(0,.25,0);pg.add(pool);
+  const jet=new THREE.Mesh(new THREE.CylinderGeometry(.045,.07,.48,10),water);jet.position.set(0,.51,0);pg.add(jet);
+  for(const [x,z] of [[-1.45,-1.35],[1.45,-1.35],[-1.45,1.35],[1.45,1.35]]){box(pg,.72,.1,.22,mat('#8a6246'),x,.16,z);for(const sx of [-.27,.27])box(pg,.06,.24,.06,mat('#505a58'),x+sx,.12,z);}
+  const play=mat('#d5a65f');box(pg,1.15,.1,.8,play,1.45,.1,1.55);box(pg,.08,.72,.08,mat('#647e91'),1.45,.45,1.55);box(pg,.95,.08,.08,mat('#647e91'),1.45,.76,1.55);
+  const glow=new THREE.Mesh(new THREE.PlaneGeometry(2.4,2.1),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:0,depthWrite:false}));glow.rotation.x=-Math.PI/2;glow.position.y=.16;pg.add(glow);pg.userData.glow=glow;pg.userData.glowEdge=null;
+ }
  window.addEventListener('pizza-rivals-update',()=>{for(const child of [...city.children])if(child.userData?.rivalBuilding)city.remove(child);for(const t of tiles)if(t.building?.rivalId)makeBuilding(t);});
  let selectedBuilding=null;
  function updateBuildingSelection(tile){
@@ -1249,7 +1290,9 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  for(const t of tiles){
   const noise=(x,y,n=0)=>{const v=Math.sin(x*127.1+y*311.7+n*74.7)*43758.5453;return v-Math.floor(v);};
   const nearSchool=tiles.some(s=>s.building?.kind==='school'&&Math.hypot(s.x-t.x,s.y-t.y)<2.5);
-  if(t.building?.kind==='park'||t.space==='garden'){
+  if(t.space==='largepark'){
+   if(noise(t.x,t.y,12)<.62)tree(t.x+(noise(t.x,t.y,13)-.5)*.42,t.y+(noise(t.x,t.y,14)-.5)*.42,.62+noise(t.x,t.y,15)*.28);
+  }else if(t.building?.kind==='park'||t.space==='garden'){
    tree(t.x-.2+(noise(t.x,t.y,1)-.5)*.22,t.y-.15+(noise(t.x,t.y,2)-.5)*.22,.82+noise(t.x,t.y,3)*.22);
    tree(t.x+.22+(noise(t.x,t.y,4)-.5)*.28,t.y+.2+(noise(t.x,t.y,5)-.5)*.28,.58+noise(t.x,t.y,6)*.24);
   }else if(!nearSchool&&!t.road&&!t.building&&!t.space&&noise(t.x,t.y,7)<.115){
