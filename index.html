@@ -689,7 +689,9 @@ function cityActors(time){
   // Durchgehende Parallelspur auf dem Gehweg: an Kurven wird der Versatz
   // geometrisch um die Ecke geführt, statt bei jedem Richtungswechsel zu springen.
   const side=Number(lane)||.62,offsetPath=path.map((p,i)=>{
-   const prev=path[Math.max(0,i-1)],next=path[Math.min(path.length-1,i+1)];
+   // Start- und Endpunkt exakt an die normale Standposition (+X) anbinden, damit beim Loslaufen oder Ankommen kein Seitensprung entsteht.
+   if(i===0||i===path.length-1)return{x:p.x+side,y:p.y};
+   const prev=path[i-1],next=path[i+1];
    const dx1=p.x-prev.x,dy1=p.y-prev.y,dx2=next.x-p.x,dy2=next.y-p.y;
    // An Start und Ziel wird weich auf die feste Standposition (Versatz nach +X) übergeleitet.
    const n1=i===0?{x:1,y:0}:{x:dy1,y:-dx1};
