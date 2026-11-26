@@ -1271,14 +1271,14 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  // Zentrale Gebäudesteckbriefe: neue Gebäudetypen bekommen hier später ihre eigene Silhouette.
  const buildingProfiles={pizza:{width:1.42,depth:1.2,roof:'#9d4938',sign:'PIZZERIA',logo:'🍕',signColor:'#b83e2d',style:'pizza'},wholesale:{width:1.5,depth:1.42,roof:'#526b75',sign:'GROSSHANDEL',logo:'📦',signColor:'#27677d',style:'warehouse'},deli:{width:1.28,depth:1.16,roof:'#87563e',sign:'FEINKOST',logo:'🥫',signColor:'#8b4d32',style:'deli'},hardware:{width:1.42,depth:1.22,roof:'#a38b3e',sign:'BAUMARKT',logo:'🔨',signColor:'#987b27',style:'hardware'},mafiaHQ:{width:1.62,depth:1.42,roof:'#493b35',sign:'CIRCOLO ITALIANO',logo:'🇮🇹',signColor:'#3f2925',style:'mafia'},policeStation:{width:1.62,depth:1.32,roof:'#526c80',sign:'POLIZEI',logo:'🚓',signColor:'#315c78',style:'police'},hospital:{width:1.8,depth:1.5,roof:'#c9c9c1',sign:'KRANKENHAUS',logo:'🏥',signColor:'#e9e9df',style:'hospital'},fireStation:{width:1.72,depth:1.42,roof:'#873d35',sign:'FEUERWEHR',logo:'🚒',signColor:'#a83d32',style:'fire'},prison:{width:1.65,depth:1.48,roof:'#606a6b',sign:'JUSTIZVOLLZUG',logo:'🔒',signColor:'#485252',style:'prison'},cafe:{width:1.3,depth:1.12,roof:'#89583c',sign:'CAFÉ',logo:'☕',signColor:'#8d4e31',style:'cafe'},market:{width:1.42,depth:1.25,roof:'#73864d',sign:'MARKT',logo:'🛒',signColor:'#617d3d',style:'market'},school:{width:2.05,depth:1.35,roof:'#b5a45f',sign:'GRUNDSCHULE',logo:'🏫',signColor:'#b39a42',style:'school'},cinema:{width:1.72,depth:1.42,roof:'#40364f',sign:'KINO',logo:'🎬',signColor:'#59416f',style:'cinema'}};
  function makeBuilding(t){
-  const b=t.building;if(!b||b.kind==='park'||b.kind==='pool')return;
+  const b=t.building;if(!b||t.road||b.kind==='park'||b.kind==='pool')return;
   const kind=b.kind;
   const g=new THREE.Group();city.add(g);
   // Die Eingangsseite zeigt immer zur nächstgelegenen Straße.
   const fronts=[{x:t.x,y:t.y-1,a:Math.PI},{x:t.x+1,y:t.y,a:Math.PI/2},{x:t.x,y:t.y+1,a:0},{x:t.x-1,y:t.y,a:-Math.PI/2}];
   const roadSides=fronts.filter(p=>tiles.some(q=>q.x===p.x&&q.y===p.y&&q.road));
   const front=roadSides.sort((a,b)=>Math.hypot(t.x-a.x,t.y-a.y)-Math.hypot(t.x-b.x,t.y-b.y))[0];
-  if(front){g.rotation.y=front.a;const setback=1.55;g.position.set(t.x+(t.x-front.x)*setback,0,t.y+(t.y-front.y)*setback);}else g.position.set(t.x,0,t.y);
+  if(front){g.rotation.y=front.a;const setback=.68;g.position.set(t.x+(t.x-front.x)*setback,0,t.y+(t.y-front.y)*setback);}else g.position.set(t.x,0,t.y);
   const baseProfile=buildingProfiles[kind]||null,profile=baseProfile&&kind==='pizza'?{...baseProfile,sign:b.brand||b.name||baseProfile.sign,logo:b.emoji||baseProfile.logo,signColor:b.color||baseProfile.signColor}:baseProfile,seed=((t.x*37+t.y*71)%11)/10,seed2=((t.x*13+t.y*29)%13)/12;
   // Normale Gebäude variieren in Breite, Tiefe und Höhe; Marken-Gebäude behalten ihre feste Silhouette.
   const heightRange={home:.88,oldhome:.9,apartments:.84,office:.86,school:.9,factory:.88,shop:.86,cafe:.9,market:.92};
