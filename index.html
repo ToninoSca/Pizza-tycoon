@@ -1638,7 +1638,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    if(profile.style==='pizza'){
     // Eigene Pizzeria-Architektur: rote Ziegelkante, gestreifte Markise und gut sichtbares Schaufenster.
     const pizzaRed=mat('#b94332'),pizzaCream=mat('#f2dfbd'),pizzaGlass=mat('#a8d5dc',.18);
-    const brandStripe=mat(t===state.owned?(state.brandColor||'#e85d3f'):(b.color||'#b94332'));
+    const brandStripe=mat(b.color||'#b94332');
     box(g,w+.2,.16,.13,pizzaRed,0,h+.12,0);
     // Schmaler Markenfarbstreifen direkt über dem Eingang – die übrige Fassade bleibt unverändert.
     box(g,.98,.12,.055,brandStripe,0,1.12,d/2+.36);
