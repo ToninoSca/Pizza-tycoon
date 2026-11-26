@@ -259,8 +259,8 @@ if(b.kind==='park'){
 const kind=b.kind,wallColor=shade(b.color,Math.floor(rand(90)*25)-12);
 let floors=kind==='cinema'?1:kind==='office'?2+Math.floor(rand(2)*3):kind==='apartments'?2+Math.floor(rand(2)*2):kind==='landmark'?3:kind==='factory'?1:kind==='school'?2:kind==='market'?1+Math.floor(rand(2)):kind==='pizza'?2:1+Math.floor(rand(3));
 let h=(kind==='office'?floors*15:kind==='apartments'?floors*12:kind==='landmark'?88:kind==='factory'?29:kind==='school'?51:kind==='policeStation'?39:kind==='market'?39:kind==='cinema'?43:kind==='pizza'?48:kind==='cafe'?32:kind==='oldhome'?36+floors*6:25+floors*6)*z;
-let w=(kind==='office'?24+rand(3)*10:kind==='factory'?29+rand(3)*4:kind==='school'?43+rand(3)*6:kind==='policeStation'?38+rand(3)*6:kind==='pizza'?34+rand(3)*7:kind==='landmark'?31+rand(3)*8:kind==='market'?32+rand(3)*8:kind==='cafe'?19+rand(3)*7:kind==='cinema'?38+rand(3)*4:kind==='pizza'?25+rand(3)*8:kind==='oldhome'?23+rand(3)*12:kind==='home'?19+rand(3)*12:25+rand(3)*10)*z;w=Math.min(w,34*z);
-let d=(kind==='office'?19+rand(4)*9:kind==='factory'?24+rand(4)*4:kind==='school'?29+rand(4)*6:kind==='policeStation'?27+rand(4)*5:kind==='pizza'?22+rand(4)*5:kind==='cinema'?21+rand(4)*3:kind==='market'?23+rand(4)*7:kind==='cafe'?15+rand(4)*6:kind==='oldhome'?18+rand(4)*11:14+rand(4)*12)*z;d=Math.min(d,25*z);
+let w=(kind==='office'?24+rand(3)*10:kind==='factory'?29+rand(3)*4:kind==='school'?43+rand(3)*6:kind==='policeStation'?38+rand(3)*6:kind==='pizza'?34+rand(3)*7:kind==='landmark'?31+rand(3)*8:kind==='market'?32+rand(3)*8:kind==='cafe'?19+rand(3)*7:kind==='cinema'?38+rand(3)*4:kind==='pizza'?25+rand(3)*8:kind==='oldhome'?23+rand(3)*12:kind==='home'?19+rand(3)*12:25+rand(3)*10)*z;w=Math.min(w,48*z);
+let d=(kind==='office'?19+rand(4)*9:kind==='factory'?24+rand(4)*4:kind==='school'?29+rand(4)*6:kind==='policeStation'?27+rand(4)*5:kind==='pizza'?22+rand(4)*5:kind==='cinema'?21+rand(4)*3:kind==='market'?23+rand(4)*7:kind==='cafe'?15+rand(4)*6:kind==='oldhome'?18+rand(4)*11:14+rand(4)*12)*z;d=Math.min(d,36*z);
 let groundY=p.y,base=groundY-8*z,plinth=8*z,ink='#59463e',left=shade(wallColor,-34),right=shade(wallColor,-12),roof=shade(wallColor,24);
 ctx.fillStyle='#263d3655';ctx.beginPath();ctx.ellipse(p.x,base+8*z,w*1.05, d*.58,0,0,Math.PI*2);ctx.fill();
 const leftGrad=ctx.createLinearGradient(p.x-w,base-h,p.x,base);leftGrad.addColorStop(0,shade(wallColor,7));leftGrad.addColorStop(1,left);
@@ -661,7 +661,7 @@ function cityActors(time){
  // Bewohner folgen Tagesplaenen und festen Wegen zwischen Wohnvierteln, Arbeitsplaetzen, Schulen und Parks.
  const weekday=((state.day||1)-1)%7,weekend=weekday>=5;
  const nearestRoadNode=p=>{const key=Math.round(p.x)+':'+Math.round(p.y);if(cityNearestRoadCache.has(key))return cityNearestRoadCache.get(key);let best=null,bestDistance=Infinity;for(const t of cityRoadNodes){const d=(t.x-p.x)**2+(t.y-p.y)**2;if(d<bestDistance){best=t;bestDistance=d;}}const node=best?{x:best.x,y:best.y,id:best.id}:{x:6,y:7,id:7*N+6};cityNearestRoadCache.set(key,node);return node;};
- const routePoint=(a,b,progress)=>{
+ const routePoint=(a,b,progress,lane)=>{
   const from=nearestRoadNode(a),to=nearestRoadNode(b),key=from.id+':'+to.id;
   let path=cityRoadPathCache.get(key);
   if(!path){
@@ -1349,8 +1349,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   const h=(typeHeight[kind]||2.0)*heightFactor;
   const baseWidth=kind==='office'||kind==='landmark'?1.34:kind==='factory'?1.3:kind==='apartments'?1.22:kind==='school'?1.25:1.14;
   const baseDepth=kind==='factory'?1.28:kind==='apartments'?1.18:kind==='school'?1.12:1.08;
-  const w=Math.min(profile?profile.width:baseWidth*(.82+seed*.34),.92);
-  const d=Math.min(profile?profile.depth:baseDepth*(.82+seed2*.34),.92);
+  const w=Math.min(profile?profile.width:baseWidth*(.82+seed*.34),1.7);
+  const d=Math.min(profile?profile.depth:baseDepth*(.82+seed2*.34),1.5);
   // Jedes Gebäude bleibt fest auf seinem eigenen Grundstück. Große Zusatzverschiebungen
   // lassen benachbarte Gebäude ineinander rutschen.
   // Das Grundstückszentrum ist die feste Position. Ein zusätzlicher Versatz
