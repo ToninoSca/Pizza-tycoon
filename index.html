@@ -1289,7 +1289,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   const w=profile?profile.width:baseWidth*(.82+seed*.34);
   const d=profile?profile.depth:baseDepth*(.82+seed2*.34);
   // Gebäude anhand ihrer tatsächlichen Grundfläche an die Straße setzen: Die straßenseitige Kante bleibt knapp innerhalb des Grundstücks.
-  if(front){const setback=Math.max(0,d*.5-.43);g.position.set(t.x+(t.x-front.x)*setback,0,t.y+(t.y-front.y)*setback);}else g.position.set(t.x,0,t.y);
+  if(front){const setback=Math.max(.28,d*.5-.24);g.position.set(t.x+(t.x-front.x)*setback,0,t.y+(t.y-front.y)*setback);}else g.position.set(t.x,0,t.y);
   const base=mat(b.color||'#c78c69'),side=mat(shadeFacade(b.color||'#c78c69',-22)),roof=mat(profile?.roof||(kind==='oldhome'||t.district==='oldtown'?'#a85a48':kind==='factory'?'#687579':'#655b52'));
   const trim=mat('#e9dfcb'),foundation=mat('#655b52'),frame=mat('#493f37'),glassLit=mat('#a9d9e8',.18),doorGlass=mat('#8fc5d4',.2);
   // Vorderseite heller, Seiten und Rückseite mit eigener Fassadenfarbe.
