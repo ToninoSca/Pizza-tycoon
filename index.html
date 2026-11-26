@@ -918,10 +918,16 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  function cylinder(parent,r,h,mat,x,y,z){return mesh(parent,new THREE.CylinderGeometry(r,r,h,18),mat,x,y,z);}
  function person(x,z,shirt){
   const g=new THREE.Group();g.position.set(x,0,z);room.add(g);
-  const body=M(shirt),skin=M('#d9aa83'),trouser=M('#35404b');
-  cylinder(g,.2,.66,body,0,1.02,0);cylinder(g,.145,.28,skin,0,1.5,0);
+  const body=M(shirt),skin=M('#d9aa83'),trouser=M('#35404b'),hair=M('#49372d'),shoe=M('#292d30');
+  cylinder(g,.2,.66,body,0,1.02,0);
+  // Kopf mit Haaransatz, Gesicht und klar erkennbaren Armen/Beinen.
+  mesh(g,new THREE.SphereGeometry(.19,16,12),skin,0,1.57,0);
+  mesh(g,new THREE.SphereGeometry(.195,16,10,0,Math.PI*2,0,Math.PI*.48),hair,0,1.66,-.015);
+  cube(g,.035,.035,.025,dark,.07,1.59,.17);cube(g,.035,.035,.025,dark,-.07,1.59,.17);
   cube(g,.13,.48,.15,trouser,-.09,.31,0);cube(g,.13,.48,.15,trouser,.09,.31,0);
+  cube(g,.16,.08,.28,shoe,-.09,.06,.06);cube(g,.16,.08,.28,shoe,.09,.06,.06);
   const arm1=cube(g,.1,.48,.12,body,-.25,1.02,0),arm2=cube(g,.1,.48,.12,body,.25,1.02,0);
+  cylinder(g,.055,.13,skin,-.25,.75,0);cylinder(g,.055,.13,skin,.25,.75,0);
   return {g,arm1,arm2,homeX:x,homeZ:z};
  }
  function seat(x,z,rot=0){
@@ -1015,6 +1021,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    cube(room,1.0,.8,.5,woodDark,5.6,.4,-4.5);cube(room,1.05,.08,.55,woodLight,5.6,.84,-4.5);
    for(let i=0;i<3;i++)cylinder(room,.12,.22,mat2('#c89c5b'),5.3+i*.28,.98,-4.5);
    const chef=person(-3.4,-2.5,'#f4f0e8');chef.role='chef';people.push(chef);
+   // Klassische Kochmütze als sichtbares Rollenmerkmal.
+   cube(chef.g,.34,.12,.34,mat2('#fffdf4'),0,1.82,0);mesh(chef.g,new THREE.SphereGeometry(.18,12,10),mat2('#fffdf4'),0,1.88,0);
    const cashier=person(-4.1,.8,'#314c62');cashier.role='cashier';people.push(cashier);
   }else{
    for(const x of [-4.5,-1.5,1.5,4.5]){
