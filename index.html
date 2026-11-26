@@ -1289,7 +1289,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   const w=profile?profile.width:baseWidth*(.82+seed*.34);
   const d=profile?profile.depth:baseDepth*(.82+seed2*.34);
   // Gebäude anhand ihrer tatsächlichen Grundfläche an die Straße setzen: Die straßenseitige Kante bleibt knapp innerhalb des Grundstücks.
-  if(front){const sidewalkOuterEdge=.77,plotClearance=.16,footprintHalf=d*.5;const setback=Math.max(0,sidewalkOuterEdge+plotClearance+footprintHalf-1);g.position.set(t.x+(t.x-front.x)*setback,0,t.y+(t.y-front.y)*setback);}else g.position.set(t.x,0,t.y);
+  if(front){const sidewalkOuterEdge=.77,plotClearance=.28,footprintHalf=d*.5;const setback=Math.max(.95,sidewalkOuterEdge+plotClearance+footprintHalf-1);g.position.set(t.x+(t.x-front.x)*setback,0,t.y+(t.y-front.y)*setback);}else g.position.set(t.x,0,t.y);
   const base=mat(b.color||'#c78c69'),side=mat(shadeFacade(b.color||'#c78c69',-22)),roof=mat(profile?.roof||(kind==='oldhome'||t.district==='oldtown'?'#a85a48':kind==='factory'?'#687579':'#655b52'));
   const trim=mat('#e9dfcb'),foundation=mat('#655b52'),frame=mat('#493f37'),glassLit=mat('#a9d9e8',.18),doorGlass=mat('#8fc5d4',.2);
   // Vorderseite heller, Seiten und Rückseite mit eigener Fassadenfarbe.
@@ -1580,11 +1580,29 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
     box(g,.16,.62,.16,mat('#e1d6c4'),0,h+.34,-.2);
     box(g,.42,.09,.09,fireRed,0,h+.68,-.2);
    }else if(profile.style==='prison'){
-    const concrete=mat('#727a79'),fence=mat('#4a5352');
-    box(g,w+.16,.2,.14,concrete,0,h+.12,0);
-    for(const px of [-.7,-.35,0,.35,.7])box(g,.045,.78,.045,fence,px,.42,d/2+.28);
-    box(g,1.5,.055,.055,fence,0,.76,d/2+.28);
-    for(const px of [-.7,.7]){box(g,.07,1.15,.07,fence,px,.58,-d/2-.22);box(g,.3,.06,.3,fence,px,1.18,-d/2-.22);}
+    const concrete=mat('#747a78'),darkConcrete=mat('#4e5655'),barMetal=mat('#343c3b'),cellGlass=mat('#303c40',.4),securityLight=mat('#d9c6a0');
+    // Massiver Gefängnisbau mit klarer Betonfassade und hoch angesetzten Zellenfenstern.
+    box(g,w+.2,.22,d+.18,concrete,0,h+.13,0);
+    box(g,w+.08,.12,d+.08,darkConcrete,0,h+.25,0);
+    for(const rowY of [.82,1.55,2.22])if(rowY<h-.12){
+      for(const px of [-.48,.48]){
+        box(g,.22,.3,.045,cellGlass,px,rowY,d/2+.09);
+        for(let bx=-2;bx<=2;bx++)box(g,.025,.34,.035,barMetal,px+bx*.045,rowY,d/2+.125);
+        box(g,.26,.035,.04,barMetal,px,rowY-.17,d/2+.12);box(g,.26,.035,.04,barMetal,px,rowY+.17,d/2+.12);
+      }
+    }
+    // Gitter an den Seitenfenstern ebenfalls sichtbar.
+    for(const sideX of [-1,1])for(const rowY of [.82,1.55,2.22])if(rowY<h-.12){
+      box(g,.045,.3,.24,cellGlass,sideX*(w/2+.025),rowY,-.1);
+      for(let bz=-2; bz<=2; bz++)box(g,.035,.34,.025,barMetal,sideX*(w/2+.055),rowY,bz*.045-.1);
+      box(g,.04,.035,.28,barMetal,sideX*(w/2+.055),rowY-.17,-.1);box(g,.04,.035,.28,barMetal,sideX*(w/2+.055),rowY+.17,-.1);
+    }
+    // Sicherheitslampen und kleine Wachturmaufbauten an den hinteren Ecken.
+    for(const px of [-w*.42,w*.42])for(const pz of [-d*.38,d*.38]){
+      box(g,.18,.22,.18,darkConcrete,px,h+.37,pz);
+      const lamp=new THREE.Mesh(new THREE.SphereGeometry(.055,10,8),securityLight);lamp.position.set(px,h+.5,pz);g.add(lamp);
+    }
+    for(const px of [-.72,.72]){box(g,.07,1.15,.07,barMetal,px,.58,-d/2-.22);box(g,.3,.06,.3,darkConcrete,px,1.18,-d/2-.22);}
    }else if(profile.style==='mafia'){
     box(g,w+.12,.16,.12,mat('#3f2925'),0,h+.12,0);
     box(g,.74,.08,.09,mat('#c4a36a'),0,h*.82,d/2+.15);
