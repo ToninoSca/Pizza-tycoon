@@ -127,8 +127,11 @@ function makeCity(){
  for(const t of tiles){
   if(!t.plot||t.space||!BUILDING_X.includes(t.x)||!BUILDING_Y.includes(t.y))continue;
   // Gebäude stehen nur an einer echten Straßenkante, nicht diagonal in Hinterhöfen.
-  const besideRoad=isRoad(t.x-1,t.y)||isRoad(t.x+1,t.y)||isRoad(t.x,t.y-1)||isRoad(t.x,t.y+1);
-  if(!besideRoad||placed.some(p=>buildingsFaceIntoEachOther(p,t)))continue;
+  const roadNeighbours=[{x:t.x-1,y:t.y},{x:t.x+1,y:t.y},{x:t.x,y:t.y-1},{x:t.x,y:t.y+1}].filter(p=>isRoad(p.x,p.y));
+  const besideRoad=roadNeighbours.length>0;
+  // Grundstücke direkt an Kreuzungen bleiben frei: dort würden breite Gebäude in die Fahrbahn ragen.
+  const touchesJunction=roadNeighbours.some(p=>isVerticalRoad(p.x,p.y)&&isHorizontalRoad(p.x,p.y));
+  if(!besideRoad||roadNeighbours.length>1||touchesJunction||placed.some(p=>buildingsFaceIntoEachOther(p,t)))continue;
   // Freie Grundstücke zwischen den Häusern lassen: die Bebauung folgt den Straßen statt jede Fläche zu füllen.
   const placeRoll=(((t.x*73856093)^(t.y*19349663)^0x5bd1e995)>>>0)%100;
   if(placeRoll>72)continue;
@@ -1480,14 +1483,16 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   const h=(typeHeight[kind]||2.0)*heightFactor;
   const baseWidth=kind==='office'||kind==='landmark'?1.34:kind==='factory'?1.3:kind==='apartments'?1.22:kind==='school'?1.25:1.14;
   const baseDepth=kind==='factory'?1.28:kind==='apartments'?1.18:kind==='school'?1.12:1.08;
-  const w=Math.min(profile?profile.width:baseWidth*(.82+seed*.34),1.35);
-  const d=Math.min(profile?profile.depth:baseDepth*(.82+seed2*.34),1.3);
+  // Normale Wohn- und Geschäftsgebäude bleiben innerhalb ihres Grundstücks.
+  // Die frühere Größe von bis zu 1.35 Kacheln ließ Fassaden in Gehwege und Straßen ragen.
+  const w=profile?Math.min(profile.width,1.22):Math.min(baseWidth*(.82+seed*.34),.82);
+  const d=profile?Math.min(profile.depth,1.18):Math.min(baseDepth*(.82+seed2*.34),.82);
   // Jedes Gebäude bleibt fest auf seinem eigenen Grundstück. Große Zusatzverschiebungen
   // lassen benachbarte Gebäude ineinander rutschen.
   // Das Grundstückszentrum ist die feste Position. Ein zusätzlicher Versatz
   // verschiebt das Gebäude um mehrere Meter und lässt es auf Nachbargrundstücke rutschen.
   // Gebäude stehen zentriert auf ihrem Grundstück; der Straßenabstand entsteht durch die freie Gehweg-Kachel.
-  const away=front?{x:t.x-front.x,y:t.y-front.y}:{x:0,y:0};const awayLength=Math.hypot(away.x,away.y)||1;g.position.set(t.x+away.x/awayLength*.48,0,t.y+away.y/awayLength*.48);
+  const away=front?{x:t.x-front.x,y:t.y-front.y}:{x:0,y:0};const awayLength=Math.hypot(away.x,away.y)||1;g.position.set(t.x+away.x/awayLength*.60,0,t.y+away.y/awayLength*.60);
   const base=mat(b.color||'#c78c69'),side=mat(shadeFacade(b.color||'#c78c69',-22)),roof=mat(profile?.roof||(kind==='oldhome'||t.district==='oldtown'?'#a85a48':kind==='factory'?'#687579':'#655b52'));
   const trim=mat('#e9dfcb'),foundation=mat('#655b52'),frame=mat('#493f37'),glassLit=mat('#a9d9e8',.18),doorGlass=mat('#8fc5d4',.2);
   // Vorderseite heller, Seiten und Rückseite mit eigener Fassadenfarbe.
