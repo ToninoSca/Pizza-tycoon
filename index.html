@@ -219,7 +219,7 @@ ctx.fillStyle='#79bd67';ctx.beginPath();ctx.arc(-2,-41,11,0,Math.PI*2);ctx.fill(
 ctx.strokeStyle='#285d3d';ctx.lineWidth=2;ctx.stroke();ctx.restore();
 }
 function drawBuilding(tile,time){
-const b=tile.building;if(!b)return;
+let b=tile.building;if(!b)return;
 // Gebäude im Stadtplan sichtbar hinter dem Gehweg platzieren, nicht auf dem Straßenrand-Anker.
 const roadFronts=[{x:tile.x,y:tile.y-1},{x:tile.x+1,y:tile.y},{x:tile.x,y:tile.y+1},{x:tile.x-1,y:tile.y}];
 const roadFront=roadFronts.find(f=>isRoad(f.x,f.y));
