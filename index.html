@@ -252,10 +252,10 @@ if(b.kind==='pool'){
   ctx.fillStyle='#fff4d8';ctx.font='bold '+(7*z)+'px system-ui';ctx.textAlign='center';ctx.fillText('FREIBAD',p.x,p.y+23*z);return;
 }
 if(b.kind==='park'){
-  // kleine Stadtparks statt leerer grüner Felder
-  const s=.72+rand(1)*.45;drawTree(p.x-10*z,p.y-7*z,s*z);drawTree(p.x+16*z,p.y+1*z,.72*z);
-  ctx.strokeStyle='#e8d5a2';ctx.lineWidth=5*z;ctx.beginPath();ctx.moveTo(p.x-25*z,p.y+5*z);ctx.lineTo(p.x+25*z,p.y-5*z);ctx.stroke();
-  ctx.fillStyle='#e7d8a8';ctx.beginPath();ctx.arc(p.x-3*z,p.y-5*z,3*z,0,Math.PI*2);ctx.fill();return;
+  // Dezentes Park-Schild statt eines dichten Baumclusters.
+  ctx.strokeStyle='#e8d5a2';ctx.lineWidth=4*z;ctx.beginPath();ctx.moveTo(p.x-24*z,p.y+5*z);ctx.lineTo(p.x+24*z,p.y-5*z);ctx.stroke();
+  rounded(p.x-9*z,p.y-18*z,18*z,9*z,2*z,'#547c4e','#36533b');
+  ctx.fillStyle='#fff4d8';ctx.font='bold '+(5*z)+'px system-ui';ctx.textAlign='center';ctx.fillText('PARK',p.x,p.y-11*z);return;
 }
 const kind=b.kind,wallColor=shade(b.color,Math.floor(rand(90)*25)-12);
 let floors=kind==='cinema'?1:kind==='office'?2+Math.floor(rand(2)*3):kind==='apartments'?2+Math.floor(rand(2)*2):kind==='landmark'?3:kind==='factory'?1:kind==='school'?2:kind==='market'?1+Math.floor(rand(2)):kind==='pizza'?2:1+Math.floor(rand(3));
@@ -480,8 +480,7 @@ if(!kind)return;
 if(kind==='largepark'){
   diamond(tile.x,tile.y,'#75ad66');
   const seed=tile.x*31+tile.y*17;
-  if(seed%3===0)drawTree(p.x-8*z,p.y-5*z,.42*z);
-  if(seed%4===0)drawTree(p.x+10*z,p.y+2*z,.36*z);
+  if(seed%13===0)drawTree(p.x-8*z,p.y-5*z,.34*z);
   ctx.strokeStyle='#e4d1a5';ctx.lineWidth=3*z;ctx.beginPath();ctx.moveTo(p.x-23*z,p.y+7*z);ctx.lineTo(p.x+23*z,p.y-7*z);ctx.stroke();
   return;
 }
@@ -712,7 +711,23 @@ function cityActors(time){
  for(let i=0;i<72;i++){const actorClass=i>=64?'mafia':i>=42?'retiree':i>=24?'child':'worker',homeNode=pedestrianHomeNodes[(i*37+13)%pedestrianHomeNodes.length]||cityRoadNodes[i%cityRoadNodes.length],home={x:homeNode.x,y:homeNode.y},work=workNodes[i%workNodes.length],school=schoolNode,park=parkNode,cafe=cafeNode;const lane=(i%2===0?1:-1)*.62;let from=home,to=home,walking=false,point={...home,angle:0},action='';const workInside=workSpot(i),cafeInside=cafeSpot(i);
  if(actorClass==='worker'){if(i%24<12){const patrolPhase=((minute*.012+i*.19)%2+2)%2;const patrolTarget=i%24<4?{x:42,y:20}:i%24<8?{x:51,y:20}:{x:56,y:20};const q=routePoint(nearestRoadNode(patrolTarget),nearestRoadNode(home),patrolPhase<=1?patrolPhase:2-patrolPhase,lane);point=q;walking=true;action='patrol';}else if(!weekend&&minute>=420&&minute<540){from=home;to=work;const q=commute(420,540,from,to,lane);point=q.point;walking=q.walking;}else if(!weekend&&minute>=540&&minute<960){point=workInside;action='work';}else if(!weekend&&minute>=960&&minute<1080){from=work;to=home;const q=commute(960,1080,from,to,lane);point=q.point;walking=q.walking;}else{const phase=((minute*(.0045+(i%9)*.00035)+i*.173)%2+2)%2;const outbound=phase<=1;const q=routePoint(home,work,outbound?phase:2-phase,lane);point={...q,angle:q.angle+(outbound?0:Math.PI)};walking=true;}}
  else if(actorClass==='child'){if(weekend||minute<450||minute>=840){point={...home,angle:0};}else if(minute<510){from=home;to=school;const q=commute(450,510,from,to,lane);point=q.point;walking=q.walking;}else if(minute<780)point={...school,angle:0};else{from=school;to=home;const q=commute(780,840,from,to,lane);point=q.point;walking=q.walking;}}
- else if(actorClass==='retiree'){const poolVisitor=i%5===0;if(i%3===0&&minute>=570&&minute<630){from=home;to=park;const q=commute(570,630,from,to,lane);point=q.point;walking=q.walking;}else if(i%3===0&&minute>=630&&minute<780){if(i%4===0){const seats=[{x:22.2,y:24},{x:23.2,y:27},{x:24,y:22.4},{x:25.1,y:22.4},{x:22.3,y:26.8}];if(i%5===0){point={...seats[Math.floor(i/5)%seats.length],angle:Math.PI,sidewalk:true};action='sit';walking=false;}else if(i%5===1){point={x:24.8,y:26.9,angle:Math.PI/2,sidewalk:true};action='stand';walking=false;}else if(minute<650){const f=Math.min(1,(minute-630)/20);point={x:parkCenter.x-1.25+f*2.5,y:parkCenter.y+((i%2)?-.72:.72),angle:Math.PI/2,sidewalk:true};walking=f<1;action=f<1?'stroll':'stand';}else{point={x:parkCenter.x+((i%3)-1)*.72,y:parkCenter.y+((i%2)?-.9:.9),angle:(i%2)?Math.PI:0,sidewalk:true};action='stand';walking=false;}}}else if(minute>=780&&minute<840){from=park;to=cafe;const q=commute(780,840,from,to,lane);point=q.point;walking=q.walking;}else if(minute>=840&&minute<930){point=cafeInside;action='cafe';}else if(poolVisitor&&minute>=930&&minute<990){from=cafe;to=poolNode;const q=commute(930,990,from,to,lane);point=q.point;walking=q.walking;}else if(poolVisitor&&minute>=990&&minute<1110){point={x:44+Math.sin((minute-990)*.045+i)*.92,y:32+Math.cos((minute-990)*.035+i)*.48,angle:Math.PI/2};action='swim';}else if(minute>=930&&minute<990){from=cafe;to=home;const q=commute(930,990,from,to,lane);point=q.point;walking=q.walking;}else point={...home,angle:0};}
+ else if(actorClass==='retiree'){
+  const parkVisitor=i%3===0,poolVisitor=i%5===0;
+  if(parkVisitor&&minute>=570&&minute<630){
+   from=home;to=park;const q=commute(570,630,from,to,lane);point=q.point;walking=q.walking;action=walking?'walk':'';
+  }else if(parkVisitor&&minute>=630&&minute<780){
+   if(i%5===0){const seats=[{x:22.2,y:24},{x:23.2,y:27},{x:24,y:22.4},{x:25.1,y:22.4},{x:22.3,y:26.8}];point={...seats[Math.floor(i/5)%seats.length],angle:Math.PI,sidewalk:true};action='sit';walking=false;}
+   else if(i%5===1){point={x:25.7,y:26,angle:Math.PI/2,sidewalk:true};action='stand';walking=false;}
+   else if(minute<645){const f=Math.max(0,Math.min(1,(minute-630)/15));point={x:22.8+f*2.5,y:24.2+((i%2)?-.42:.42),angle:Math.PI/2,sidewalk:true};walking=true;action='stroll';}
+   else{point={x:25.3+((i%3)-1)*.28,y:24.2+((i%2)?-.42:.42),angle:(i%2)?Math.PI:0,sidewalk:true};action='stand';walking=false;}
+  }else if(parkVisitor&&minute>=780&&minute<840){from=park;to=cafe;const q=commute(780,840,from,to,lane);point=q.point;walking=q.walking;action=walking?'walk':'';}
+  else if(!parkVisitor&&minute>=600&&minute<660){from=home;to=cafe;const q=commute(600,660,from,to,lane);point=q.point;walking=q.walking;action=walking?'walk':'';}
+  else if((parkVisitor&&minute>=840&&minute<930)||(!parkVisitor&&minute>=660&&minute<750)){point=cafeInside;action='cafe';walking=false;}
+  else if(poolVisitor&&minute>=930&&minute<990){from=cafe;to=poolNode;const q=commute(930,990,from,to,lane);point=q.point;walking=q.walking;action=walking?'walk':'';}
+  else if(poolVisitor&&minute>=990&&minute<1110){point={x:44+Math.sin((minute-990)*.045+i)*.92,y:32+Math.cos((minute-990)*.035+i)*.48,angle:Math.PI/2};action='swim';walking=false;}
+  else if(minute>=930&&minute<990){from=cafe;to=home;const q=commute(930,990,from,to,lane);point=q.point;walking=q.walking;action=walking?'walk':'';}
+  else{point={...home,angle:0};walking=false;action='';}
+ }
  else{const hq=mafiaSpot(i);if(minute>=1080&&minute<1140){from=home;to=mafiaHQNode;const q=commute(1080,1140,from,to,lane);point=q.point;walking=q.walking;}else if(minute>=1140&&minute<1320){point={...hq,angle:0};action='mafiaHQ';}else if(minute>=1320&&minute<1380&&i%2===0){from=mafiaHQNode;to=nearestRoadNode({x:30+(i%3)*4,y:30+(i%2)*6});const q=commute(1320,1380,from,to,lane);point=q.point;walking=q.walking;action='crime';}else if(minute>=1380||minute<120){from=mafiaHQNode;to=home;const start=minute>=1380?1380:0,end=minute>=1380?1440:60;const q=commute(start,end,from,to,lane);point=q.point;walking=q.walking;}else point={...home,angle:0};}
  // Außerhalb ihrer Wege bleiben Personen wirklich stehen. Die frühere
  // Ersatzbewegung ließ alle Figuren auf der Stelle laufen und wirkte wie Breakdance.
@@ -1752,18 +1767,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   g.userData.tile=t;g.userData.rivalBuilding=!!b.rivalId;g.userData.cityBuilding=true;
  }
  for(const t of tiles)if(t.building&&t.building.kind!=='park')makeBuilding(t);
- // Großpark: zusammenhängende Wege, zentraler Springbrunnen, Bänke und Spielbereich.
- const parkTile=tiles.find(t=>t.building?.siteId==='citypark');
- if(parkTile){const pg=new THREE.Group();pg.position.set(44,0,28);city.add(pg);pg.userData.tile=parkTile;
-  const pathMat=mat('#d9c69d'),water=mat('#65b5c4',.32),stone=mat('#a7aaa0');
-  box(pg,4.55,.055,.72,pathMat,0,.055,0);box(pg,.72,.055,4.55,pathMat,0,.057,0);
-  const basin=new THREE.Mesh(new THREE.CylinderGeometry(.62,.72,.18,24),stone);basin.position.set(0,.13,0);pg.add(basin);
-  const pool=new THREE.Mesh(new THREE.CylinderGeometry(.48,.48,.08,24),water);pool.position.set(0,.25,0);pg.add(pool);
-  const jet=new THREE.Mesh(new THREE.CylinderGeometry(.045,.07,.48,10),water);jet.position.set(0,.51,0);pg.add(jet);
-  for(const [x,z] of [[-1.45,-1.35],[1.45,-1.35],[-1.45,1.35],[1.45,1.35]]){box(pg,.72,.1,.22,mat('#8a6246'),x,.16,z);for(const sx of [-.27,.27])box(pg,.06,.24,.06,mat('#505a58'),x+sx,.12,z);}
-  const play=mat('#d5a65f');box(pg,1.15,.1,.8,play,1.45,.1,1.55);box(pg,.08,.72,.08,mat('#647e91'),1.45,.45,1.55);box(pg,.95,.08,.08,mat('#647e91'),1.45,.76,1.55);
-  const glow=new THREE.Mesh(new THREE.PlaneGeometry(2.4,2.1),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:0,depthWrite:false}));glow.rotation.x=-Math.PI/2;glow.position.y=.16;pg.add(glow);pg.userData.glow=glow;pg.userData.glowEdge=null;
- }
+ // Der frühere Park am alten Standort wurde vollständig entfernt.
  window.addEventListener('pizza-rivals-update',()=>{for(const child of [...city.children])if(child.userData?.rivalBuilding)city.remove(child);for(const t of tiles)if(t.building?.rivalId)makeBuilding(t);});
   window.addEventListener('pizza-owned-building-update',e=>{const tile=e.detail?.tile;if(!tile?.building)return;for(const child of [...city.children])if(child.userData?.tile?.id===tile.id)city.remove(child);makeBuilding(tile);window.dispatchEvent(new CustomEvent('pizza-building-selected',{detail:{tile}}));});
  let selectedBuilding=null;
@@ -1784,7 +1788,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   const noise=(x,y,n=0)=>{const v=Math.sin(x*127.1+y*311.7+n*74.7)*43758.5453;return v-Math.floor(v);};
   const nearSchool=tiles.some(s=>s.building?.kind==='school'&&Math.hypot(s.x-t.x,s.y-t.y)<2.5);
   if(t.space==='largepark'){
-   if(noise(t.x,t.y,12)<.62)tree(t.x+(noise(t.x,t.y,13)-.5)*.42,t.y+(noise(t.x,t.y,14)-.5)*.42,.62+noise(t.x,t.y,15)*.28);
+   if(noise(t.x,t.y,12)<.12)tree(t.x+(noise(t.x,t.y,13)-.5)*.42,t.y+(noise(t.x,t.y,14)-.5)*.42,.62+noise(t.x,t.y,15)*.28);
   }else if(t.building?.kind==='park'||t.space==='garden'){
    tree(t.x-.2+(noise(t.x,t.y,1)-.5)*.22,t.y-.15+(noise(t.x,t.y,2)-.5)*.22,.82+noise(t.x,t.y,3)*.22);
    tree(t.x+.22+(noise(t.x,t.y,4)-.5)*.28,t.y+.2+(noise(t.x,t.y,5)-.5)*.28,.58+noise(t.x,t.y,6)*.24);
