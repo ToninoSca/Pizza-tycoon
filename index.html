@@ -1303,7 +1303,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),[side,side,roof,foundation,base,side]);body.position.set(0,h/2+.08,0);body.castShadow=true;body.receiveShadow=true;g.add(body);box(g,w+.08,.13,d+.08,foundation,0,.12,0);
   if(['home','oldhome','apartments'].includes(kind)){const windowLevels=kind==='apartments'?[h*.34,h*.72]:kind==='oldhome'?[h*.27,h*.58]:[h*.29,h*.64];for(let row=0;row<windowLevels.length;row++){const y=windowLevels[row];for(const x of [-w*.29,w*.29]){const pane=box(g,.25,.29,.045,warmWindow.clone(),x,y,d/2+.065);buildingWindows.push({mesh:pane,tx:t.x,ty:t.y,row});}for(const sideX of [-1,1]){const pane=box(g,.045,.29,.25,warmWindow.clone(),sideX*(w/2+.055),y,0);buildingWindows.push({mesh:pane,tx:t.x,ty:t.y,row});}}}
   // Roof silhouette and building-specific roof details
-  if(['oldhome','school','landmark','home'].includes(kind)){
+  if(['oldhome','school','landmark','home','policeStation','hospital','fireStation','prison'].includes(kind)){
    box(g,w+.16,.2,d+.16,roof,0,h+.2,0);
    if(kind==='oldhome'||kind==='home'){
     const roofHeight=.48+seed*.38;
