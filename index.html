@@ -239,7 +239,7 @@ function drawBuilding(tile,time){
 let b=tile.building;if(!b)return;
 // Auch die 2D-Ansicht zeichnet Gebäude auf ihrem tatsächlichen Grundstück.
 // Die 2D-Karte verwendet wie die 3D-Stadt exakt das Grundstückszentrum.
-const roadCandidates=[{x:tile.x-1,y:tile.y},{x:tile.x+1,y:tile.y},{x:tile.x,y:tile.y-1},{x:tile.x,y:tile.y+1},{x:tile.x-2,y:tile.y},{x:tile.x+2,y:tile.y},{x:tile.x,y:tile.y-2},{x:tile.x,y:tile.y+2}].filter(q=>isRoad(q.x,q.y));const nearestRoad=roadCandidates.sort((a,b)=>Math.hypot(tile.x-a.x,tile.y-a.y)-Math.hypot(tile.x-b.x,tile.y-b.y))[0];const setback=nearestRoad?{x:(tile.x-nearestRoad.x)/Math.hypot(tile.x-nearestRoad.x,tile.y-nearestRoad.y)*.42,y:(tile.y-nearestRoad.y)/Math.hypot(tile.x-nearestRoad.x,tile.y-nearestRoad.y)*.42}:{x:0,y:0};let p=screen(tile.x+setback.x,tile.y+setback.y),z=cam.zoom;
+const roadCandidates=[{x:tile.x-1,y:tile.y},{x:tile.x+1,y:tile.y},{x:tile.x,y:tile.y-1},{x:tile.x,y:tile.y+1},{x:tile.x-2,y:tile.y},{x:tile.x+2,y:tile.y},{x:tile.x,y:tile.y-2},{x:tile.x,y:tile.y+2}].filter(q=>isRoad(q.x,q.y));const nearestRoad=roadCandidates.sort((a,b)=>Math.hypot(tile.x-a.x,tile.y-a.y)-Math.hypot(tile.x-b.x,tile.y-b.y))[0];const roadDistance=nearestRoad?Math.hypot(tile.x-nearestRoad.x,tile.y-nearestRoad.y):0;const setback=nearestRoad?{x:(tile.x-nearestRoad.x)/roadDistance*(roadDistance<1.5?.82:.42),y:(tile.y-nearestRoad.y)/roadDistance*(roadDistance<1.5?.82:.42)}:{x:0,y:0};let p=screen(tile.x+setback.x,tile.y+setback.y),z=cam.zoom;
 if(tile===state.owned)b={name:state.company,emoji:state.brandLogo||'🍕',color:state.brandColor||'#ed8a42',kind:'pizza'};
 const seed=tile.id*9301+17,rand=n=>{let v=Math.sin(seed+n*127.1)*43758.5453;return v-Math.floor(v);};
 if(b.kind==='pool'){
@@ -1341,7 +1341,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   // lassen benachbarte Gebäude ineinander rutschen.
   // Das Grundstückszentrum ist die feste Position. Ein zusätzlicher Versatz
   // verschiebt das Gebäude um mehrere Meter und lässt es auf Nachbargrundstücke rutschen.
-  const frontDistance=front?Math.hypot(t.x-front.x,t.y-front.y):1;g.position.set(t.x+(front?(t.x-front.x)/frontDistance*.42:0),0,t.y+(front?(t.y-front.y)/frontDistance*.42:0));
+  const frontDistance=front?Math.hypot(t.x-front.x,t.y-front.y):0;const buildingSetback=front?(frontDistance<1.5?.82:.42):0;g.position.set(t.x+(front?(t.x-front.x)/frontDistance*buildingSetback:0),0,t.y+(front?(t.y-front.y)/frontDistance*buildingSetback:0));
   const base=mat(b.color||'#c78c69'),side=mat(shadeFacade(b.color||'#c78c69',-22)),roof=mat(profile?.roof||(kind==='oldhome'||t.district==='oldtown'?'#a85a48':kind==='factory'?'#687579':'#655b52'));
   const trim=mat('#e9dfcb'),foundation=mat('#655b52'),frame=mat('#493f37'),glassLit=mat('#a9d9e8',.18),doorGlass=mat('#8fc5d4',.2);
   // Vorderseite heller, Seiten und Rückseite mit eigener Fassadenfarbe.
