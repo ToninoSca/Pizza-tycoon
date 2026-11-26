@@ -1210,16 +1210,20 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
     box(g,1.18,.12,.48,mat('#a65e3d'),0,h*.79,d/2+.24);
     for(let x=-.48;x<=.49;x+=.24)box(g,.055,.13,.49,trim,x,h*.79,d/2+.25);
     box(g,.12,.28,.12,mat('#e0b96c'),-.53,h*.49,d/2+.12);
+    for(let x of [-.32,0,.32]){const display=new THREE.Mesh(new THREE.SphereGeometry(.085,10,8),mat(x<0?'#c76b4c':x>0?'#d9b65f':'#789d65'));display.position.set(x,.68,d/2+.16);g.add(display);}
    }else if(profile.style==='hardware'){
     box(g,w+.12,.12,.12,mat('#d7b64d'),0,h+.12,0);
     box(g,.18,.5,.18,mat('#a18a45'),w*.32,h+.4,-d*.25);
     box(g,.72,.1,.08,mat('#d7b64d'),0,h*.85,d/2+.1);
    }else if(profile.style==='cafe'){
-    box(g,1.25,.16,.5,mat('#8b4e35'),0,h*.8,d/2+.25);
+    const cafeAwning=mat('#8b4e35');box(g,1.25,.16,.5,cafeAwning,0,h*.8,d/2+.25);
+    for(let k=0;k<6;k++)box(g,.16,.12,.035,k%2?trim:mat('#f0d9b6'),-.5+k*.2,h*.8-.13,d/2+.49);
     for(const px of [-.45,.45])box(g,.07,.52,.07,mat('#60402f'),px,h*.48,d/2+.14);
+    box(g,.28,.32,.035,mat('#a9d3d8'),-.48,h*.48,d/2+.13);
    }else if(profile.style==='market'){
     box(g,w+.08,.16,.12,mat('#617d3d'),0,h+.12,0);
     box(g,.78,.12,.12,mat('#d5c69a'),0,h*.86,d/2+.1);
+    for(const px of [-.42,0,.42]){box(g,.2,.22,.18,mat('#a8a66a'),px,.22,d/2+.13);box(g,.18,.12,.16,mat(px===0?'#d56f4f':'#7eaa62'),px,.39,d/2+.13);}
    }
   }
   // Entrance: frame, glass door, handle and small step
@@ -1352,7 +1356,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   box(lounger,.42,.07,.78,poolChairMat,0,.2,0);box(lounger,.42,.07,.34,poolChairMat,0,.36,-.2);
   for(const sx of [-.16,.16])box(lounger,.035,.18,.035,poolRailMat,sx,.1,.22);
  }
- const poolSign=box(city,.85,.42,.08,mat('#397f91'),44,.55,33.22);poolSign.rotation.y=0;
+ const poolSignBoard=box(city,.92,.48,.09,mat('#397f91'),44,.62,33.22);
+ const poolSignCanvas=document.createElement('canvas');poolSignCanvas.width=512;poolSignCanvas.height=192;const poolSignCtx=poolSignCanvas.getContext('2d');poolSignCtx.fillStyle='#397f91';poolSignCtx.fillRect(0,0,512,192);poolSignCtx.fillStyle='#fff4d9';poolSignCtx.font='bold 92px system-ui';poolSignCtx.textAlign='center';poolSignCtx.textBaseline='middle';poolSignCtx.fillText('FREIBAD',256,98);const poolSignTexture=new THREE.CanvasTexture(poolSignCanvas);poolSignTexture.colorSpace=THREE.SRGBColorSpace;const poolSignFace=new THREE.Mesh(new THREE.PlaneGeometry(.88,.32),new THREE.MeshBasicMaterial({map:poolSignTexture,side:THREE.DoubleSide}));poolSignFace.position.set(44,.64,33.275);city.add(poolSignFace);
  // Plätze und Kreisverkehr
  const round=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.1,.12,32),mat('#7eaa72'));round.position.set(33,.08,35);city.add(round);
  const plaza=tiles.filter(t=>t.space==='plaza'||t.space==='parking');for(const t of plaza){slab(t.x,t.y,.95,.95,mat(t.space==='plaza'?'#b9ad91':'#9a9d96'),.03);}
