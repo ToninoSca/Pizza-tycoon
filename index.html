@@ -933,8 +933,9 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   cube(leg1,.17,.075,.3,shoe,0,-.43,.07);cube(leg2,.17,.075,.3,shoe,0,-.43,.07);
   cube(g,.12,.035,.25,detail,-.09,.018,.07);cube(g,.12,.035,.25,detail,.09,.018,.07);
   cube(g,.36,.055,.22,trouser,0,.67,0);
-  const arm1=cube(g,.115,.43,.13,body,-.25,1.02,0),arm2=cube(g,.115,.43,.13,body,.25,1.02,0);
-  const hand1=mesh(g,new THREE.SphereGeometry(.075,12,10),skin,-.25,.76,.015),hand2=mesh(g,new THREE.SphereGeometry(.075,12,10),skin,.25,.76,.015);
+  const arm1=new THREE.Group(),arm2=new THREE.Group();arm1.position.set(-.25,1.22,0);arm2.position.set(.25,1.22,0);g.add(arm1,arm2);
+  cube(arm1,.115,.43,.13,body,0,-.2,0);cube(arm2,.115,.43,.13,body,0,-.2,0);
+  const hand1=mesh(arm1,new THREE.SphereGeometry(.075,12,10),skin,0,-.43,.015),hand2=mesh(arm2,new THREE.SphereGeometry(.075,12,10),skin,0,-.43,.015);
   cube(g,.07,.12,.15,detail,-.105,1.27,.11);cube(g,.07,.12,.15,detail,.105,1.27,.11);
   cylinder(g,.055,.13,skin,-.25,.75,0);cylinder(g,.055,.13,skin,.25,.75,0);
   if(isChild){
@@ -1117,9 +1118,11 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
     else if(job.phase==='handoff'){pizza.visible=true;pizza.position.set(-4.0,1.17,-.35);pizza.rotation.y=0;job.ovenGlow.visible=false;if(job.timer>.75)pizza.visible=false;}
   }else if(p.role==='cashier'&&kitchenJob){const job=kitchenJob;p.g.position.x=-4.1+Math.sin(clock*.7)*.035;p.arm1.rotation.z=job.cashierBusy>0?-.72+Math.sin(clock*12)*.12:Math.sin(clock*1.5)*.08;p.arm2.rotation.z=job.cashierBusy>0?.62+Math.sin(clock*12)*.1:-Math.sin(clock*1.5)*.08;if(job.cashierBusy>0){job.cashierBusy=Math.max(0,job.cashierBusy-dt);job.tillLight.material.emissiveIntensity=.9;}else job.tillLight.material.emissiveIntensity=.2;job.ovenGlow.material.emissiveIntensity=.55+Math.sin(clock*9)*.28;}}
   for(let i=customers.length-1;i>=0;i--){
-   const p=customers[i];p.timer+=dt;const isWalking=p.state==='enter'||p.state==='pay'||p.state==='leave',step=isWalking?Math.sin(clock*11+i)*.62:Math.sin(clock*1.7+i)*.025;p.leg1.rotation.x=step;p.leg2.rotation.x=-step;p.arm1.rotation.x=isWalking?-.18-step*.3:0;p.arm2.rotation.x=isWalking?-.18+step*.3:0;p.g.position.y=0;
-   if(p.state==='enter'){const waypoint=p.route?.[p.routeIndex]||p.target;if(moveToward(p,waypoint[0],waypoint[1],dt)){p.routeIndex=(p.routeIndex||0)+1;if(p.routeIndex>=(p.route?.length||1)){p.state='eat';p.timer=0;}}}
-   else if(p.state==='eat'&&p.timer>5){p.state='pay';p.timer=0;}
+   const p=customers[i];p.timer+=dt;const isWalking=p.state==='enter'||p.state==='pay'||p.state==='leave',isEating=p.state==='eat'||p.state==='sit',step=isWalking?Math.sin(clock*11+i)*.68:0;p.leg1.rotation.x=isWalking?step:isEating?-1.05:0;p.leg2.rotation.x=isWalking?-step:isEating?-1.05:0;p.g.position.y=isEating?-.28:0;p.arm1.rotation.x=isWalking?-.2-step*.28:isEating?-.5+Math.max(0,Math.sin(clock*3.8+i))*.42:0;p.arm2.rotation.x=isWalking?-.2+step*.28:isEating?-.5+Math.max(0,Math.sin(clock*3.8+i+1.5))*.42:0;p.arm1.rotation.z=isEating?-.22:0;p.arm2.rotation.z=isEating?.22:0;p.g.rotation.x=isEating?-.08:0;
+   if(p.state==='enter'){const waypoint=p.route?.[p.routeIndex]||p.target;if(moveToward(p,waypoint[0],waypoint[1],dt)){p.routeIndex=(p.routeIndex||0)+1;if(p.routeIndex>=(p.route?.length||1)){p.state='sit';p.timer=0;p.g.rotation.y=Math.PI;}}}
+   else if(p.state==='sit'&&p.timer>.9){p.state='eat';p.timer=0;}
+   else if(p.state==='eat'&&p.timer>8){p.state='stand';p.timer=0;}
+   else if(p.state==='stand'&&p.timer>.75){p.state='pay';p.timer=0;p.g.position.y=0;p.leg1.rotation.x=0;p.leg2.rotation.x=0;p.g.rotation.x=0;}
    else if(p.state==='pay'&&moveToward(p,-4.2,.9,dt,1.7)){p.state='paying';p.timer=0;if(kitchenJob)kitchenJob.cashierBusy=1.65;}
    else if(p.state==='paying'&&p.timer>1.8){p.state='leave';p.timer=0;}
    else if(p.state==='leave'&&moveToward(p,0,5.6,dt,1.6)){room.remove(p.g);customers.splice(i,1);}
@@ -1209,8 +1212,9 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   const g=new THREE.Group();city.add(g);
   // Die Eingangsseite zeigt immer zur nächstgelegenen Straße.
   const fronts=[{x:t.x,y:t.y-1,a:Math.PI},{x:t.x+1,y:t.y,a:Math.PI/2},{x:t.x,y:t.y+1,a:0},{x:t.x-1,y:t.y,a:-Math.PI/2}];
-  const front=fronts.find(p=>tiles.some(q=>q.x===p.x&&q.y===p.y&&q.road));
-  if(front){g.rotation.y=front.a;const setback=1.08;g.position.set(t.x+(t.x-front.x)*setback,0,t.y+(t.y-front.y)*setback);}else g.position.set(t.x,0,t.y);
+  const roadSides=fronts.filter(p=>tiles.some(q=>q.x===p.x&&q.y===p.y&&q.road));
+  const front=roadSides.sort((a,b)=>Math.hypot(t.x-a.x,t.y-a.y)-Math.hypot(t.x-b.x,t.y-b.y))[0];
+  if(front){g.rotation.y=front.a;const setback=1.55;g.position.set(t.x+(t.x-front.x)*setback,0,t.y+(t.y-front.y)*setback);}else g.position.set(t.x,0,t.y);
   const baseProfile=buildingProfiles[kind]||null,profile=baseProfile&&kind==='pizza'?{...baseProfile,sign:b.brand||b.name||baseProfile.sign,logo:b.emoji||baseProfile.logo,signColor:b.color||baseProfile.signColor}:baseProfile,seed=((t.x*37+t.y*71)%11)/10,seed2=((t.x*13+t.y*29)%13)/12;
   // Normale Gebäude variieren in Breite, Tiefe und Höhe; Marken-Gebäude behalten ihre feste Silhouette.
   const heightRange={home:.88,oldhome:.9,apartments:.84,office:.86,school:.9,factory:.88,shop:.86,cafe:.9,market:.92};
