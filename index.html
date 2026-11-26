@@ -159,6 +159,17 @@ function makeCity(){
   if(kind===null)continue;
   t.building=buildings[kind];placed.push({x:t.x,y:t.y,kind});
  }
+ // Schulen werden unabhängig von der Zufallsverteilung an festen, gut erreichbaren Standorten gesetzt.
+ const schoolTargets=[{x:44,y:10},{x:28,y:48}];
+ schoolTargets.forEach((target,index)=>{
+  const candidates=tiles.filter(t=>t.plot&&!t.space&&t.building&&BUILDING_X.includes(t.x)&&BUILDING_Y.includes(t.y)&&
+   (isRoad(t.x-1,t.y)||isRoad(t.x+1,t.y)||isRoad(t.x,t.y-1)||isRoad(t.x,t.y+1))&&
+   !['landmark','cinema','pool','park','mafiaHQ','wholesale','deli','hardware'].includes(t.building.kind)&&
+   !schoolTargets.slice(0,index).some(s=>Math.hypot(s.x-t.x,s.y-t.y)<10));
+  candidates.sort((a,b)=>Math.hypot(a.x-target.x,a.y-target.y)-Math.hypot(b.x-target.x,b.y-target.y));
+  const site=candidates[0];
+  if(site){site.building={...buildings[4],siteId:'school-'+(index+1)};site.space=null;site.plot=true;site.forSale=false;site.ground='#c8b99a';site.traffic=72;}
+ });
   // Großes Freizeitareal: ein zusammenhängender Stadtpark mit Wegen und Grünflächen.
  for(const t of tiles){if(t.x>=42&&t.x<=46&&t.y>=26&&t.y<=30){t.building=null;t.space='largepark';t.ground='#75a967';t.plot=true;}}
  const parkCenter=tiles.find(t=>t.x===44&&t.y===28);if(parkCenter)parkCenter.building={name:'Stadtpark',emoji:'🌳',color:'#4e895c',kind:'park',siteId:'citypark'};
