@@ -128,11 +128,11 @@ function makeCity(){
   const roll=(((t.x*73856093)^(t.y*19349663))>>>0)%100;
   let kind=0;
   if(t.district==='industrial')kind=roll<35?9:roll<52?5:roll<68?3:roll<80?7:roll<89?8:6;
-  else if(t.district==='downtown')kind=roll<15?3:roll<28?2:roll<42?8:roll<59?7:roll<74?5:roll<86?4:6;
-  else if(t.district==='oldtown')kind=roll<24?1:roll<38?8:roll<59?7:roll<73?5:roll<88?0:6;
-  else if(t.district==='shopping')kind=roll<25?5:roll<44?7:roll<57?8:roll<72?3:roll<87?6:0;
-  else if(t.district==='civic')kind=roll<13?4:roll<30?3:roll<44?5:roll<57?8:roll<77?6:7;
-  else kind=roll<29?0:roll<46?1:roll<56?2:roll<68?6:roll<80?7:roll<88?8:roll<96?4:5;
+  else if(t.district==='downtown')kind=roll<17?3:roll<29?2:roll<43?8:roll<61?7:roll<78?5:roll<91?6:4;
+  else if(t.district==='oldtown')kind=roll<24?1:roll<42?8:roll<65?7:roll<80?5:roll<94?0:6;
+  else if(t.district==='shopping')kind=roll<28?5:roll<52?7:roll<69?8:roll<83?3:roll<95?6:0;
+  else if(t.district==='civic')kind=roll<3?4:roll<25?3:roll<43?5:roll<60?8:roll<80?6:7;
+  else kind=roll<31?0:roll<49?1:roll<61?2:roll<76?6:roll<88?7:roll<96?8:roll<98?4:5;
   // Keine direkt aneinander gereihten gleichen Gebäude oder Ladenarten.
   const nearby=placed.filter(p=>Math.abs(p.x-t.x)<=2&&Math.abs(p.y-t.y)<=2);
   // Schulen brauchen wegen ihrer breiten Campus-Anlage deutlich mehr Abstand.
@@ -146,7 +146,7 @@ function makeCity(){
   }
   if(kind===null)continue;
   if(nearby.some(p=>p.kind===kind||(isCommercial(p.kind)&&isCommercial(kind)))){
-   const alternatives=t.district==='industrial'?[9,3,0,1,4,6]:t.district==='civic'?[4,3,0,1,2,6]:[0,1,2,3,4,6,9];
+   const alternatives=t.district==='industrial'?[9,3,0,1,6]:t.district==='civic'?[3,0,1,2,6]:[0,1,2,3,6,9];
    kind=alternatives.find(k=>!nearby.some(p=>p.kind===k||(isCommercial(p.kind)&&isCommercial(k))))??null;
   }
   if(kind===null)continue;
@@ -1195,6 +1195,16 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    box(g,1.16,.045,.07,mast,0,h+.72,0);
    if(profile.style==='cinema'){box(g,.06,.48,.06,mast,0,h+1.15,.04);box(g,.72,.34,.07,mat('#30263d'),0,h+1.42,.04);}
    if(profile.style==='pizza'){
+    // Eigene Pizzeria-Architektur: rote Ziegelkante, gestreifte Markise und gut sichtbares Schaufenster.
+    const pizzaRed=mat('#b94332'),pizzaCream=mat('#f2dfbd'),pizzaGlass=mat('#a8d5dc',.18);
+    box(g,w+.2,.16,.13,pizzaRed,0,h+.12,0);
+    box(g,w*.78,.13,.48,pizzaRed,0,h*.76,d/2+.25);
+    for(let stripe=-3;stripe<=3;stripe++){
+     box(g,.13,.14,.025,stripe%2===0?pizzaCream:mat('#e5a45f'),stripe*.2,h*.76-.13,d/2+.5);
+    }
+    box(g,.42,.58,.045,pizzaGlass,-.48,.48,d/2+.12);
+    box(g,.42,.58,.045,pizzaGlass,.48,.48,d/2+.12);
+    box(g,.045,.62,.055,pizzaRed,0,.48,d/2+.15);
     // Runder, roter Dachaufsatz erinnert zusätzlich an ein Pizza-Signet.
     const badge=new THREE.Mesh(new THREE.CylinderGeometry(.25,.25,.1,24),mat('#e6c46f'));badge.rotation.x=Math.PI/2;badge.position.set(.56,h+.55,.12);g.add(badge);
     const slice=new THREE.Mesh(new THREE.ConeGeometry(.16,.12,3),mat('#bd4936'));slice.rotation.x=Math.PI/2;slice.position.set(.56,h+.56,.19);g.add(slice);
