@@ -207,8 +207,8 @@ if(b.kind==='park'){
 }
 const kind=b.kind,wallColor=shade(b.color,Math.floor(rand(90)*25)-12);
 let floors=kind==='cinema'?2:kind==='office'?2+Math.floor(rand(2)*3):kind==='apartments'?2+Math.floor(rand(2)*2):kind==='landmark'?3:kind==='factory'?1:kind==='school'?2:kind==='market'?1+Math.floor(rand(2)):kind==='pizza'?2:1+Math.floor(rand(3));
-let h=(kind==='office'?floors*15:kind==='apartments'?floors*12:kind==='landmark'?88:kind==='factory'?29:kind==='school'?43:kind==='market'?39:kind==='cinema'?58:kind==='pizza'?48:kind==='cafe'?32:kind==='oldhome'?36+floors*6:25+floors*6)*z;
-let w=(kind==='office'?24+rand(3)*10:kind==='factory'?29+rand(3)*4:kind==='school'?30+rand(3)*5:kind==='landmark'?31+rand(3)*8:kind==='market'?32+rand(3)*8:kind==='cafe'?19+rand(3)*7:kind==='cinema'?42+rand(3)*5:kind==='pizza'?25+rand(3)*8:kind==='oldhome'?23+rand(3)*12:kind==='home'?19+rand(3)*12:25+rand(3)*10)*z;
+let h=(kind==='office'?floors*15:kind==='apartments'?floors*12:kind==='landmark'?88:kind==='factory'?29:kind==='school'?43:kind==='market'?39:kind==='cinema'?72:kind==='pizza'?48:kind==='cafe'?32:kind==='oldhome'?36+floors*6:25+floors*6)*z;
+let w=(kind==='office'?24+rand(3)*10:kind==='factory'?29+rand(3)*4:kind==='school'?30+rand(3)*5:kind==='landmark'?31+rand(3)*8:kind==='market'?32+rand(3)*8:kind==='cafe'?19+rand(3)*7:kind==='cinema'?66+rand(3)*7:kind==='pizza'?25+rand(3)*8:kind==='oldhome'?23+rand(3)*12:kind==='home'?19+rand(3)*12:25+rand(3)*10)*z;
 let d=(kind==='office'?19+rand(4)*9:kind==='factory'?24+rand(4)*4:kind==='school'?21+rand(4)*5:kind==='market'?23+rand(4)*7:kind==='cafe'?15+rand(4)*6:kind==='oldhome'?18+rand(4)*11:14+rand(4)*12)*z;
 let groundY=p.y,base=groundY-8*z,plinth=8*z,ink='#59463e',left=shade(wallColor,-34),right=shade(wallColor,-12),roof=shade(wallColor,24);
 ctx.fillStyle='#263d3655';ctx.beginPath();ctx.ellipse(p.x,base+8*z,w*1.05, d*.58,0,0,Math.PI*2);ctx.fill();
@@ -999,9 +999,9 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    else slab(sx,sz,1.025,.26,sidewalk,.065);
   }
  }
- const typeHeight={home:1.8,oldhome:2.1,apartments:3.3,office:4.8,school:3.65,cinema:3.0,market:2.3,park:.2,shop:2.0,cafe:2.0,factory:1.8,landmark:4.0,wholesale:2.65,deli:1.95,hardware:2.2,pizza:2.45};
+ const typeHeight={home:1.8,oldhome:2.1,apartments:3.3,office:4.8,school:3.65,cinema:3.65,market:2.3,park:.2,shop:2.0,cafe:2.0,factory:1.8,landmark:4.0,wholesale:2.65,deli:1.95,hardware:2.2,pizza:2.45};
  // Zentrale Gebäudesteckbriefe: neue Gebäudetypen bekommen hier später ihre eigene Silhouette.
- const buildingProfiles={pizza:{width:1.42,depth:1.2,roof:'#9d4938',sign:'PIZZERIA',logo:'🍕',signColor:'#b83e2d',style:'pizza'},wholesale:{width:1.5,depth:1.42,roof:'#526b75',sign:'GROSSHANDEL',logo:'📦',signColor:'#27677d',style:'warehouse'},deli:{width:1.28,depth:1.16,roof:'#87563e',sign:'FEINKOST',logo:'🥫',signColor:'#8b4d32',style:'deli'},hardware:{width:1.42,depth:1.22,roof:'#a38b3e',sign:'BAUMARKT',logo:'🔨',signColor:'#987b27',style:'hardware'},cafe:{width:1.3,depth:1.12,roof:'#89583c',sign:'CAFÉ',logo:'☕',signColor:'#8d4e31',style:'cafe'},market:{width:1.42,depth:1.25,roof:'#73864d',sign:'MARKT',logo:'🛒',signColor:'#617d3d',style:'market'},school:{width:2.05,depth:1.35,roof:'#b5a45f',sign:'GRUNDSCHULE',logo:'🏫',signColor:'#b39a42',style:'school'},cinema:{width:2.35,depth:1.7,roof:'#40364f',sign:'LICHTSPIELHAUS',logo:'🎬',signColor:'#59416f',style:'cinema'}};
+ const buildingProfiles={pizza:{width:1.42,depth:1.2,roof:'#9d4938',sign:'PIZZERIA',logo:'🍕',signColor:'#b83e2d',style:'pizza'},wholesale:{width:1.5,depth:1.42,roof:'#526b75',sign:'GROSSHANDEL',logo:'📦',signColor:'#27677d',style:'warehouse'},deli:{width:1.28,depth:1.16,roof:'#87563e',sign:'FEINKOST',logo:'🥫',signColor:'#8b4d32',style:'deli'},hardware:{width:1.42,depth:1.22,roof:'#a38b3e',sign:'BAUMARKT',logo:'🔨',signColor:'#987b27',style:'hardware'},cafe:{width:1.3,depth:1.12,roof:'#89583c',sign:'CAFÉ',logo:'☕',signColor:'#8d4e31',style:'cafe'},market:{width:1.42,depth:1.25,roof:'#73864d',sign:'MARKT',logo:'🛒',signColor:'#617d3d',style:'market'},school:{width:2.05,depth:1.35,roof:'#b5a45f',sign:'GRUNDSCHULE',logo:'🏫',signColor:'#b39a42',style:'school'},cinema:{width:3.15,depth:2.35,roof:'#40364f',sign:'LICHTSPIELHAUS',logo:'🎬',signColor:'#59416f',style:'cinema'}};
  function makeBuilding(t){
   const b=t.building;if(!b||b.kind==='park')return;
   const kind=b.kind;
