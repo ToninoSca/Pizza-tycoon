@@ -1226,12 +1226,56 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    const doorHinge=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.8,10),brass);doorHinge.position.set(0,0,.015);ovenDoor.add(doorHinge);
    const tillLight=new THREE.Mesh(new THREE.BoxGeometry(.16,.08,.045),new THREE.MeshStandardMaterial({color:'#64d58a',emissive:'#28b968',emissiveIntensity:.2}));tillLight.position.set(-4.85,1.42,-.18);room.add(tillLight);
    const savedJob=window.__pizzaKitchenState||{};kitchenJob={chef,cashier,pizza,ovenGlow,ovenDoor,tillLight,phase:savedJob.phase||'prep',timer:Number(savedJob.timer)||0,cashierBusy:Number(savedJob.cashierBusy)||0,phaseOrder:['prep','toOven','insert','bake','remove','deliver','handoff'],durations:{prep:3.8,toOven:2.2,insert:1.25,bake:5.2,remove:1.2,deliver:2.2,handoff:1.4}};
-  }else{
-   for(const x of [-4.5,-1.5,1.5,4.5]){
-    cube(room,1.15,2.3,.55,dark,x,1.15,-4.65);
-    for(let y=.48;y<2.6;y+=.68){cube(room,1.08,.08,.65,wood2,x,y,-4.3);for(let j=0;j<4;j++)cube(room,.18,.32,.2,activeKind==='hardware'?metal:activeKind==='deli'?M(['#d9ad65','#8aaf83','#c96e4f'][j%3]):glass,x-.39+j*.26,y+.2,-4.28);}
+  }else if(activeKind==='mafiaHQ'){
+   // Mafia-HQ: eigenständiger dunkler Club mit Bar, Stammtisch, Boss und Handlanger – kein Großhandelspersonal.
+   const wall=mat2('#4a3025'),leather=mat2('#342722'),barWood=mat2('#5b3827'),gold=mat2('#b18a4e'),wine=mat2('#6f252c');
+   cube(room,10.8,1.05,.7,barWood,0,.55,-4.65);cube(room,10.9,.12,.82,gold,0,1.1,-4.65);
+   for(let x=-4.6;x<=4.6;x+=1.15){cube(room,.06,.72,.06,gold,x,.55,-4.22);cylinder(room,.18,.28,wine,x,1.3,-4.48);}
+   cube(room,9.8,.12,1.0,leather,0,.85,-1.7);cube(room,9.8,.8,.16,barWood,0,.45,-1.15);
+   // Familien-Stammtisch und Stühle
+   table(0,1.3);table(-3.3,2.5);table(3.3,2.5);
+   // Boss am Kopfende und Handlanger an der Tür
+   const boss=person(0,-3.5,'#25282b','Boss');boss.g.scale.setScalar(1.12);people.push(boss);
+   cube(boss.g,.3,.46,.035,mat2('#191b1e'),0,.9,.19);cube(boss.g,.34,.08,.04,gold,0,1.18,.21);
+   const guard=person(4.8,4.0,'#24272b','Handlanger');guard.g.scale.setScalar(1.02);people.push(guard);
+   cube(guard.g,.25,.4,.04,mat2('#17191b'),0,.9,.19);
+   // Club-Details, Weinregal, Wandleuchten und sichtbares Mafia-Schild
+   cube(room,3.2,.65,.12,barWood,-4.8,2.0,-5.55);cube(room,2.9,.42,.04,mat2('#d9c5a4'),-4.8,2.0,-5.47);
+   cube(room,2.2,.18,.12,gold,4.5,2.1,-5.55);
+   for(let i=0;i<5;i++){cube(room,.35,.55,.12,wine,3.5+i*.45,1.45,-5.48);cylinder(room,.08,.2,gold,3.5+i*.45,1.8,-5.45);}
+  }else if(activeKind==='wholesale'){
+   // Großhandel: hohe Palettenregale, Kisten und sichtbare Warenausgabe.
+   const rack=mat2('#46606a'),crate=mat2('#b58a55'),boxDark=mat2('#8b6845');
+   for(const x of [-4.8,-1.6,1.6,4.8]){
+    cube(room,1.25,2.25,.62,rack,x,1.15,-4.65);
+    for(let y=.48;y<2.55;y+=.68){cube(room,1.18,.08,.7,steel,x,y,-4.3);for(let j=0;j<4;j++)cube(room,.2,.35,.22,[crate,boxDark,mat2('#d3b887'),mat2('#8da17b')][j],x-.42+j*.28,y+.2,-4.25);}
    }
-   cube(room,3.4,.95,.9,wood,0,.48,-1);cube(room,3.5,.12,.95,accent,0,1,-1);const worker=person(0,0,'#314c62');people.push(worker);
+   cube(room,4.4,.95,1.0,barWood,0,.48,-1.0);cube(room,4.5,.12,1.05,steel,0,1.0,-1.0);
+   const worker=person(-.3,0,'#31556a','Großhandel');people.push(worker);
+   cube(worker.g,.29,.48,.04,mat2('#27485b'),0,1.0,.19);
+   // Paletten und Handwagen im vorderen Lagerbereich
+   for(const x of [-4.2,4.1]){cube(room,1.2,.16,1.0,woodDark,x,.12,2.5);for(let j=0;j<3;j++)cube(room,.35,.42,.36,crate,x-.35+j*.35,.42,2.5);}
+   cube(room,.12,1.1,.12,steel,5.7,.55,2.8);cube(room,.75,.08,.12,steel,5.35,.08,2.8);
+  }else if(activeKind==='deli'){
+   // Feinkost: Kühlvitrine, Frischetheke und regionale Produkte.
+   const cold=mat2('#a8cbd0',.25),display=mat2('#694a34'),product=mat2('#b85e43');
+   cube(room,5.4,1.05,1.1,display,0,.52,-1.5);cube(room,5.45,.14,1.15,steel,0,1.1,-1.5);
+   cube(room,5.0,.85,.08,cold,0,1.55,-1.45);cube(room,5.0,.06,.08,steel,0,2.0,-1.45);
+   for(let x=-2;x<=2;x+=1){cylinder(room,.16,.25,[mat2('#d8b568'),mat2('#9cae78'),product][(x+2)%3],x,1.23,-1.5);cube(room,.55,.08,.06,mat2('#f2e5cf'),x,1.82,-1.45);}
+   for(const x of [-4.5,-1.5,1.5,4.5]){cube(room,1.0,2.15,.5,woodDark,x,1.08,-4.7);for(let shelfY=.55;shelfY<2.2;shelfY+=.65){cube(room,.95,.08,.55,woodLight,x,shelfY,-4.35);for(let j=0;j<3;j++)cylinder(room,.14,.24,[product,mat2('#d6a65b'),mat2('#7c9a68')][j],x-.3+j*.3,shelfY+.2,-4.32);}}
+   const worker=person(-4.3,.5,'#6e4a36','Feinkost');people.push(worker);
+   cube(worker.g,.28,.46,.04,mat2('#7c4f32'),0,1.0,.19);
+  }else if(activeKind==='hardware'){
+   // Baumarkt: Werkstattregale, Werkzeugwand und Bauartikel statt Lebensmittel.
+   const metalRack=mat2('#68736d'),tool=mat2('#b78a45'),paint=mat2('#547e9b');
+   for(const x of [-4.8,-1.6,1.6,4.8]){cube(room,1.2,2.25,.6,metalRack,x,1.15,-4.65);for(let y=.45;y<2.5;y+=.65){cube(room,1.15,.08,.68,steel,x,y,-4.3);for(let j=0;j<3;j++)cube(room,.25,.4,.24,[tool,paint,mat2('#8f9a83')][j],x-.35+j*.35,y+.2,-4.25);}}
+   cube(room,3.8,.9,1.0,woodDark,-1.0,.45,-1.0);cube(room,3.9,.12,1.05,steel,-1.0,.95,-1.0);
+   // Werkzeugwand mit klar erkennbaren Symbolen/Objektformen
+   for(let i=0;i<5;i++){cube(room,.18,.7,.07,tool,-4.8+i*.65,1.7,-5.45);cube(room,.38,.08,.08,woodLight,-4.8+i*.65,1.95,-5.45);}
+   for(const x of [3.7,4.8,5.9]){cube(room,.55,1.6,.12,paint,x,.8,-2.0);cube(room,.62,.12,.15,mat2('#d8c26b'),x,1.65,-2.0);}
+  }else{
+   // Fallback-Raum nur für unbekannte Typen – ohne Großhandelspersonal.
+   cube(room,4.0,.95,.9,wood,0,.48,-1);cube(room,4.1,.12,.95,accent,0,1,-1);
   }
   // Dezente Deckenbalken geben dem Raum Tiefe, ohne den Blick zu versperren.
   for(const x of [-6,0,6])cube(room,.12,.12,11.5,woodDark,x,2.72,0);
