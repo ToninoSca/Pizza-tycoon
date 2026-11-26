@@ -1051,8 +1051,19 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    const schoolWall=mat('#d7c8a3'),schoolAccent=mat('#bd9b53'),schoolRoof=mat('#647b83'),schoolGlass=mat('#9cc9d5',.22),court=mat('#849c9a');
    box(g,w*.62,h*.62,d*.62,schoolWall,0,h*.34,-d*.08);
    box(g,w*.66,.16,d*.68,schoolRoof,0,h*.66,-d*.08);
-   box(g,.52,.72,.25,schoolAccent,0,.42,d/2+.08);
-   box(g,.38,.42,.06,trim,0,.5,d/2+.12);
+   // Breiter, gut erkennbarer Haupteingang mit Vordach und Doppeltür.
+   box(g,.72,.12,.42,schoolAccent,0,1.48,d/2+.22);
+   for(const px of [-.31,.31])box(g,.055,.58,.055,trim,px,1.18,d/2+.24);
+   box(g,.27,.62,.045,schoolGlass,-.15,.43,d/2+.105);
+   box(g,.27,.62,.045,schoolGlass,.15,.43,d/2+.105);
+   box(g,.025,.62,.025,schoolAccent,0,.43,d/2+.14);
+   box(g,.62,.07,.07,trim,0,.78,d/2+.14);
+   // Große Klassenraumfenster links und rechts vom Eingang.
+   for(const px of [-.48,.48]){
+    box(g,.34,.48,.045,schoolGlass,px,1.02,d/2+.105);
+    box(g,.38,.055,.055,trim,px,1.02,d/2+.135);
+    box(g,.045,.52,.045,trim,px,1.02,d/2+.14);
+   }
    const clockFace=new THREE.Mesh(new THREE.CircleGeometry(.19,32),mat('#f6edcf'));clockFace.position.set(0,h*.76,d/2+.055);g.add(clockFace);
    const clockRim=new THREE.Mesh(new THREE.RingGeometry(.19,.23,32),schoolAccent);clockRim.position.set(0,h*.76,d/2+.06);g.add(clockRim);
    box(g,.025,.12,.018,frame,0,h*.76+.035,d/2+.075);box(g,.1,.025,.018,frame,.045,h*.76-.02,d/2+.075);
@@ -1067,8 +1078,14 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    box(gym,w*.24,h*.48,d*.62,schoolWall,0,h*.24,0);
    box(gym,w*.26,.18,d*.66,schoolRoof,0,h*.49,0);
    box(gym,w*.22,.36,.035,schoolGlass,0,h*.3,d*.32);
-   box(g,.9,.035,.72,court,-w*.18,.035,d*.64);
-   box(g,.58,.025,.38,mat('#bd9b79'),-w*.18,.06,d*.64);
+   // Eigener Schulhof mit großem gepflastertem Pausenbereich und Spielfeldmarkierungen.
+   box(g,1.55,.055,.92,court,-w*.12,.035,d*.78);
+   box(g,1.18,.018,.62,mat('#bd9b79'),-w*.12,.073,d*.78);
+   box(g,.018,.02,.62,trim,-w*.12,.086,d*.78);
+   box(g,1.18,.02,.018,trim,-w*.12,.086,d*.78);
+   const playLine=mat('#eee8d7');
+   box(g,.018,.018,.52,playLine,-w*.12,.09,d*.78);
+   box(g,.42,.018,.018,playLine,-w*.12,.09,d*.78);
    for(const sx of [-1,1]){
     box(g,.24,.07,.18,mat('#71966b'),sx*w*.52,.05,d*.52);
     box(g,.055,.65,.055,mat('#87949a'),sx*w*.58,.34,d*.58);
