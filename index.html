@@ -1049,9 +1049,12 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    cube(room,1.0,.8,.5,woodDark,5.6,.4,-4.5);cube(room,1.05,.08,.55,woodLight,5.6,.84,-4.5);
    for(let i=0;i<3;i++)cylinder(room,.12,.22,mat2('#c89c5b'),5.3+i*.28,.98,-4.5);
    const chef=person(-3.4,-2.5,'#f4f0e8');chef.role='chef';people.push(chef);
+   // Kochjacke, Schürze, Halstuch und Kochmütze als klar erkennbare Uniform.
+   cube(chef.g,.29,.42,.035,mat2('#e4d6bd'),0,.91,.19);cube(chef.g,.32,.07,.045,mat2('#a84d3b'),0,1.17,.2);cube(chef.g,.12,.13,.045,mat2('#b9a27c'),-.08,.82,.22);
    // Klassische Kochmütze als sichtbares Rollenmerkmal.
    cube(chef.g,.34,.12,.34,mat2('#fffdf4'),0,1.82,0);mesh(chef.g,new THREE.SphereGeometry(.18,12,10),mat2('#fffdf4'),0,1.88,0);
    const cashier=person(-4.1,.8,'#314c62');cashier.role='cashier';people.push(cashier);
+   cube(cashier.g,.29,.48,.035,mat2('#263d50'),0,1.02,.19);cube(cashier.g,.055,.3,.045,mat2('#d7b56e'),0,1.04,.22);cube(cashier.g,.18,.08,.04,mat2('#d7b56e'),0,.77,.22);
    const pizza=new THREE.Group();
    cylinder(pizza,.37,.075,mat2('#d8a45e'),0,0,0);cylinder(pizza,.325,.018,mat2('#c94d37'),0,.045,0);cylinder(pizza,.29,.018,mat2('#f2d778'),0,.058,0);
    for(const [px,pz] of [[-.15,-.12],[.12,-.15],[.19,.1],[-.1,.16],[.02,.02]]){cylinder(pizza,.055,.025,mat2('#bd4938'),px,.08,pz);mesh(pizza,new THREE.SphereGeometry(.035,8,6),mat2('#5b8c4c'),px+.035,.095,pz+.025);}
@@ -1111,7 +1114,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
     else if(job.phase==='bake'){pizza.visible=true;pizza.position.set(-1.45,.82,-3.17);pizza.rotation.y=Math.sin(clock*2)*.04;job.ovenGlow.visible=true;}
     else if(job.phase==='remove'){pizza.visible=true;const t=Math.min(1,job.timer/job.durations.remove);pizza.position.set(-1.45,1.0,-3.17+t*.42);job.ovenGlow.visible=true;}
     else if(job.phase==='handoff'){pizza.visible=true;pizza.position.set(-4.0,1.17,-.35);pizza.rotation.y=0;job.ovenGlow.visible=false;if(job.timer>.75)pizza.visible=false;}
-  }else if(p.role==='cashier'&&kitchenJob){const job=kitchenJob;p.g.position.x=-4.1+Math.sin(clock*.7)*.035;p.arm1.rotation.z=job.cashierBusy>0?-.72+Math.sin(clock*12)*.12:Math.sin(clock*1.5)*.08;p.arm2.rotation.z=job.cashierBusy>0?.62+Math.sin(clock*12)*.1:-Math.sin(clock*1.5)*.08;if(job.cashierBusy>0){job.cashierBusy=Math.max(0,job.cashierBusy-dt);job.tillLight.material.emissiveIntensity=.9;}else job.tillLight.material.emissiveIntensity=.2;}}
+  }else if(p.role==='cashier'&&kitchenJob){const job=kitchenJob;p.g.position.x=-4.1+Math.sin(clock*.7)*.035;p.arm1.rotation.z=job.cashierBusy>0?-.72+Math.sin(clock*12)*.12:Math.sin(clock*1.5)*.08;p.arm2.rotation.z=job.cashierBusy>0?.62+Math.sin(clock*12)*.1:-Math.sin(clock*1.5)*.08;if(job.cashierBusy>0){job.cashierBusy=Math.max(0,job.cashierBusy-dt);job.tillLight.material.emissiveIntensity=.9;}else job.tillLight.material.emissiveIntensity=.2;job.ovenGlow.material.emissiveIntensity=.55+Math.sin(clock*9)*.28;}}
   for(let i=customers.length-1;i>=0;i--){
    const p=customers[i];p.timer+=dt;p.g.position.y=Math.abs(Math.sin(clock*5+i))*0.025;
    if(p.state==='enter'){const waypoint=p.route?.[p.routeIndex]||p.target;if(moveToward(p,waypoint[0],waypoint[1],dt)){p.routeIndex=(p.routeIndex||0)+1;if(p.routeIndex>=(p.route?.length||1)){p.state='eat';p.timer=0;}}}
