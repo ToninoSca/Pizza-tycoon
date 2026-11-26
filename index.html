@@ -156,7 +156,7 @@ function makeCity(){
  for(const t of tiles){if(t.x>=42&&t.x<=46&&t.y>=26&&t.y<=30){t.building=null;t.space='largepark';t.ground='#75a967';t.plot=true;}}
  const parkCenter=tiles.find(t=>t.x===44&&t.y===28);if(parkCenter)parkCenter.building={name:'Stadtpark',emoji:'🌳',color:'#4e895c',kind:'park',siteId:'citypark'};
  // Besondere Freizeit- und Einkaufsziele als feste, gut auffindbare Stadtziele.
- const cinema=tiles.find(t=>t.x===39&&t.y===27);if(cinema){cinema.building={name:'Lichtspielhaus',emoji:'🎬',color:'#765a91',kind:'cinema',siteId:'cinema'};cinema.space=null;cinema.plot=true;cinema.ground='#b8b09c';cinema.traffic=90;}
+ const cinema=tiles.find(t=>t.x===39&&t.y===27);if(cinema){cinema.building={name:'Kino',emoji:'🎬',color:'#765a91',kind:'cinema',siteId:'cinema'};cinema.space=null;cinema.plot=true;cinema.ground='#b8b09c';cinema.traffic=90;}
  const specialSites=[{x:8,y:8,name:'Großhandel',emoji:'📦',color:'#6d9eb1',kind:'wholesale',siteId:'wholesale'},{x:20,y:48,name:'Feinkost',emoji:'🥫',color:'#ba8d61',kind:'deli',siteId:'deli'},{x:27,y:46,name:'Baumarkt',emoji:'🔨',color:'#b5a263',kind:'hardware',siteId:'hardware'}];
  for(const site of specialSites){const t=tiles.find(q=>q.x===site.x&&q.y===site.y);if(t){t.building={name:site.name,emoji:site.emoji,color:site.color,kind:site.kind,siteId:site.siteId};t.plot=true;t.space=null;t.ground='#b8b09c';t.traffic=75;}}
  // Ein markantes Rathaus als Orientierungspunkt im Zentrum
@@ -380,7 +380,7 @@ if(['pizza','shop','market','cafe'].includes(kind)){
   const sign=fascia(.5,.37);ctx.fillText(kind==='pizza'?(b.rivalId?(b.brand||'PIZZA').toUpperCase():(b.name||'PIZZA').toUpperCase()):kind==='cafe'?'CAFÉ':kind==='market'?'MARKT':'SHOP',sign.x,sign.y);
 }
 if(kind==='cinema'){
-  ctx.fillStyle='#f4d46f';ctx.font='bold '+(10*z)+'px system-ui';ctx.textAlign='center';ctx.fillText('★ KINO ★',p.x,base-h+20*z);
+  ctx.fillStyle='#f4d46f';ctx.font='bold '+(10*z)+'px system-ui';ctx.textAlign='center';ctx.fillText('KINO',p.x,base-h+20*z);
   ctx.fillStyle='#392d4b';ctx.fillRect(p.x-w*.62,base-h+28*z,w*1.24,9*z);ctx.fillStyle='#f6d987';ctx.font='bold '+(6*z)+'px system-ui';ctx.fillText('FILM · POPCORN · PREMIERE',p.x,base-h+35*z);
 }
 if(kind==='landmark'){
@@ -1001,7 +1001,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  }
  const typeHeight={home:1.8,oldhome:2.1,apartments:3.3,office:4.8,school:3.65,cinema:3.65,market:2.3,park:.2,shop:2.0,cafe:2.0,factory:1.8,landmark:4.0,wholesale:2.65,deli:1.95,hardware:2.2,pizza:2.45};
  // Zentrale Gebäudesteckbriefe: neue Gebäudetypen bekommen hier später ihre eigene Silhouette.
- const buildingProfiles={pizza:{width:1.42,depth:1.2,roof:'#9d4938',sign:'PIZZERIA',logo:'🍕',signColor:'#b83e2d',style:'pizza'},wholesale:{width:1.5,depth:1.42,roof:'#526b75',sign:'GROSSHANDEL',logo:'📦',signColor:'#27677d',style:'warehouse'},deli:{width:1.28,depth:1.16,roof:'#87563e',sign:'FEINKOST',logo:'🥫',signColor:'#8b4d32',style:'deli'},hardware:{width:1.42,depth:1.22,roof:'#a38b3e',sign:'BAUMARKT',logo:'🔨',signColor:'#987b27',style:'hardware'},cafe:{width:1.3,depth:1.12,roof:'#89583c',sign:'CAFÉ',logo:'☕',signColor:'#8d4e31',style:'cafe'},market:{width:1.42,depth:1.25,roof:'#73864d',sign:'MARKT',logo:'🛒',signColor:'#617d3d',style:'market'},school:{width:2.05,depth:1.35,roof:'#b5a45f',sign:'GRUNDSCHULE',logo:'🏫',signColor:'#b39a42',style:'school'},cinema:{width:3.15,depth:2.35,roof:'#40364f',sign:'LICHTSPIELHAUS',logo:'🎬',signColor:'#59416f',style:'cinema'}};
+ const buildingProfiles={pizza:{width:1.42,depth:1.2,roof:'#9d4938',sign:'PIZZERIA',logo:'🍕',signColor:'#b83e2d',style:'pizza'},wholesale:{width:1.5,depth:1.42,roof:'#526b75',sign:'GROSSHANDEL',logo:'📦',signColor:'#27677d',style:'warehouse'},deli:{width:1.28,depth:1.16,roof:'#87563e',sign:'FEINKOST',logo:'🥫',signColor:'#8b4d32',style:'deli'},hardware:{width:1.42,depth:1.22,roof:'#a38b3e',sign:'BAUMARKT',logo:'🔨',signColor:'#987b27',style:'hardware'},cafe:{width:1.3,depth:1.12,roof:'#89583c',sign:'CAFÉ',logo:'☕',signColor:'#8d4e31',style:'cafe'},market:{width:1.42,depth:1.25,roof:'#73864d',sign:'MARKT',logo:'🛒',signColor:'#617d3d',style:'market'},school:{width:2.05,depth:1.35,roof:'#b5a45f',sign:'GRUNDSCHULE',logo:'🏫',signColor:'#b39a42',style:'school'},cinema:{width:3.15,depth:2.35,roof:'#40364f',sign:'KINO',logo:'🎬',signColor:'#59416f',style:'cinema'}};
  function makeBuilding(t){
   const b=t.building;if(!b||b.kind==='park')return;
   const kind=b.kind;
@@ -1298,6 +1298,34 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   }else if(!nearSchool&&!t.road&&!t.building&&!t.space&&noise(t.x,t.y,7)<.115){
    tree(t.x+(noise(t.x,t.y,8)-.5)*.72,t.y+(noise(t.x,t.y,9)-.5)*.72,.42+noise(t.x,t.y,10)*.26);
   }
+ }
+ // Großer Stadtpark mit Wegen, Brunnen, Bänken, Spielplatz und Blumenbeeten.
+ const parkPathMat=mat('#c9b991'),parkEdgeMat=mat('#9e936f'),parkWaterMat=mat('#65b8c7'),parkStoneMat=mat('#d8d2bd'),parkWoodMat=mat('#805b3c'),parkMetalMat=mat('#536d70'),parkRedMat=mat('#c96c55'),parkBlueMat=mat('#5d91b4');
+ slab(44,28,4.65,.34,parkPathMat,.09);slab(44,28,.34,4.65,parkPathMat,.095);
+ // Zentraler Springbrunnen
+ const parkFountain=new THREE.Group();parkFountain.position.set(44,.16,28);city.add(parkFountain);
+ const parkBasin=new THREE.Mesh(new THREE.CylinderGeometry(.72,.78,.18,32),parkStoneMat);parkBasin.position.y=.12;parkFountain.add(parkBasin);
+ const parkPool=new THREE.Mesh(new THREE.CylinderGeometry(.59,.59,.035,32),parkWaterMat);parkPool.position.y=.225;parkFountain.add(parkPool);
+ const parkPedestal=new THREE.Mesh(new THREE.CylinderGeometry(.16,.23,.52,12),parkStoneMat);parkPedestal.position.y=.48;parkFountain.add(parkPedestal);
+ const parkJet=new THREE.Mesh(new THREE.CylinderGeometry(.035,.055,.48,8),parkWaterMat);parkJet.position.y=.94;parkFountain.add(parkJet);
+ const parkTop=new THREE.Mesh(new THREE.SphereGeometry(.11,12,10),parkWaterMat);parkTop.position.y=1.2;parkFountain.add(parkTop);
+ // Vier Sitzbänke rund um den Brunnen
+ for(const [x,z,rot] of [[42.6,27,0],[45.4,29,Math.PI],[44,26.5,Math.PI/2],[44,29.5,-Math.PI/2]]){
+  const parkBench=new THREE.Group();parkBench.position.set(x,.12,z);parkBench.rotation.y=rot;city.add(parkBench);
+  box(parkBench,.62,.09,.2,parkWoodMat,0,.35,0);box(parkBench,.62,.09,.2,parkWoodMat,0,.55,-.04);
+  for(const sx of [-.23,.23]){box(parkBench,.07,.34,.07,parkMetalMat,sx,.18,0);box(parkBench,.07,.34,.07,parkMetalMat,sx,.38,-.06);}
+ }
+ // Spielplatz mit Rutsche und Klettergerüst
+ const parkPlayground=new THREE.Group();parkPlayground.position.set(45.55,.12,26.65);city.add(parkPlayground);
+ box(parkPlayground,.95,.08,.72,mat('#d8c69b'),0,.08,0);
+ box(parkPlayground,.42,.08,.42,parkRedMat,-.12,.68,-.08);box(parkPlayground,.12,.72,.12,parkBlueMat,-.12,.34,-.08);
+ box(parkPlayground,.12,.12,.12,parkRedMat,-.12,1.08,-.08);box(parkPlayground,.62,.07,.08,parkMetalMat,.28,.72,.02);
+ for(const sx of [.04,.52])box(parkPlayground,.045,.56,.045,parkMetalMat,sx,.42,.02);
+ // Blumenbeete
+ for(const [x,z] of [[42.65,29.35],[45.35,29.35],[42.65,26.65],[45.35,26.65]]){
+  const parkBed=new THREE.Group();parkBed.position.set(x,.08,z);city.add(parkBed);
+  box(parkBed,.62,.12,.48,mat('#66834f'),0,.08,0);
+  for(let n=0;n<5;n++){const parkFlower=new THREE.Mesh(new THREE.SphereGeometry(.055,8,6),mat(['#e9c86d','#df8d83','#f2eee0','#b79bd2','#e7a65c'][n]));parkFlower.position.set(-.22+n*.11,.23,(n%2)*.1-.05);parkBed.add(parkFlower);}
  }
  // Plätze und Kreisverkehr
  const round=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.1,.12,32),mat('#7eaa72'));round.position.set(33,.08,35);city.add(round);
