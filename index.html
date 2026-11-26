@@ -134,6 +134,16 @@ function makeCity(){
   else kind=roll<29?0:roll<46?1:roll<56?2:roll<68?6:roll<80?7:roll<88?8:roll<96?4:5;
   // Keine direkt aneinander gereihten gleichen Gebäude oder Ladenarten.
   const nearby=placed.filter(p=>Math.abs(p.x-t.x)<=2&&Math.abs(p.y-t.y)<=2);
+  // Schulen brauchen wegen ihrer breiten Campus-Anlage deutlich mehr Abstand.
+  // Auch spätere Gebäude dürfen nicht in den reservierten Schulbereich hineinragen.
+  const nearSchool=placed.some(p=>p.kind===4&&Math.hypot(p.x-t.x,p.y-t.y)<3.5);
+  const schoolCrowded=kind===4&&placed.some(p=>Math.hypot(p.x-t.x,p.y-t.y)<3.5);
+  if(nearSchool)continue;
+  if(schoolCrowded){
+   const alternatives=t.district==='civic'?[3,0,1,2,6]:[0,1,2,3,6,9];
+   kind=alternatives.find(k=>!nearby.some(p=>p.kind===k||(isCommercial(p.kind)&&isCommercial(k))))??null;
+  }
+  if(kind===null)continue;
   if(nearby.some(p=>p.kind===kind||(isCommercial(p.kind)&&isCommercial(kind)))){
    const alternatives=t.district==='industrial'?[9,3,0,1,4,6]:t.district==='civic'?[4,3,0,1,2,6]:[0,1,2,3,4,6,9];
    kind=alternatives.find(k=>!nearby.some(p=>p.kind===k||(isCommercial(p.kind)&&isCommercial(k))))??null;
