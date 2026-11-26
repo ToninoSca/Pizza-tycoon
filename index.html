@@ -912,7 +912,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  const sun=new THREE.DirectionalLight(0xffe8c5,2.6);sun.position.set(-5,12,8);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
  const M=(c,r=.8)=>new THREE.MeshStandardMaterial({color:c,roughness:r});
  const wood=M('#805237'),wood2=M('#b17a4e'),cream=M('#ead8b8'),wall=M('#d8c5a7'),brick=M('#a9573f'),metal=M('#59676b',.35),green=M('#527b50'),dark=M('#403b36'),glass=M('#9dcbd0',.25);
- let room=new THREE.Group();scene.add(room);let people=[],customers=[],clock=0,nextGuest=2.5,activeKind='pizza',accent=M('#b94f35'),currentUpgrades={};
+ let room=new THREE.Group();scene.add(room);let people=[],customers=[],tableObstacles=[],clock=0,nextGuest=2.5,activeKind='pizza',accent=M('#b94f35'),currentUpgrades={};
  function mesh(parent,geo,mat,x,y,z){const o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
  function cube(parent,w,h,d,mat,x,y,z){return mesh(parent,new THREE.BoxGeometry(w,h,d),mat,x,y,z);}
  function cylinder(parent,r,h,mat,x,y,z){return mesh(parent,new THREE.CylinderGeometry(r,r,h,18),mat,x,y,z);}
@@ -936,6 +936,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   cube(g,.55,.12,.12,wood,0,.88,-.22);cube(g,.12,.42,.12,wood,0,1.08,-.28);
  }
  function table(x,z){
+  tableObstacles.push({x,z,r:1.02});
   cylinder(room,.72,.16,wood,x,.78,z);cylinder(room,.15,.72,dark,x,.39,z);
   seat(x-1,z,.2);seat(x+1,z,Math.PI);seat(x,z+1,Math.PI/2);
   // Teller und kleine Kerze
@@ -943,7 +944,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  }
  function wallPanel(x,y,z,w,h,d,color){cube(room,w,h,d,M(color),x,y,z);}
  function build(kind,color,upgrades={}){
-  room.clear();people=[];customers=[];activeKind=kind||'pizza';currentUpgrades=upgrades||{};accent=M(color||'#b94f35');
+  room.clear();people=[];customers=[];tableObstacles=[];activeKind=kind||'pizza';currentUpgrades=upgrades||{};accent=M(color||'#b94f35');
   const mat2=(c,r=.82)=>M(c,r),creamWall=mat2('#f0dfc4'),plaster=mat2('#ead9bd'),plasterSide=mat2('#d9c3a2'),tileDark=mat2('#b77d55'),tileLight=mat2('#ead9bd'),brass=mat2('#b58a4e',.38),woodDark=mat2('#60402e'),woodMid=mat2('#91603e'),woodLight=mat2('#bd8b5a'),steel=mat2('#68777a',.35),black=mat2('#252b2b',.4),leafMat=mat2('#39784c'),glassPane=new THREE.MeshStandardMaterial({color:'#9ccbd0',roughness:.18,metalness:.12});
   // Solider Boden mit sichtbaren Fugen, umlaufendem Sockel und warmem Holzbereich.
   cube(room,14,.25,12,mat2('#aa8b68'),0,-.15,0);
@@ -1046,25 +1047,36 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   // Mafiosi kommen nur bei erkennbarem italienischem Ambiente.
   if(mafia.style>=3&&Math.random()<.28){type='Mafioso';budget=48;taste='Hausgemachte italienische Spezialitäten';scale=1.04;colors=['#252b2b','#463c35','#343d42'];isMafia=true;}
   const p=person((Math.random()-.5)*.35,5.3,colors[Math.floor(Math.random()*colors.length)]);
-  p.g.scale.set(scale,scale,scale);p.phase=Math.random()*6;p.state='enter';p.timer=0;p.target=[[-.5,3],[1.7,-.2],[4.3,2.8]][customers.length%3];p.tableIndex=customers.length%3;p.customerType=type;p.budget=budget;p.taste=taste;p.mafiaVisit=isMafia;if(isMafia)window.__pizzaCity?.recordMafiaVisit?.();customers.push(p);
+  p.g.scale.set(scale,scale,scale);p.phase=Math.random()*6;p.state='enter';p.timer=0;
+  const routes=[[[0,4.15],[0,2.0],[.7,1.0],[.7,-.25]],[[0,4.15],[2.0,4.15],[3.4,3.7],[4.25,3.55]],[[0,4.15],[-1.0,3.9],[-1.35,2.8]],[[0,4.15],[0,1.0],[2.0,-.8],[2.8,-2.15]]];
+  p.route=routes[customers.length%routes.length].map(q=>q.slice());p.routeIndex=0;p.target=p.route[p.route.length-1];p.tableIndex=customers.length%routes.length;p.customerType=type;p.budget=budget;p.taste=taste;p.mafiaVisit=isMafia;if(isMafia)window.__pizzaCity?.recordMafiaVisit?.();customers.push(p);
  }
  function moveToward(p,x,z,dt,speed=1.35){
   const dx=x-p.g.position.x,dz=z-p.g.position.z,d=Math.hypot(dx,dz);
   if(d<.13){p.g.position.x=x;p.g.position.z=z;return true;}
-  const step=Math.min(d,speed*dt);p.g.position.x+=dx/d*step;p.g.position.z+=dz/d*step;p.g.rotation.y=Math.atan2(dx,dz);return false;
+  const step=Math.min(d,speed*dt),nx=p.g.position.x+dx/d*step,nz=p.g.position.z+dz/d*step;
+  let blocked=false;for(const o of tableObstacles){if(Math.hypot(nx-o.x,nz-o.z)<o.r&&Math.hypot(x-o.x,z-o.z)>.78){blocked=true;break;}}
+  if(!blocked){p.g.position.x=nx;p.g.position.z=nz;}else{const side=dx*(p.g.position.z-z)-dz*(p.g.position.x-x)>=0?1:-1;const sx=p.g.position.x+(-dz/d)*step*side,sz=p.g.position.z+(dx/d)*step*side;let clear=true;for(const o of tableObstacles)if(Math.hypot(sx-o.x,sz-o.z)<o.r&&Math.hypot(x-o.x,z-o.z)>.78){clear=false;break;}if(clear){p.g.position.x=sx;p.g.position.z=sz;}}
+  p.g.rotation.y=Math.atan2(dx,dz);return false;
  }
  function updatePeople(dt){
   for(const p of people){if(p.role==='chef'){const q=Math.sin(clock*1.25);p.g.position.x=-3.3+q*.65;p.g.position.z=-2.5+Math.cos(clock*.8)*.25;p.arm1.rotation.z=Math.sin(clock*5)*.5;p.arm2.rotation.z=-Math.sin(clock*5)*.5;}else if(p.role==='cashier'){p.g.position.x=-4.1+Math.sin(clock*.7)*.12;p.arm1.rotation.z=Math.sin(clock*2)*.2;}}
   for(let i=customers.length-1;i>=0;i--){
    const p=customers[i];p.timer+=dt;p.g.position.y=Math.abs(Math.sin(clock*5+i))*0.025;
-   if(p.state==='enter'&&moveToward(p,p.target[0],p.target[1],dt)){p.state='eat';p.timer=0;}
+   if(p.state==='enter'){const waypoint=p.route?.[p.routeIndex]||p.target;if(moveToward(p,waypoint[0],waypoint[1],dt)){p.routeIndex=(p.routeIndex||0)+1;if(p.routeIndex>=(p.route?.length||1)){p.state='eat';p.timer=0;}}}
    else if(p.state==='eat'&&p.timer>5){p.state='pay';p.timer=0;}
    else if(p.state==='pay'&&moveToward(p,-4.2,.9,dt,1.7)){p.state='leave';p.timer=0;}
    else if(p.state==='leave'&&moveToward(p,0,5.6,dt,1.6)){room.remove(p.g);customers.splice(i,1);}
   }
   if(activeKind==='pizza'){const data=window.__pizzaCity?.getClockData?.()||{minute:480};const h=data.minute/60;const night=h<7||h>=23;const rush=(h>=7&&h<9)||(h>=12&&h<14)||(h>=17&&h<20);nextGuest-=dt*(night?.15:rush?1.55:1);if(nextGuest<=0){spawnCustomer();nextGuest=(night?28: rush?3.2:7)+Math.random()*(night?18: rush?2:5);}}
  }
+ const cameraTarget=new THREE.Vector3(0,0,0),cameraOffset=new THREE.Vector3(11,15,13);let cameraAzimuth=Math.atan2(cameraOffset.x,cameraOffset.z),cameraPolar=Math.acos(cameraOffset.y/cameraOffset.length()),cameraDistance=cameraOffset.length();
+ function updateRoomCamera(){const s=Math.sin(cameraPolar);camera.position.set(cameraTarget.x+cameraDistance*s*Math.sin(cameraAzimuth),cameraTarget.y+cameraDistance*Math.cos(cameraPolar),cameraTarget.z+cameraDistance*s*Math.cos(cameraAzimuth));camera.lookAt(cameraTarget);}
  function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);const aspect=w/h;const viewWidth=18.5,viewHeight=viewWidth/Math.max(.55,aspect);camera.left=-viewWidth/2;camera.right=viewWidth/2;camera.top=viewHeight/2;camera.bottom=-viewHeight/2;camera.updateProjectionMatrix();}
+ const activePointers=new Map();let pinchStart=0,pinchZoom=1;canvas.style.touchAction='none';
+ canvas.addEventListener('pointerdown',e=>{activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.setPointerCapture?.(e.pointerId);if(activePointers.size===2){const a=[...activePointers.values()];pinchStart=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);pinchZoom=camera.zoom;}});
+ canvas.addEventListener('pointermove',e=>{if(!activePointers.has(e.pointerId))return;const prev=activePointers.get(e.pointerId);activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(activePointers.size>=2){const a=[...activePointers.values()];const d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);if(pinchStart>0){camera.zoom=Math.max(.72,Math.min(2.65,pinchZoom*d/pinchStart));camera.updateProjectionMatrix();}}else{const dx=e.clientX-prev.x,dy=e.clientY-prev.y;cameraAzimuth-=dx*.008;cameraPolar=Math.max(.48,Math.min(1.22,cameraPolar+dy*.006));updateRoomCamera();}});
+ const endPointer=e=>{activePointers.delete(e.pointerId);if(activePointers.size<2)pinchStart=0;};canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);updateRoomCamera();
  if(window.ResizeObserver)new ResizeObserver(resize).observe(canvas);else window.addEventListener('resize',resize);
  resize();window.addEventListener('pizza-room-change',e=>{build(e.detail?.kind||'pizza',e.detail?.color,currentUpgrades);nextGuest=1.5;});
  window.addEventListener('pizza-room-upgrades',e=>{const d=e.detail||{};build(activeKind,d.color||'#b94f35',d.upgrades||{});});
