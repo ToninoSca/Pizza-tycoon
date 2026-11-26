@@ -633,7 +633,7 @@ ctx.fillStyle='#f0bd8d';ctx.beginPath();ctx.arc(0,-15*z,3*z,0,Math.PI*2);ctx.fil
 const cityRoadPathCache=new Map(),cityNearestRoadCache=new Map(),cityRoadNodes=tiles.filter(t=>t.road);
 function cityActors(time){
  const actors=new Map(),colors=['#e45c4f','#f0c44f','#4f8ecb','#f4f0df','#4f9b71','#d87c42','#8c6ab1','#d77ca5'];
- const minute=((Number(state.clockMinute)||480)%1440+1440)%1440+(((Number(time)||0)%1000+1000)%1000)/1000;
+ const minute=((Number(state.clockMinute)||480)%1440+1440)%1440;
  const add=(x,y,type,color,angle=0,stopped=false,actorId='',actorClass='')=>{let tx=Math.max(0,Math.min(N-1,Math.round(x))),ty=Math.max(0,Math.min(N-1,Math.round(y)));if(type==='ped'){const vx=ROAD_X.find(v=>Math.abs(x-v)<.85),hy=ROAD_Y.find(v=>Math.abs(y-v)<.85);if(vx!==undefined){tx=vx;ty=Math.round(y);}else if(hy!==undefined){tx=Math.round(x);ty=hy;}if(tx===33&&ty===35){tx=34;ty=35;}}const id=ty*N+tx;if(!actors.has(id))actors.set(id,[]);actors.get(id).push({id:actorId,x,y,type,color,angle,stopped,actorClass});};
  const outer=[{x:6,y:7},{x:18,y:7},{x:33,y:7},{x:48,y:7},{x:56,y:7},{x:56,y:21},{x:56,y:35},{x:56,y:49},{x:56,y:56},{x:48,y:56},{x:33,y:56},{x:18,y:56},{x:6,y:56},{x:6,y:49},{x:6,y:35},{x:6,y:21}];
  const inner=[{x:18,y:21},{x:33,y:21},{x:48,y:21},{x:48,y:35},{x:48,y:49},{x:33,y:49},{x:18,y:49},{x:18,y:35}];
@@ -684,7 +684,7 @@ function cityActors(time){
  else{if(minute>=1140&&minute<1260){from=home;to=work;const q=commute(1140,1260,from,to);point=q.point;walking=q.walking;}else if(minute>=1260||minute<180){point={...work,angle:0};}else if(minute>=180&&minute<300){from=work;to=home;const q=commute(180,300,from,to);point=q.point;walking=q.walking;}else point={...home,angle:0};}
  // Außerhalb ihrer Wege bleiben Personen wirklich stehen. Die frühere
  // Ersatzbewegung ließ alle Figuren auf der Stelle laufen und wirkte wie Breakdance.
- const actorAngle=point.angle||0;let x=point.x,y=point.y;/* Konstanter Seitenabstand zur Laufrichtung: die Gehwegspur wird nicht mehr abrupt zwischen X- und Y-Achse umgeschaltet. */const lane=((i%3)-1)*.055;x+=Math.cos(actorAngle)*lane;y-=Math.sin(actorAngle)*lane;const pedColor=actorClass==='mafia'?'#24282c':actorClass==='retiree'?'#788b91':actorClass==='child'?['#e4a34c','#5d91b4','#bd6c68'][i%3]:colors[i%colors.length];add(x,y,'ped',pedColor,actorAngle,!walking,'ped-'+i,actorClass);}
+ const actorAngle=point.angle||0;let x=point.x,y=point.y;/* Personen laufen auf einer festen Gehwegspur statt auf der Straßenmitte. Der seitliche Abstand bleibt auch an Kurven senkrecht zur Laufrichtung. */const lane=(i%2===0?1:-1)*.62;x+=Math.cos(actorAngle)*lane;y-=Math.sin(actorAngle)*lane;const pedColor=actorClass==='mafia'?'#24282c':actorClass==='retiree'?'#788b91':actorClass==='child'?['#e4a34c','#5d91b4','#bd6c68'][i%3]:colors[i%colors.length];add(x,y,'ped',pedColor,actorAngle,!walking,'ped-'+i,actorClass);}
  return actors;
 }
 window.__pizzaCity={tiles,getActors:cityActors,selectTile,isInterior:()=>!!state.interior,getClockData:()=>({minute:state.clockMinute||480,day:state.day||1,weekday:((state.day||1)-1)%7}),getMafiaData:()=>({style:getItalianStyleScore(),influence:state.mafia?.influence||0,pressure:state.mafia?.pressure||0}),recordMafiaVisit};
