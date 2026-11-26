@@ -155,6 +155,9 @@ function makeCity(){
   // Großes Freizeitareal: ein zusammenhängender Stadtpark mit Wegen und Grünflächen.
  for(const t of tiles){if(t.x>=42&&t.x<=46&&t.y>=26&&t.y<=30){t.building=null;t.space='largepark';t.ground='#75a967';t.plot=true;}}
  const parkCenter=tiles.find(t=>t.x===44&&t.y===28);if(parkCenter)parkCenter.building={name:'Stadtpark',emoji:'🌳',color:'#4e895c',kind:'park',siteId:'citypark'};
+ // Direkt am Stadtpark liegt ein eigenes, zusammenhängendes Freibad-Grundstück.
+ for(const t of tiles){if(t.x>=42&&t.x<=46&&t.y>=31&&t.y<=33){t.building=null;t.space='swimmingpool';t.ground='#c6bda6';t.plot=true;}}
+ const poolCenter=tiles.find(t=>t.x===44&&t.y===32);if(poolCenter)poolCenter.building={name:'Freibad',emoji:'🏊',color:'#4babc4',kind:'pool',siteId:'citypool'};
  // Besondere Freizeit- und Einkaufsziele als feste, gut auffindbare Stadtziele.
  const cinema=tiles.find(t=>t.x===39&&t.y===27);if(cinema){cinema.building={name:'Kino',emoji:'🎬',color:'#765a91',kind:'cinema',siteId:'cinema'};cinema.space=null;cinema.plot=true;cinema.ground='#b8b09c';cinema.traffic=90;}
  const specialSites=[{x:8,y:8,name:'Großhandel',emoji:'📦',color:'#6d9eb1',kind:'wholesale',siteId:'wholesale'},{x:20,y:48,name:'Feinkost',emoji:'🥫',color:'#ba8d61',kind:'deli',siteId:'deli'},{x:27,y:46,name:'Baumarkt',emoji:'🔨',color:'#b5a263',kind:'hardware',siteId:'hardware'}];
@@ -199,6 +202,13 @@ function drawBuilding(tile,time){
 let p=screen(tile.x,tile.y),z=cam.zoom,b=tile.building;if(!b)return;
 if(tile===state.owned)b={name:state.company,emoji:state.brandLogo||'🍕',color:state.brandColor||'#ed8a42',kind:'pizza'};
 const seed=tile.id*9301+17,rand=n=>{let v=Math.sin(seed+n*127.1)*43758.5453;return v-Math.floor(v);};
+if(b.kind==='pool'){
+  // Freibad als klar erkennbare Wasserfläche mit Beckenrand und Liegebereich.
+  ctx.fillStyle='#d6c7a5';ctx.beginPath();ctx.moveTo(p.x-31*z,p.y-5*z);ctx.lineTo(p.x,p.y-21*z);ctx.lineTo(p.x+31*z,p.y-5*z);ctx.lineTo(p.x,p.y+12*z);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#4caec5';ctx.beginPath();ctx.moveTo(p.x-23*z,p.y-5*z);ctx.lineTo(p.x,p.y-16*z);ctx.lineTo(p.x+23*z,p.y-5*z);ctx.lineTo(p.x,p.y+6*z);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#f5f0df';ctx.lineWidth=1.5*z;for(let k=-1;k<=1;k++){ctx.beginPath();ctx.moveTo(p.x+k*8*z,p.y-11*z);ctx.lineTo(p.x+k*8*z,p.y+1*z);ctx.stroke();}
+  ctx.fillStyle='#fff4d8';ctx.font='bold '+(7*z)+'px system-ui';ctx.textAlign='center';ctx.fillText('FREIBAD',p.x,p.y+23*z);return;
+}
 if(b.kind==='park'){
   // kleine Stadtparks statt leerer grüner Felder
   const s=.72+rand(1)*.45;drawTree(p.x-10*z,p.y-7*z,s*z);drawTree(p.x+16*z,p.y+1*z,.72*z);
@@ -206,10 +216,10 @@ if(b.kind==='park'){
   ctx.fillStyle='#e7d8a8';ctx.beginPath();ctx.arc(p.x-3*z,p.y-5*z,3*z,0,Math.PI*2);ctx.fill();return;
 }
 const kind=b.kind,wallColor=shade(b.color,Math.floor(rand(90)*25)-12);
-let floors=kind==='cinema'?2:kind==='office'?2+Math.floor(rand(2)*3):kind==='apartments'?2+Math.floor(rand(2)*2):kind==='landmark'?3:kind==='factory'?1:kind==='school'?2:kind==='market'?1+Math.floor(rand(2)):kind==='pizza'?2:1+Math.floor(rand(3));
-let h=(kind==='office'?floors*15:kind==='apartments'?floors*12:kind==='landmark'?88:kind==='factory'?29:kind==='school'?43:kind==='market'?39:kind==='cinema'?72:kind==='pizza'?48:kind==='cafe'?32:kind==='oldhome'?36+floors*6:25+floors*6)*z;
-let w=(kind==='office'?24+rand(3)*10:kind==='factory'?29+rand(3)*4:kind==='school'?30+rand(3)*5:kind==='landmark'?31+rand(3)*8:kind==='market'?32+rand(3)*8:kind==='cafe'?19+rand(3)*7:kind==='cinema'?66+rand(3)*7:kind==='pizza'?25+rand(3)*8:kind==='oldhome'?23+rand(3)*12:kind==='home'?19+rand(3)*12:25+rand(3)*10)*z;
-let d=(kind==='office'?19+rand(4)*9:kind==='factory'?24+rand(4)*4:kind==='school'?21+rand(4)*5:kind==='market'?23+rand(4)*7:kind==='cafe'?15+rand(4)*6:kind==='oldhome'?18+rand(4)*11:14+rand(4)*12)*z;
+let floors=kind==='cinema'?1:kind==='office'?2+Math.floor(rand(2)*3):kind==='apartments'?2+Math.floor(rand(2)*2):kind==='landmark'?3:kind==='factory'?1:kind==='school'?2:kind==='market'?1+Math.floor(rand(2)):kind==='pizza'?2:1+Math.floor(rand(3));
+let h=(kind==='office'?floors*15:kind==='apartments'?floors*12:kind==='landmark'?88:kind==='factory'?29:kind==='school'?43:kind==='market'?39:kind==='cinema'?43:kind==='pizza'?48:kind==='cafe'?32:kind==='oldhome'?36+floors*6:25+floors*6)*z;
+let w=(kind==='office'?24+rand(3)*10:kind==='factory'?29+rand(3)*4:kind==='school'?30+rand(3)*5:kind==='landmark'?31+rand(3)*8:kind==='market'?32+rand(3)*8:kind==='cafe'?19+rand(3)*7:kind==='cinema'?38+rand(3)*4:kind==='pizza'?25+rand(3)*8:kind==='oldhome'?23+rand(3)*12:kind==='home'?19+rand(3)*12:25+rand(3)*10)*z;
+let d=(kind==='office'?19+rand(4)*9:kind==='factory'?24+rand(4)*4:kind==='school'?21+rand(4)*5:kind==='cinema'?21+rand(4)*3:kind==='market'?23+rand(4)*7:kind==='cafe'?15+rand(4)*6:kind==='oldhome'?18+rand(4)*11:14+rand(4)*12)*z;
 let groundY=p.y,base=groundY-8*z,plinth=8*z,ink='#59463e',left=shade(wallColor,-34),right=shade(wallColor,-12),roof=shade(wallColor,24);
 ctx.fillStyle='#263d3655';ctx.beginPath();ctx.ellipse(p.x,base+8*z,w*1.05, d*.58,0,0,Math.PI*2);ctx.fill();
 const leftGrad=ctx.createLinearGradient(p.x-w,base-h,p.x,base);leftGrad.addColorStop(0,shade(wallColor,7));leftGrad.addColorStop(1,left);
@@ -999,11 +1009,11 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    else slab(sx,sz,1.025,.26,sidewalk,.065);
   }
  }
- const typeHeight={home:1.8,oldhome:2.1,apartments:3.3,office:4.8,school:3.65,cinema:3.65,market:2.3,park:.2,shop:2.0,cafe:2.0,factory:1.8,landmark:4.0,wholesale:2.65,deli:1.95,hardware:2.2,pizza:2.45};
+ const typeHeight={home:1.8,oldhome:2.1,apartments:3.3,office:4.8,school:3.65,cinema:3.2,pool:.2,market:2.3,park:.2,shop:2.0,cafe:2.0,factory:1.8,landmark:4.0,wholesale:2.65,deli:1.95,hardware:2.2,pizza:2.45};
  // Zentrale Gebäudesteckbriefe: neue Gebäudetypen bekommen hier später ihre eigene Silhouette.
- const buildingProfiles={pizza:{width:1.42,depth:1.2,roof:'#9d4938',sign:'PIZZERIA',logo:'🍕',signColor:'#b83e2d',style:'pizza'},wholesale:{width:1.5,depth:1.42,roof:'#526b75',sign:'GROSSHANDEL',logo:'📦',signColor:'#27677d',style:'warehouse'},deli:{width:1.28,depth:1.16,roof:'#87563e',sign:'FEINKOST',logo:'🥫',signColor:'#8b4d32',style:'deli'},hardware:{width:1.42,depth:1.22,roof:'#a38b3e',sign:'BAUMARKT',logo:'🔨',signColor:'#987b27',style:'hardware'},cafe:{width:1.3,depth:1.12,roof:'#89583c',sign:'CAFÉ',logo:'☕',signColor:'#8d4e31',style:'cafe'},market:{width:1.42,depth:1.25,roof:'#73864d',sign:'MARKT',logo:'🛒',signColor:'#617d3d',style:'market'},school:{width:2.05,depth:1.35,roof:'#b5a45f',sign:'GRUNDSCHULE',logo:'🏫',signColor:'#b39a42',style:'school'},cinema:{width:3.15,depth:2.35,roof:'#40364f',sign:'KINO',logo:'🎬',signColor:'#59416f',style:'cinema'}};
+ const buildingProfiles={pizza:{width:1.42,depth:1.2,roof:'#9d4938',sign:'PIZZERIA',logo:'🍕',signColor:'#b83e2d',style:'pizza'},wholesale:{width:1.5,depth:1.42,roof:'#526b75',sign:'GROSSHANDEL',logo:'📦',signColor:'#27677d',style:'warehouse'},deli:{width:1.28,depth:1.16,roof:'#87563e',sign:'FEINKOST',logo:'🥫',signColor:'#8b4d32',style:'deli'},hardware:{width:1.42,depth:1.22,roof:'#a38b3e',sign:'BAUMARKT',logo:'🔨',signColor:'#987b27',style:'hardware'},cafe:{width:1.3,depth:1.12,roof:'#89583c',sign:'CAFÉ',logo:'☕',signColor:'#8d4e31',style:'cafe'},market:{width:1.42,depth:1.25,roof:'#73864d',sign:'MARKT',logo:'🛒',signColor:'#617d3d',style:'market'},school:{width:2.05,depth:1.35,roof:'#b5a45f',sign:'GRUNDSCHULE',logo:'🏫',signColor:'#b39a42',style:'school'},cinema:{width:1.72,depth:1.42,roof:'#40364f',sign:'KINO',logo:'🎬',signColor:'#59416f',style:'cinema'}};
  function makeBuilding(t){
-  const b=t.building;if(!b||b.kind==='park')return;
+  const b=t.building;if(!b||b.kind==='park'||b.kind==='pool')return;
   const kind=b.kind;
   const g=new THREE.Group();city.add(g);
   // Die Eingangsseite zeigt immer zur nächstgelegenen Straße.
@@ -1327,6 +1337,22 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   box(parkBed,.62,.12,.48,mat('#66834f'),0,.08,0);
   for(let n=0;n<5;n++){const parkFlower=new THREE.Mesh(new THREE.SphereGeometry(.055,8,6),mat(['#e9c86d','#df8d83','#f2eee0','#b79bd2','#e7a65c'][n]));parkFlower.position.set(-.22+n*.11,.23,(n%2)*.1-.05);parkBed.add(parkFlower);}
  }
+ // Freibad: großes rechteckiges Becken, umlaufende helle Fliesen, Leitern und Liegen.
+ const poolDeckMat=mat('#d7c8a6'),poolWaterMat=mat('#48abc5',.16),poolRailMat=mat('#d9e0dc'),poolChairMat=mat('#e9eee9');
+ slab(44,32,4.55,2.55,poolDeckMat,.095);
+ const poolBasin=new THREE.Group();poolBasin.position.set(44,.14,32);city.add(poolBasin);
+ box(poolBasin,3.25,.12,1.78,mat('#e9e4d4'),0,.12,0);
+ box(poolBasin,2.98,.045,1.5,poolWaterMat,0,.205,0);
+ for(const x of [-.82,-.27,.27,.82])box(poolBasin,.018,.012,1.36,poolRailMat,x,.232,0);
+ for(const x of [-1.58,1.58]){box(poolBasin,.055,.58,.055,poolRailMat,x,.38,-.48);box(poolBasin,.055,.58,.055,poolRailMat,x,.38,-.27);box(poolBasin,.48,.045,.055,poolRailMat,x,.66,-.38);}
+ // Einstiegsleiter und vier Liegestühle auf der Sonnenseite.
+ for(const x of [-.7,-.25,.25,.7]){box(poolBasin,.035,.52,.035,poolRailMat,x,.42,.91);}
+ for(const [x,z] of [[-1.72,.82],[-.95,.92],[.95,.92],[1.72,.82]]){
+  const lounger=new THREE.Group();lounger.position.set(x,.17,z);lounger.rotation.y=x<0?-.18:.18;city.add(lounger);
+  box(lounger,.42,.07,.78,poolChairMat,0,.2,0);box(lounger,.42,.07,.34,poolChairMat,0,.36,-.2);
+  for(const sx of [-.16,.16])box(lounger,.035,.18,.035,poolRailMat,sx,.1,.22);
+ }
+ const poolSign=box(city,.85,.42,.08,mat('#397f91'),44,.55,33.22);poolSign.rotation.y=0;
  // Plätze und Kreisverkehr
  const round=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.1,.12,32),mat('#7eaa72'));round.position.set(33,.08,35);city.add(round);
  const plaza=tiles.filter(t=>t.space==='plaza'||t.space==='parking');for(const t of plaza){slab(t.x,t.y,.95,.95,mat(t.space==='plaza'?'#b9ad91':'#9a9d96'),.03);}
