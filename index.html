@@ -645,8 +645,8 @@ function cityActors(time){
  });
  // Bewohner folgen Tagesplaenen und festen Wegen zwischen Wohnvierteln, Arbeitsplaetzen, Schulen und Parks.
  const weekday=((state.day||1)-1)%7,weekend=weekday>=5;
- const roadPathCache=new Map();
- const nearestRoadNode=p=>{let best=null,bestDistance=Infinity;for(const t of tiles){if(!t.road)continue;const d=(t.x-p.x)**2+(t.y-p.y)**2;if(d<bestDistance){best=t;bestDistance=d;}}return best?{x:best.x,y:best.y,id:best.id}:{x:6,y:7,id:7*N+6};};
+ const roadPathCache=new Map(),nearestRoadCache=new Map(),roadNodes=tiles.filter(t=>t.road);
+ const nearestRoadNode=p=>{const key=Math.round(p.x)+':'+Math.round(p.y);if(nearestRoadCache.has(key))return nearestRoadCache.get(key);let best=null,bestDistance=Infinity;for(const t of roadNodes){const d=(t.x-p.x)**2+(t.y-p.y)**2;if(d<bestDistance){best=t;bestDistance=d;}}const node=best?{x:best.x,y:best.y,id:best.id}:{x:6,y:7,id:7*N+6};nearestRoadCache.set(key,node);return node;};
  const routePoint=(a,b,progress)=>{
   const from=nearestRoadNode(a),to=nearestRoadNode(b),key=from.id+':'+to.id;
   let path=roadPathCache.get(key);
