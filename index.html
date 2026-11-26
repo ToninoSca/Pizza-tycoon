@@ -1391,6 +1391,36 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  }
  const poolSignBoard=box(city,.92,.48,.09,mat('#397f91'),44,.62,33.22);
  const poolSignCanvas=document.createElement('canvas');poolSignCanvas.width=512;poolSignCanvas.height=192;const poolSignCtx=poolSignCanvas.getContext('2d');poolSignCtx.fillStyle='#397f91';poolSignCtx.fillRect(0,0,512,192);poolSignCtx.fillStyle='#fff4d9';poolSignCtx.font='bold 92px system-ui';poolSignCtx.textAlign='center';poolSignCtx.textBaseline='middle';poolSignCtx.fillText('FREIBAD',256,98);const poolSignTexture=new THREE.CanvasTexture(poolSignCanvas);poolSignTexture.colorSpace=THREE.SRGBColorSpace;const poolSignFace=new THREE.Mesh(new THREE.PlaneGeometry(.88,.32),new THREE.MeshBasicMaterial({map:poolSignTexture,side:THREE.DoubleSide}));poolSignFace.position.set(44,.64,33.275);city.add(poolSignFace);
+ // Wasserrutsche mit erhöhtem Startpodest und sichtbaren Stützen.
+ const slideMat=mat('#e7a34d'),slideRailMat=mat('#f3d5a2'),slideSupportMat=mat('#71858a');
+ const slidePath=new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-1.38,1.28,-.58),
+  new THREE.Vector3(-1.38,1.12,-.12),
+  new THREE.Vector3(-1.2,.72,.24),
+  new THREE.Vector3(-.88,.38,.42),
+  new THREE.Vector3(-.55,.27,.42)
+ ]);
+ const slideTube=new THREE.Mesh(new THREE.TubeGeometry(slidePath,28,.105,8,false),slideMat);poolBasin.add(slideTube);
+ for(const [sx,sz,top] of [[-1.38,-.58,1.25],[-1.38,-.12,1.08],[-1.2,.24,.68]]){
+  const support=new THREE.Mesh(new THREE.CylinderGeometry(.035,.045,top,8),slideSupportMat);support.position.set(sx,top/2,sz);poolBasin.add(support);
+ }
+ box(poolBasin,.62,.09,.48,slideRailMat,-1.38,1.29,-.58);
+ for(const sx of [-1.62,-1.14])box(poolBasin,.045,.42,.045,slideRailMat,sx,1.48,-.58);
+ // Kleine Kinderwasserzone mit eigener heller Umrandung.
+ box(poolBasin,.72,.07,.48,mat('#e9e4d4'),1.08,.12,-.43);
+ box(poolBasin,.58,.035,.34,mat('#77c9d8',.12),1.08,.18,-.43);
+ // Sonnenschirme und Sitzplätze am Rand des Freibads.
+ for(const [ux,uz,uc] of [[-1.78,-.88,'#e8b65b'],[1.78,-.88,'#d96f59']]){
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.025,.035,.62,8),poolRailMat);pole.position.set(ux,.49,uz);poolBasin.add(pole);
+  const canopy=new THREE.Mesh(new THREE.ConeGeometry(.48,.2,8),mat(uc));canopy.position.set(ux,.86,uz);canopy.rotation.y=Math.PI/8;poolBasin.add(canopy);
+  const table=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.045,12),poolChairMat);table.position.set(ux,.24,uz+.42);poolBasin.add(table);
+ }
+ // Rettungsschwimmer-Hochsitz mit Leiter und rotem Rettungsring.
+ const lifeguard=new THREE.Group();lifeguard.position.set(1.62,.17,-.18);poolBasin.add(lifeguard);
+ box(lifeguard,.42,.09,.38,mat('#f2eee2'),0,.82,0);
+ for(const sx of [-.15,.15])box(lifeguard,.055,.86,.055,slideSupportMat,sx,.42,0);
+ box(lifeguard,.48,.08,.42,mat('#d75d4d'),0,1.28,0);
+ const rescueRing=new THREE.Mesh(new THREE.TorusGeometry(.13,.035,8,16),mat('#e55d4c'));rescueRing.position.set(.26,.85,.2);lifeguard.add(rescueRing);
  // Plätze und Kreisverkehr
  const round=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.1,.12,32),mat('#7eaa72'));round.position.set(33,.08,35);city.add(round);
  const plaza=tiles.filter(t=>t.space==='plaza'||t.space==='parking');for(const t of plaza){slab(t.x,t.y,.95,.95,mat(t.space==='plaza'?'#b9ad91':'#9a9d96'),.03);}
