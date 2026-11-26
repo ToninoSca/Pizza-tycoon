@@ -928,8 +928,9 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   cube(g,.075,.018,.018,dark,0,1.48,.185);
   mesh(g,new THREE.SphereGeometry(.195,16,10,0,Math.PI*2,0,Math.PI*.48),hair,0,1.66,-.015);
   cube(g,.035,.035,.025,dark,.07,1.59,.17);cube(g,.035,.035,.025,dark,-.07,1.59,.17);
-  cube(g,.13,.48,.15,trouser,-.09,.31,0);cube(g,.13,.48,.15,trouser,.09,.31,0);
-  cube(g,.17,.075,.3,shoe,-.09,.055,.07);cube(g,.17,.075,.3,shoe,.09,.055,.07);
+  const leg1=new THREE.Group(),leg2=new THREE.Group();leg1.position.set(-.09,.55,0);leg2.position.set(.09,.55,0);g.add(leg1,leg2);
+  cube(leg1,.13,.42,.15,trouser,0,-.19,0);cube(leg2,.13,.42,.15,trouser,0,-.19,0);
+  cube(leg1,.17,.075,.3,shoe,0,-.43,.07);cube(leg2,.17,.075,.3,shoe,0,-.43,.07);
   cube(g,.12,.035,.25,detail,-.09,.018,.07);cube(g,.12,.035,.25,detail,.09,.018,.07);
   cube(g,.36,.055,.22,trouser,0,.67,0);
   const arm1=cube(g,.115,.43,.13,body,-.25,1.02,0),arm2=cube(g,.115,.43,.13,body,.25,1.02,0);
@@ -955,7 +956,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    cube(g,.13,.045,.035,M('#17191b'),0,1.6,.2);cube(g,.09,.045,.035,M('#17191b'),-.09,1.6,.2);cube(g,.09,.045,.035,M('#17191b'),.09,1.6,.2);
    cylinder(g,.25,.045,M('#17191b'),0,1.79,0);cylinder(g,.14,.19,M('#24272a'),0,1.88,0);
   }
-  return {g,arm1,arm2,hand1,hand2,homeX:x,homeZ:z,appearance};
+  return {g,arm1,arm2,hand1,hand2,leg1,leg2,homeX:x,homeZ:z,appearance};
  }
  function seat(x,z,rot=0){
   const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;room.add(g);
@@ -1097,7 +1098,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   p.g.rotation.y=Math.atan2(dx,dz);return false;
  }
  function updatePeople(dt){
-  for(const p of people){if(p.role==='chef'&&kitchenJob){
+  for(const p of people){const walking=p.role==='chef'&&kitchenJob&&['toOven','deliver'].includes(kitchenJob.phase);const stride=walking?Math.sin(clock*10)*.58:Math.sin(clock*1.8)*.035;p.leg1.rotation.x=stride;p.leg2.rotation.x=-stride;p.arm1.rotation.x=walking?-.22-stride*.35:0;p.arm2.rotation.x=walking?-.22+stride*.35:0;if(p.role==='chef'&&kitchenJob){
     const job=kitchenJob;job.timer+=dt;const phase=job.phase,idx=job.phaseOrder.indexOf(phase);
     if(job.timer>=job.durations[phase]){job.timer=0;job.phase=job.phaseOrder[(idx+1)%job.phaseOrder.length];}
     const targets={prep:[1.05,-3.05],toOven:[-1.45,-2.12],insert:[-1.45,-2.12],bake:[-1.45,-2.12],remove:[-1.45,-2.12],deliver:[-3.25,-.85],handoff:[-3.8,-.55]};
@@ -1106,7 +1107,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
     const working=job.phase==='prep'||job.phase==='insert'||job.phase==='remove'||job.phase==='handoff',swing=Math.sin(clock*(job.phase==='prep'?7:10));
     p.arm1.rotation.z=working?-.48+Math.max(0,swing)*.48:job.phase==='toOven'||job.phase==='deliver'?.42:Math.sin(clock*2)*.08;
     p.arm2.rotation.z=working?.48-Math.max(0,swing)*.48:job.phase==='toOven'||job.phase==='deliver'?.42:-Math.sin(clock*2)*.08;
-    p.arm1.rotation.x=working?-.32:0;p.arm2.rotation.x=working?-.32:0;p.g.position.y=job.phase==='prep'?Math.abs(swing)*.025:0;
+    p.arm1.rotation.x=working?-.32:0;p.arm2.rotation.x=working?-.32:0;p.g.position.y=0;
     const pizza=job.pizza,handX=p.g.position.x+.34,handZ=p.g.position.z+.22;
     if(job.phase==='prep'){pizza.visible=true;pizza.position.set(1.55,1.13,-3.8);pizza.rotation.y=clock*.12;job.ovenGlow.visible=false;}
     else if(job.phase==='toOven'||job.phase==='deliver'){pizza.visible=true;pizza.position.set(handX,1.18,handZ);pizza.rotation.y=p.g.rotation.y;job.ovenGlow.visible=false;}
@@ -1116,7 +1117,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
     else if(job.phase==='handoff'){pizza.visible=true;pizza.position.set(-4.0,1.17,-.35);pizza.rotation.y=0;job.ovenGlow.visible=false;if(job.timer>.75)pizza.visible=false;}
   }else if(p.role==='cashier'&&kitchenJob){const job=kitchenJob;p.g.position.x=-4.1+Math.sin(clock*.7)*.035;p.arm1.rotation.z=job.cashierBusy>0?-.72+Math.sin(clock*12)*.12:Math.sin(clock*1.5)*.08;p.arm2.rotation.z=job.cashierBusy>0?.62+Math.sin(clock*12)*.1:-Math.sin(clock*1.5)*.08;if(job.cashierBusy>0){job.cashierBusy=Math.max(0,job.cashierBusy-dt);job.tillLight.material.emissiveIntensity=.9;}else job.tillLight.material.emissiveIntensity=.2;job.ovenGlow.material.emissiveIntensity=.55+Math.sin(clock*9)*.28;}}
   for(let i=customers.length-1;i>=0;i--){
-   const p=customers[i];p.timer+=dt;p.g.position.y=Math.abs(Math.sin(clock*5+i))*0.025;
+   const p=customers[i];p.timer+=dt;const isWalking=p.state==='enter'||p.state==='pay'||p.state==='leave',step=isWalking?Math.sin(clock*11+i)*.62:Math.sin(clock*1.7+i)*.025;p.leg1.rotation.x=step;p.leg2.rotation.x=-step;p.arm1.rotation.x=isWalking?-.18-step*.3:0;p.arm2.rotation.x=isWalking?-.18+step*.3:0;p.g.position.y=0;
    if(p.state==='enter'){const waypoint=p.route?.[p.routeIndex]||p.target;if(moveToward(p,waypoint[0],waypoint[1],dt)){p.routeIndex=(p.routeIndex||0)+1;if(p.routeIndex>=(p.route?.length||1)){p.state='eat';p.timer=0;}}}
    else if(p.state==='eat'&&p.timer>5){p.state='pay';p.timer=0;}
    else if(p.state==='pay'&&moveToward(p,-4.2,.9,dt,1.7)){p.state='paying';p.timer=0;if(kitchenJob)kitchenJob.cashierBusy=1.65;}
@@ -1209,7 +1210,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   // Die Eingangsseite zeigt immer zur nächstgelegenen Straße.
   const fronts=[{x:t.x,y:t.y-1,a:Math.PI},{x:t.x+1,y:t.y,a:Math.PI/2},{x:t.x,y:t.y+1,a:0},{x:t.x-1,y:t.y,a:-Math.PI/2}];
   const front=fronts.find(p=>tiles.some(q=>q.x===p.x&&q.y===p.y&&q.road));
-  if(front){g.rotation.y=front.a;const setback=.56;g.position.set(t.x+(t.x-front.x)*setback,0,t.y+(t.y-front.y)*setback);}else g.position.set(t.x,0,t.y);
+  if(front){g.rotation.y=front.a;const setback=1.08;g.position.set(t.x+(t.x-front.x)*setback,0,t.y+(t.y-front.y)*setback);}else g.position.set(t.x,0,t.y);
   const baseProfile=buildingProfiles[kind]||null,profile=baseProfile&&kind==='pizza'?{...baseProfile,sign:b.brand||b.name||baseProfile.sign,logo:b.emoji||baseProfile.logo,signColor:b.color||baseProfile.signColor}:baseProfile,seed=((t.x*37+t.y*71)%11)/10,seed2=((t.x*13+t.y*29)%13)/12;
   // Normale Gebäude variieren in Breite, Tiefe und Höhe; Marken-Gebäude behalten ihre feste Silhouette.
   const heightRange={home:.88,oldhome:.9,apartments:.84,office:.86,school:.9,factory:.88,shop:.86,cafe:.9,market:.92};
