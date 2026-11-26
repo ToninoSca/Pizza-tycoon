@@ -1055,33 +1055,37 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    // Hängelampen mit warm leuchtenden Schirmen.
    const lampMat=new THREE.MeshStandardMaterial({color:'#ffe0a0',emissive:'#ffbd55',emissiveIntensity:.7,roughness:.35});
    for(const [x,z] of [[-2.5,0],[1.8,0],[4.4,1.2],[0,3.6]]){cylinder(room,.035,.72,steel,x,2.35,z);cylinder(room,.28,.12,brass,x,1.98,z);mesh(room,new THREE.SphereGeometry(.19,12,10),lampMat,x,1.84,z);}
-   // Abgetrennter Vorrats-Hinterraum rechts hinten mit eigenem Eingang.
-   const stockWall=mat2('#d7c4a5'),stockFloor=mat2('#c9ad87'),stockDoor=mat2('#65432f');
-   cube(room,3.55,.035,4.25,stockFloor,4.95,.015,-3.72);
-   cube(room,.16,2.55,4.25,plasterSide,3.17,1.25,-3.72);
-   cube(room,3.55,2.55,.16,stockWall,4.95,1.25,-5.78);
-   cube(room,1.0,2.55,.16,stockWall,3.67,1.25,-1.66);
-   cube(room,1.55,2.55,.16,stockWall,6.0,1.25,-1.66);
-   cube(room,.12,2.65,4.25,woodDark,6.72,1.3,-3.72);
-   cube(room,.12,.12,4.25,woodDark,3.25,.12,-3.72);
-   cube(room,1.35,.08,.12,woodDark,4.85,2.45,-1.66);
-   cube(room,1.35,.08,.12,woodLight,4.85,.12,-1.66);
-   cube(room,1.15,.1,.1,stockDoor,4.85,2.05,-1.62);
-   // Vorratsregale und beschriftete Zutatenkisten im eigenen Lagerraum.
+   // Sichtbarer, eigener Lagerraum rechts hinten: heller Boden, niedrige Trennwände und offene Tür.
+   const stockWall=mat2('#d7c4a5'),stockFloor=mat2('#b99a70'),stockDoor=mat2('#65432f');
+   cube(room,3.7,.07,4.35,stockFloor,5.0,.045,-3.65);
+   // Rückwand und Seitenwände rahmen den Lagerbereich, die Vorderseite hat eine breite Öffnung.
+   cube(room,.16,2.45,4.35,plasterSide,3.12,1.22,-3.65);
+   cube(room,3.7,2.45,.16,stockWall,5.0,1.22,-5.82);
+   cube(room,.16,2.45,4.35,stockWall,6.88,1.22,-3.65);
+   cube(room,1.05,2.25,.16,stockWall,3.75,1.12,-1.48);
+   cube(room,1.35,2.25,.16,stockWall,6.18,1.12,-1.48);
+   // Deutlich sichtbarer Türrahmen und Schild über dem offenen Eingang.
+   cube(room,.13,2.35,.18,woodDark,4.43,1.18,-1.48);
+   cube(room,.13,2.35,.18,woodDark,5.55,1.18,-1.48);
+   cube(room,1.25,.16,.2,woodDark,4.99,2.28,-1.48);
+   cube(room,1.05,.48,.09,woodDark,4.99,2.02,-1.34);
+   cube(room,.92,.34,.035,mat2('#f0dfbd'),4.99,2.02,-1.28);
+   // Regale und gut erkennbare Zutatenkisten stehen sichtbar im Lagerraum.
    for(let row=0;row<2;row++){
-    const sx=3.65+row*2.45;
-    cube(room,1.75,.12,.62,woodDark,sx, .58,-5.25);
-    cube(room,1.75,.12,.62,woodDark,sx,1.35,-5.25);
-    cube(room,1.75,.08,.62,woodLight,sx,.2,-5.25);
+    const sx=3.85+row*2.25;
+    cube(room,1.7,.13,.72,woodDark,sx,.62,-5.22);
+    cube(room,1.7,.13,.72,woodDark,sx,1.38,-5.22);
+    cube(room,1.7,.08,.72,woodLight,sx,.2,-5.22);
     for(let j=0;j<4;j++){
      const crateMat=[mat2('#bd8d54'),mat2('#b85b43'),mat2('#7d9a65'),mat2('#d4bd8e')][j];
-     cube(room,.32,.34,.34,crateMat,sx-.62+j*.41,.82,-5.17);
-     if((currentUpgrades.storageLevel||1)>=2)cube(room,.32,.34,.34,crateMat,sx-.62+j*.41,1.58,-5.17);
+     cube(room,.36,.38,.38,crateMat,sx-.63+j*.42,.88,-5.12);
+     if((currentUpgrades.storageLevel||1)>=2)cube(room,.36,.38,.38,crateMat,sx-.63+j*.42,1.66,-5.12);
     }
    }
-   cube(room,1.25,.38,.08,woodDark,4.95,2.05,-5.64);
-   cube(room,1.08,.22,.035,mat2('#e8d5ae'),4.95,2.05,-5.58);
-   // Türöffnung bleibt frei; der Raum ist als separates Lager klar erkennbar.
+   // Beschriftung direkt an der Lager-Rückwand.
+   cube(room,1.55,.62,.08,woodDark,4.98,2.08,-5.68);
+   cube(room,1.34,.4,.035,mat2('#f0dfbd'),4.98,2.08,-5.62);
+   // Türöffnung bleibt frei und führt sichtbar in den Vorratsraum.
    // Sitzbank und Garderoben-/Servierdetails.
    if((currentUpgrades.sofas||0)>0){cube(room,2.0,.38,.72,mat2('#547a70'),-2.0,.35,4.0);cube(room,2.0,.68,.2,mat2('#547a70'),-2.0,.72,4.28);}
    cube(room,1.0,.8,.5,woodDark,5.6,.4,-4.5);cube(room,1.05,.08,.55,woodLight,5.6,.84,-4.5);
@@ -1100,12 +1104,12 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    for(const [px,pz] of [[-.15,-.12],[.12,-.15],[.19,.1],[-.1,.16],[.02,.02]]){cylinder(pizza,.055,.025,mat2('#bd4938'),px,.08,pz);mesh(pizza,new THREE.SphereGeometry(.035,8,6),mat2('#5b8c4c'),px+.035,.095,pz+.025);}
    room.add(pizza);pizza.position.set(1.55,1.12,-3.8);
    const ovenGlow=new THREE.Mesh(new THREE.BoxGeometry(.55,.24,.035),new THREE.MeshStandardMaterial({color:'#ff8b36',emissive:'#ff5a16',emissiveIntensity:1.2}));ovenGlow.position.set(-1.45,.72,-2.985);room.add(ovenGlow);ovenGlow.visible=false;
-   // Angeschlagene Ofentür mit Griff; sie schwenkt beim Einschieben und Herausnehmen auf.
-   const ovenDoor=new THREE.Group();ovenDoor.position.set(-1.98,.66,-2.91);room.add(ovenDoor);
-   cube(ovenDoor,1.02,.72,.13,mat2('#8d4936'),.51,0,.015);
-   cube(ovenDoor,.78,.48,.045,mat2('#c17b50'),.51,0,.095);
-   cube(ovenDoor,.12,.08,.12,brass,.82,-.04,.17);
-   const doorHinge=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.78,10),brass);doorHinge.position.set(0,0,.02);ovenDoor.add(doorHinge);
+   // Eine einzige Ofentür: bündig vor der Öffnung montiert, mit sichtbarem Scharnier links.
+   const ovenDoor=new THREE.Group();ovenDoor.position.set(-1.98,.66,-2.78);room.add(ovenDoor);
+   cube(ovenDoor,1.02,.76,.12,mat2('#8d4936'),.51,0,0);
+   cube(ovenDoor,.82,.54,.035,mat2('#c17b50'),.51,0,.078);
+   cube(ovenDoor,.13,.085,.11,brass,.83,-.04,.13);
+   const doorHinge=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.8,10),brass);doorHinge.position.set(0,0,.015);ovenDoor.add(doorHinge);
    const tillLight=new THREE.Mesh(new THREE.BoxGeometry(.16,.08,.045),new THREE.MeshStandardMaterial({color:'#64d58a',emissive:'#28b968',emissiveIntensity:.2}));tillLight.position.set(-4.85,1.42,-.18);room.add(tillLight);
    kitchenJob={chef,cashier,pizza,ovenGlow,ovenDoor,tillLight,phase:'prep',timer:0,phaseOrder:['prep','toOven','insert','bake','remove','deliver','handoff'],durations:{prep:3.8,toOven:2.2,insert:1.25,bake:5.2,remove:1.2,deliver:2.2,handoff:1.4}};
   }else{
