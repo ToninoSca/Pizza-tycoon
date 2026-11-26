@@ -220,11 +220,8 @@ ctx.strokeStyle='#285d3d';ctx.lineWidth=2;ctx.stroke();ctx.restore();
 }
 function drawBuilding(tile,time){
 let b=tile.building;if(!b)return;
-// Gebäude im Stadtplan sichtbar hinter dem Gehweg platzieren, nicht auf dem Straßenrand-Anker.
-const roadFronts=[{x:tile.x,y:tile.y-1},{x:tile.x+1,y:tile.y},{x:tile.x,y:tile.y+1},{x:tile.x-1,y:tile.y}];
-const roadFront=roadFronts.find(f=>isRoad(f.x,f.y));
-const displayX=roadFront?tile.x+(tile.x-roadFront.x)*1.05:tile.x,displayY=roadFront?tile.y+(tile.y-roadFront.y)*1.05:tile.y;
-let p=screen(displayX,displayY),z=cam.zoom;
+// Auch die 2D-Ansicht zeichnet Gebäude auf ihrem tatsächlichen Grundstück.
+let p=screen(tile.x,tile.y),z=cam.zoom;
 if(tile===state.owned)b={name:state.company,emoji:state.brandLogo||'🍕',color:state.brandColor||'#ed8a42',kind:'pizza'};
 const seed=tile.id*9301+17,rand=n=>{let v=Math.sin(seed+n*127.1)*43758.5453;return v-Math.floor(v);};
 if(b.kind==='pool'){
@@ -1293,9 +1290,9 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   const baseDepth=kind==='factory'?1.28:kind==='apartments'?1.18:kind==='school'?1.12:1.08;
   const w=profile?profile.width:baseWidth*(.82+seed*.34);
   const d=profile?profile.depth:baseDepth*(.82+seed2*.34);
-  // Gebäude anhand ihrer tatsächlichen Grundfläche an die Straße setzen: Die straßenseitige Kante bleibt knapp innerhalb des Grundstücks.
-  // Mindestabstand ab Straßenmitte: Fahrbahn + Gehweg + Grundstückspuffer + halbe Gebäudetiefe.
-  if(front){const roadHalfWidth=.5125,sidewalkOuterEdge=.77,plotClearance=.24,footprintHalf=d*.5;const requiredCenterDistance=roadHalfWidth+sidewalkOuterEdge+plotClearance+footprintHalf;const setback=Math.max(0,requiredCenterDistance-1);g.position.set(t.x+(t.x-front.x)*setback,0,t.y+(t.y-front.y)*setback);}else g.position.set(t.x,0,t.y);
+  // Jedes Gebäude bleibt fest auf seinem eigenen Grundstück. Große Zusatzverschiebungen
+  // lassen benachbarte Gebäude ineinander rutschen.
+  g.position.set(t.x,0,t.y);
   const base=mat(b.color||'#c78c69'),side=mat(shadeFacade(b.color||'#c78c69',-22)),roof=mat(profile?.roof||(kind==='oldhome'||t.district==='oldtown'?'#a85a48':kind==='factory'?'#687579':'#655b52'));
   const trim=mat('#e9dfcb'),foundation=mat('#655b52'),frame=mat('#493f37'),glassLit=mat('#a9d9e8',.18),doorGlass=mat('#8fc5d4',.2);
   // Vorderseite heller, Seiten und Rückseite mit eigener Fassadenfarbe.
