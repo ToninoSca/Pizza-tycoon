@@ -672,7 +672,18 @@ function cityActors(time){
    path=[];if(parent[to.id]!==-2){for(let id=to.id;id!==-1;id=parent[id])path.push({x:id%N,y:Math.floor(id/N)});path.reverse();}else path=[from];
    cityRoadPathCache.set(key,path);
   }
-  if(path.length<2){const a=path[0]||from;return{x:a.x,y:a.y,angle:0,sidewalk:true};}
+  if(path.length<2){
+   // Wenn Start und Ziel auf derselben Straßenkachel liegen, darf die Figur
+   // nicht mit "walking=true" auf der Stelle laufen. Suche ein weiter
+   // entferntes, tatsächlich erreichbares Ziel im zusammenhängenden Wegenetz.
+   const parent=new Int32Array(N*N);parent.fill(-2);const depth=new Int16Array(N*N);const queue=new Int32Array(N*N);let head=0,tail=0;queue[tail++]=from.id;parent[from.id]=-1;let fallback=from.id,bestDepth=0;
+   const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+   while(head<tail){const id=queue[head++],x=id%N,y=Math.floor(id/N);if(depth[id]>bestDepth&&Math.hypot(x-from.x,y-from.y)>=4){fallback=id;bestDepth=depth[id];}
+    for(const [dx,dy] of dirs){const nx=x+dx,ny=y+dy,nid=ny*N+nx;if(nx<0||ny<0||nx>=N||ny>=N||parent[nid]!==-2||!tiles[nid]?.road)continue;parent[nid]=id;depth[nid]=depth[id]+1;queue[tail++]=nid;}
+   }
+   if(fallback!==from.id){path=[];for(let id=fallback;id!==-1;id=parent[id])path.push({x:id%N,y:Math.floor(id/N)});path.reverse();}
+   else{const a=path[0]||from;return{x:a.x,y:a.y,angle:0,sidewalk:true};}
+  }
   // Durchgehende Parallelspur auf dem Gehweg: an Kurven wird der Versatz
   // geometrisch um die Ecke geführt, statt bei jedem Richtungswechsel zu springen.
   const side=Number(lane)||.62,offsetPath=path.map((p,i)=>{
