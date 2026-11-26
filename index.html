@@ -621,12 +621,14 @@ ctx.fillStyle='#f0bd8d';ctx.beginPath();ctx.arc(0,-15*z,3*z,0,Math.PI*2);ctx.fil
 }
 function cityActors(time){
  const actors=new Map(),colors=['#e45c4f','#f0c44f','#4f8ecb','#f4f0df','#4f9b71','#d87c42','#8c6ab1','#d77ca5'];
- const minute=(((Number(state.clockMinute)||480)+(Number(time)||0)%1000/1000)%1440+1440)%1440;
+ const minute=((Number(state.clockMinute)||480)%1440+1440)%1440;
  const add=(x,y,type,color,angle=0,stopped=false,actorId='',actorClass='')=>{let tx=Math.max(0,Math.min(N-1,Math.round(x))),ty=Math.max(0,Math.min(N-1,Math.round(y)));if(type==='ped'){const vx=ROAD_X.find(v=>Math.abs(x-v)<.85),hy=ROAD_Y.find(v=>Math.abs(y-v)<.85);if(vx!==undefined){tx=vx;ty=Math.round(y);}else if(hy!==undefined){tx=Math.round(x);ty=hy;}if(tx===33&&ty===35){tx=34;ty=35;}}const id=ty*N+tx;if(!actors.has(id))actors.set(id,[]);actors.get(id).push({id:actorId,x,y,type,color,angle,stopped,actorClass});};
  const outer=[{x:6,y:7},{x:18,y:7},{x:33,y:7},{x:48,y:7},{x:56,y:7},{x:56,y:21},{x:56,y:35},{x:56,y:49},{x:56,y:56},{x:48,y:56},{x:33,y:56},{x:18,y:56},{x:6,y:56},{x:6,y:49},{x:6,y:35},{x:6,y:21}];
  const inner=[{x:18,y:21},{x:33,y:21},{x:48,y:21},{x:48,y:35},{x:48,y:49},{x:33,y:49},{x:18,y:49},{x:18,y:35}];
  [outer,inner,ROUNDABOUT_RING.map(([x,y])=>({x,y}))].forEach((path,ri)=>{
-  const legs=path.map((p,i)=>{const next=path[(i+1)%path.length];return{a:p,b:next,len:Math.hypot(next.x-p.x,next.y-p.y)};});
+  // Fahrzeuge am Kreisverkehr fahren nicht endlos im Ring, sondern werden in den normalen Stadtverkehr eingespeist.
+  const vehicleRoute=ri===2?outer:path;
+  const legs=vehicleRoute.map((p,i)=>{const next=vehicleRoute[(i+1)%vehicleRoute.length];return{a:p,b:next,len:Math.hypot(next.x-p.x,next.y-p.y)};});
   const travelPerUnit=780,cycle=legs.reduce((sum,l)=>sum+l.len*travelPerUnit,0);
   for(let n=0;n<(ri===2?2:5);n++){
    let cursor=((time+n*cycle/4+ri*cycle/7)%cycle+cycle)%cycle,pos=legs[0].a,angle=0;
