@@ -1114,7 +1114,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    cube(ovenDoor,.82,.54,.035,mat2('#c17b50'),.51,0,.078);
    const doorHinge=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.8,10),brass);doorHinge.position.set(0,0,.015);ovenDoor.add(doorHinge);
    const tillLight=new THREE.Mesh(new THREE.BoxGeometry(.16,.08,.045),new THREE.MeshStandardMaterial({color:'#64d58a',emissive:'#28b968',emissiveIntensity:.2}));tillLight.position.set(-4.85,1.42,-.18);room.add(tillLight);
-   kitchenJob={chef,cashier,pizza,ovenGlow,ovenDoor,tillLight,phase:'prep',timer:0,phaseOrder:['prep','toOven','insert','bake','remove','deliver','handoff'],durations:{prep:3.8,toOven:2.2,insert:1.25,bake:5.2,remove:1.2,deliver:2.2,handoff:1.4}};
+   const savedJob=window.__pizzaKitchenState||{};kitchenJob={chef,cashier,pizza,ovenGlow,ovenDoor,tillLight,phase:savedJob.phase||'prep',timer:Number(savedJob.timer)||0,cashierBusy:Number(savedJob.cashierBusy)||0,phaseOrder:['prep','toOven','insert','bake','remove','deliver','handoff'],durations:{prep:3.8,toOven:2.2,insert:1.25,bake:5.2,remove:1.2,deliver:2.2,handoff:1.4}};
   }else{
    for(const x of [-4.5,-1.5,1.5,4.5]){
     cube(room,1.15,2.3,.55,dark,x,1.15,-4.65);
@@ -1151,7 +1151,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  function updatePeople(dt){
   for(const p of people){if(p.role==='chef'&&kitchenJob){
     const job=kitchenJob;job.timer+=dt;const phase=job.phase,idx=job.phaseOrder.indexOf(phase);
-    if(job.timer>=job.durations[phase]){job.timer=0;job.phase=job.phaseOrder[(idx+1)%job.phaseOrder.length];}
+    if(job.timer>=job.durations[phase]){job.timer-=job.durations[phase];job.phase=job.phaseOrder[(idx+1)%job.phaseOrder.length];}window.__pizzaKitchenState={phase:job.phase,timer:job.timer,cashierBusy:job.cashierBusy||0};
     const targets={prep:[1.05,-3.05],toOven:[-1.45,-2.12],insert:[-1.45,-2.12],bake:[-1.45,-2.12],remove:[-1.45,-2.12],deliver:[-3.25,-.85],handoff:[-3.8,-.55]};
     const target=targets[job.phase]||targets.prep,dx=target[0]-p.g.position.x,dz=target[1]-p.g.position.z,distance=Math.hypot(dx,dz),walkSpeed=1.65,step=Math.min(distance,walkSpeed*dt);
     const walking=distance>.12,stride=walking?Math.sin(clock*10)*.58:0;p.leg1.rotation.x=stride;p.leg2.rotation.x=-stride;p.arm1.rotation.x=walking?-.22-stride*.35:0;p.arm2.rotation.x=walking?-.22+stride*.35:0;
