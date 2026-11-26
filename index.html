@@ -1084,10 +1084,11 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
     box(wing,.34,.48,.035,schoolGlass,0,h*.24,d*.29);
     for(const wx of [-.32,.32])for(const wy of [.65,1.15])if(wy<h*.45)box(wing,.18,.2,.035,schoolGlass,wx,wy,d*.29);
    }
-   const gym=new THREE.Group();gym.position.set(w*.63,0,-d*.26);g.add(gym);
-   box(gym,w*.24,h*.48,d*.62,schoolWall,0,h*.24,0);
-   box(gym,w*.26,.18,d*.66,schoolRoof,0,h*.49,0);
-   box(gym,w*.22,.36,.035,schoolGlass,0,h*.3,d*.32);
+   const gym=new THREE.Group();gym.position.set(-w*.04,0,-d*.34);g.add(gym);
+   // Sporthalle liegt kompakt hinter dem Hauptbau statt seitlich auf dem Straßenrand.
+   box(gym,w*.48,h*.4,d*.28,schoolWall,0,h*.2,0);
+   box(gym,w*.5,.18,d*.3,schoolRoof,0,h*.41,0);
+   box(gym,w*.2,.32,.035,schoolGlass,0,h*.27,d*.145);
    // Eigener Schulhof mit großem gepflastertem Pausenbereich und Spielfeldmarkierungen.
    box(g,1.55,.055,.92,court,-w*.12,.035,d*.78);
    box(g,1.18,.018,.62,mat('#bd9b79'),-w*.12,.073,d*.78);
