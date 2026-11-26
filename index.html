@@ -1112,7 +1112,6 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    const ovenDoor=new THREE.Group();ovenDoor.position.set(-1.98,.66,-2.78);room.add(ovenDoor);
    cube(ovenDoor,1.02,.76,.12,mat2('#8d4936'),.51,0,0);
    cube(ovenDoor,.82,.54,.035,mat2('#c17b50'),.51,0,.078);
-   cube(ovenDoor,.13,.085,.11,brass,.83,-.04,.13);
    const doorHinge=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.8,10),brass);doorHinge.position.set(0,0,.015);ovenDoor.add(doorHinge);
    const tillLight=new THREE.Mesh(new THREE.BoxGeometry(.16,.08,.045),new THREE.MeshStandardMaterial({color:'#64d58a',emissive:'#28b968',emissiveIntensity:.2}));tillLight.position.set(-4.85,1.42,-.18);room.add(tillLight);
    kitchenJob={chef,cashier,pizza,ovenGlow,ovenDoor,tillLight,phase:'prep',timer:0,phaseOrder:['prep','toOven','insert','bake','remove','deliver','handoff'],durations:{prep:3.8,toOven:2.2,insert:1.25,bake:5.2,remove:1.2,deliver:2.2,handoff:1.4}};
