@@ -656,7 +656,7 @@ function cityActors(time){
    const parent=new Int32Array(N*N);parent.fill(-2);const queue=new Int32Array(N*N);let head=0,tail=0;queue[tail++]=from.id;parent[from.id]=-1;
    const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
    while(head<tail&&parent[to.id]===-2){const id=queue[head++],x=id%N,y=Math.floor(id/N);for(const [dx,dy] of dirs){const nx=x+dx,ny=y+dy,nid=ny*N+nx;if(nx<0||ny<0||nx>=N||ny>=N||parent[nid]!==-2||!tiles[nid]?.road)continue;parent[nid]=id;queue[tail++]=nid;if(nid===to.id)break;}}
-   path=[];if(parent[to.id]!==-2){for(let id=to.id;id!==-1;id=parent[id])path.push({x:id%N,y:Math.floor(id/N)});path.reverse();}else path=[from,to];
+   path=[];if(parent[to.id]!==-2){for(let id=to.id;id!==-1;id=parent[id])path.push({x:id%N,y:Math.floor(id/N)});path.reverse();}else path=[from];
    roadPathCache.set(key,path);
   }
   if(path.length<2)return{x:to.x,y:to.y,angle:0};
@@ -664,7 +664,7 @@ function cityActors(time){
   return{x:a0.x+(b0.x-a0.x)*f,y:a0.y+(b0.y-a0.y)*f,angle:Math.atan2(b0.x-a0.x,b0.y-a0.y)};
  };
  const commute=(start,end,from,to)=>{if(minute<start||minute>=end)return{point:to,walking:false};return{point:routePoint(from,to,(minute-start)/(end-start)),walking:true};};
- const siteNode=(k,fallback)=>{const t=tiles.find(q=>q.building?.kind===k);if(!t)return fallback;return{x:ROAD_X.reduce((a,b)=>Math.abs(b-t.x)<Math.abs(a-t.x)?b:a,ROAD_X[0]),y:ROAD_Y.reduce((a,b)=>Math.abs(b-t.y)<Math.abs(a-t.y)?b:a,ROAD_Y[0])};};
+ const siteNode=(k,fallback)=>{const t=tiles.find(q=>q.building?.kind===k);if(!t)return nearestRoadNode(fallback);return nearestRoadNode({x:t.x,y:t.y});};
  const schoolNode=siteNode('school',{x:33,y:21}),parkNode=siteNode('park',{x:33,y:49}),cafeNode=siteNode('cafe',{x:48,y:35}),workNodes=[siteNode('office',{x:48,y:21}),siteNode('factory',{x:56,y:49})];
  for(let i=0;i<72;i++){const actorClass=i>=64?'mafia':i>=42?'retiree':i>=24?'child':'worker',home={x:ROAD_X[(i*3+1)%5],y:ROAD_Y[(i*2+1)%5]},work=workNodes[i%workNodes.length],school=schoolNode,park=parkNode,cafe=cafeNode;let from=home,to=home,walking=false,point={...home,angle:0};
  if(actorClass==='worker'){if(!weekend&&minute>=420&&minute<540){from=home;to=work;const q=commute(420,540,from,to);point=q.point;walking=q.walking;}else if(!weekend&&minute>=540&&minute<960)point={...work,angle:0};else if(!weekend&&minute>=960&&minute<1080){from=work;to=home;const q=commute(960,1080,from,to);point=q.point;walking=q.walking;}else{const q=routePoint(home,work,((((Number(time)||0)*.000012)+i*.137)%1+1)%1);point=q;walking=true;}}
@@ -673,7 +673,7 @@ function cityActors(time){
  else{if(minute>=1140&&minute<1260){from=home;to=work;const q=commute(1140,1260,from,to);point=q.point;walking=q.walking;}else if(minute>=1260||minute<180){point={...work,angle:0};}else if(minute>=180&&minute<300){from=work;to=home;const q=commute(180,300,from,to);point=q.point;walking=q.walking;}else point={...home,angle:0};}
  // Außerhalb ihrer Wege bleiben Personen wirklich stehen. Die frühere
  // Ersatzbewegung ließ alle Figuren auf der Stelle laufen und wirkte wie Breakdance.
- const actorAngle=point.angle||0;let x=point.x,y=point.y;const crowdX=((i%3)-1)*.055,crowdY=((Math.floor(i/3)%3)-1)*.055;x+=crowdX;y+=crowdY;const pedColor=actorClass==='mafia'?'#24282c':actorClass==='retiree'?'#788b91':actorClass==='child'?['#e4a34c','#5d91b4','#bd6c68'][i%3]:colors[i%colors.length];add(x,y,'ped',pedColor,actorAngle,!walking,'ped-'+i,actorClass);}
+ const actorAngle=point.angle||0;let x=point.x,y=point.y;const sidewalkSide=i%2===0?1:-1;x+=Math.cos(actorAngle)*.68*sidewalkSide;y-=Math.sin(actorAngle)*.68*sidewalkSide;const crowdX=((i%3)-1)*.045,crowdY=((Math.floor(i/3)%3)-1)*.045;x+=crowdX;y+=crowdY;const pedColor=actorClass==='mafia'?'#24282c':actorClass==='retiree'?'#788b91':actorClass==='child'?['#e4a34c','#5d91b4','#bd6c68'][i%3]:colors[i%colors.length];add(x,y,'ped',pedColor,actorAngle,!walking,'ped-'+i,actorClass);}
  return actors;
 }
 window.__pizzaCity={tiles,getActors:cityActors,selectTile,isInterior:()=>!!state.interior,getClockData:()=>({minute:state.clockMinute||480,day:state.day||1,weekday:((state.day||1)-1)%7}),getMafiaData:()=>({style:getItalianStyleScore(),influence:state.mafia?.influence||0,pressure:state.mafia?.pressure||0}),recordMafiaVisit};
@@ -1267,6 +1267,16 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  }
  // Gehwegstücke liegen nur direkt neben einem echten Straßenfeld.
  // Sobald dort eine andere Straße verläuft, wird das Stück ausgelassen.
+ // Der Kreisverkehr bekommt eine echte begrünte Mittelinsel statt eines nackten grünen Punktes.
+ const islandStone=mat('#b8b3a5'),islandGrass=mat('#6f9859'),islandDark=mat('#456f43'),islandLeaf=mat('#3f854b'),islandFlower=mat('#e7d9a2');
+ const islandBase=new THREE.Mesh(new THREE.CylinderGeometry(.91,.98,.16,40),islandStone);islandBase.position.set(33,.12,35);islandBase.receiveShadow=true;city.add(islandBase);
+ const islandTop=new THREE.Mesh(new THREE.CylinderGeometry(.77,.82,.07,40),islandGrass);islandTop.position.set(33,.225,35);city.add(islandTop);
+ const islandRim=new THREE.Mesh(new THREE.TorusGeometry(.83,.055,8,40),mat('#d8d0bd'));islandRim.rotation.x=Math.PI/2;islandRim.position.set(33,.27,35);city.add(islandRim);
+ for(let n=0;n<12;n++){const a=n*Math.PI/6,x=33+Math.cos(a)*.68,z=35+Math.sin(a)*.68;const stone=new THREE.Mesh(new THREE.DodecahedronGeometry(.095,0),islandStone);stone.position.set(x,.29,z);stone.scale.set(1,.45,.8);stone.rotation.y=a;city.add(stone);}
+ for(let n=0;n<7;n++){const a=n*Math.PI*2/7,r=n%2?.34:.2,x=33+Math.cos(a)*r,z=35+Math.sin(a)*r;const shrub=new THREE.Mesh(new THREE.IcosahedronGeometry(.17,1),n%2?islandLeaf:islandDark);shrub.position.set(x,.43,z);shrub.scale.set(1,.8,1);shrub.castShadow=true;city.add(shrub);if(n%2===0){const flower=new THREE.Mesh(new THREE.SphereGeometry(.045,8,6),islandFlower);flower.position.set(x+.09,.56,z);city.add(flower);}}
+ const islandTree=new THREE.Group();islandTree.position.set(33,.26,35);city.add(islandTree);
+ const islandTrunk=new THREE.Mesh(new THREE.CylinderGeometry(.045,.065,.48,7),trunk);islandTrunk.position.y=.24;islandTree.add(islandTrunk);
+ const islandCrown=new THREE.Mesh(new THREE.SphereGeometry(.25,10,8),leaf);islandCrown.position.y=.62;islandCrown.scale.set(1,.9,1);islandCrown.castShadow=true;islandTree.add(islandCrown);
  for(const t of tiles){
   if(!t.road)continue;
   const sides=[[-1,0], [1,0], [0,-1], [0,1]];
