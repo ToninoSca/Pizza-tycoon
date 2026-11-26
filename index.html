@@ -136,8 +136,8 @@ function makeCity(){
   const nearby=placed.filter(p=>Math.abs(p.x-t.x)<=2&&Math.abs(p.y-t.y)<=2);
   // Schulen brauchen wegen ihrer breiten Campus-Anlage deutlich mehr Abstand.
   // Auch spätere Gebäude dürfen nicht in den reservierten Schulbereich hineinragen.
-  const nearSchool=placed.some(p=>p.kind===4&&Math.hypot(p.x-t.x,p.y-t.y)<3.5);
-  const schoolCrowded=kind===4&&placed.some(p=>Math.hypot(p.x-t.x,p.y-t.y)<3.5);
+  const nearSchool=placed.some(p=>p.kind===4&&Math.hypot(p.x-t.x,p.y-t.y)<5.5);
+  const schoolCrowded=kind===4&&placed.some(p=>Math.hypot(p.x-t.x,p.y-t.y)<5.5);
   if(nearSchool)continue;
   if(schoolCrowded){
    const alternatives=t.district==='civic'?[3,0,1,2,6]:[0,1,2,3,6,9];
@@ -992,7 +992,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   // Die Eingangsseite zeigt immer zur nächstgelegenen Straße.
   const fronts=[{x:t.x,y:t.y-1,a:Math.PI},{x:t.x+1,y:t.y,a:Math.PI/2},{x:t.x,y:t.y+1,a:0},{x:t.x-1,y:t.y,a:-Math.PI/2}];
   const front=fronts.find(p=>tiles.some(q=>q.x===p.x&&q.y===p.y&&q.road));
-  if(front){g.rotation.y=front.a;const setback=kind==='school'?1.75:.56;g.position.set(t.x+(t.x-front.x)*setback,0,t.y+(t.y-front.y)*setback);}else g.position.set(t.x,0,t.y);
+  if(front){g.rotation.y=front.a;const setback=kind==='school'?3.0:.56;g.position.set(t.x+(t.x-front.x)*setback,0,t.y+(t.y-front.y)*setback);}else g.position.set(t.x,0,t.y);
   const baseProfile=buildingProfiles[kind]||null,profile=baseProfile&&kind==='pizza'?{...baseProfile,sign:b.brand||b.name||baseProfile.sign,logo:b.emoji||baseProfile.logo,signColor:b.color||baseProfile.signColor}:baseProfile,seed=((t.x*37+t.y*71)%11)/10,seed2=((t.x*13+t.y*29)%13)/12;
   // Normale Gebäude variieren in Breite, Tiefe und Höhe; Marken-Gebäude behalten ihre feste Silhouette.
   const heightRange={home:.88,oldhome:.9,apartments:.84,office:.86,school:.9,factory:.88,shop:.86,cafe:.9,market:.92};
