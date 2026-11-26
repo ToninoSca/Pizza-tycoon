@@ -1608,8 +1608,20 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  canvas.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const dx=e.clientX-drag.lastX,dy=e.clientY-drag.lastY;if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>4)drag.moved=true;if(drag.moved){const scale=43/(zoom*Math.max(300,canvas.clientHeight));const sx=dx*scale*.92,sy=dy*scale*.72;target.x+=(-sx-sy)*.707;target.z+=(sx-sy)*.707;target.x=Math.max(-10,Math.min(70,target.x));target.z=Math.max(-10,Math.min(70,target.z));placeCamera();}drag.lastX=e.clientX;drag.lastY=e.clientY;});
  function pickBuilding(e){
   const r=canvas.getBoundingClientRect();mouse.x=((e.clientX-r.left)/r.width)*2-1;mouse.y=-((e.clientY-r.top)/r.height)*2+1;ray.setFromCamera(mouse,camera);
-  // Zuerst die vergrößerten unsichtbaren Touch-Flächen prüfen, damit kleine Gebäude leichter getroffen werden.
-  const ownedTile=window.__pizzaCity?.tiles?.find(t=>t.building?.kind==='pizza'&&!t.building?.rivalId);const ownedGroup=ownedTile&&city.children.find(g=>g.userData?.tile?.id===ownedTile.id);const ownedHit=ownedGroup?.children.find(o=>o.userData?.buildingHitArea);if(ownedHit&&ray.intersectObject(ownedHit,false).length)return ownedTile;
+  // Eigene Pizzeria zuerst über ihre sichtbare Bildschirmposition treffen.
+  // Das ist auf Touchscreens zuverlässiger als alleinige 3D-Raycasts bei überlappenden Gebäuden.
+  const ownedTile=tiles.find(t=>t===window.__pizzaCity?.tiles?.find(q=>q.building?.kind==='pizza'&&!q.building?.rivalId))||tiles.find(t=>t.building?.kind==='pizza'&&!t.building?.rivalId);
+  const ownedGroup=ownedTile&&city.children.find(g=>g.userData?.tile?.id===ownedTile.id);
+  if(ownedTile){
+   const worldPos=new THREE.Vector3(ownedTile.x,1.0,ownedTile.y);
+   if(ownedGroup){ownedGroup.updateMatrixWorld(true);ownedGroup.getWorldPosition(worldPos);worldPos.y+=1.0;}
+   const projected=worldPos.project(camera);
+   const sx=r.left+(projected.x+1)*r.width/2,sy=r.top+(1-projected.y)*r.height/2;
+   if(Number.isFinite(sx)&&Number.isFinite(sy)&&Math.hypot(e.clientX-sx,e.clientY-sy)<92)return ownedTile;
+   // Zusätzliche Trefferfläche als zweite Absicherung.
+   const ownedHit=ownedGroup?.children.find(o=>o.userData?.buildingHitArea);
+   if(ownedHit&&ray.intersectObject(ownedHit,false).length)return ownedTile;
+  }
   const hitAreas=[];for(const g of city.children)if(g.userData?.tile?.building){const h=g.children.find(o=>o.userData?.buildingHitArea);if(h)hitAreas.push(h);}
   const touchHits=ray.intersectObjects(hitAreas,false);
   if(touchHits.length){let o=touchHits[0].object;while(o&&o!==city){if(o.userData?.tile?.building)return o.userData.tile;o=o.parent;}}
