@@ -778,7 +778,11 @@ else if(k==='wholesale'||k==='deli'){let items=state.interiorItems||[];items.for
 else{box(roomX+roomW*.05,roomY+roomH*.3,roomW*.42,roomH*.23,'furniture','Möbel','🪑','#956c4a');box(roomX+roomW*.53,roomY+roomH*.3,roomW*.42,roomH*.23,'equipment','Küchengeräte','🔧','#66624f');box(roomX+roomW*.05,roomY+roomH*.58,roomW*.42,roomH*.19,'decor','Dekoration','🖼️','#8b7758');box(roomX+roomW*.53,roomY+roomH*.58,roomW*.42,roomH*.19,'exit','Tür · Straße','🚪','#654332');}
 ctx.fillStyle='#fff';ctx.font='12px system-ui';ctx.textAlign='center';ctx.fillText('Tippe auf Gegenstände / Bereiche, um sie zu benutzen',W/2,roomY+roomH+23);ctx.textAlign='left';state.interiorHits=hitBoxes;ctx.fillStyle='#17251f';ctx.fillRect(0,H-56,W,56);ctx.fillStyle='#fff';ctx.font='bold 14px system-ui';ctx.textAlign='center';if(k==='pizza'){ctx.fillText('↩️ Stadt',W*.25,H-23);ctx.fillText('📋 Verwaltung',W*.75,H-23);state.interiorHits.push({x:0,y:H-56,w:W*.5,h:56,id:'exit'},{x:W*.5,y:H-56,w:W*.5,h:56,id:'manage'});}else{ctx.fillText('↩️ Zurück zur Stadt',W/2,H-23);state.interiorHits.push({x:0,y:H-56,w:W,h:56,id:'exit'});}ctx.textAlign='left';}
 function updateInteriorDecor(){if(!state.interior)return;const u=state.shop&&state.shop.upgrades||{};const room=$('room3d');room.style.setProperty('--floor',u.floorColor||'#c89f70');room.style.setProperty('--accent',state.brandColor||'#b34c32');room.style.backgroundImage=u.wallPattern==='brick'?'radial-gradient(#8c6448 1px,transparent 1px)':'none';room.querySelectorAll('.tableA,.tableB').forEach((e,i)=>{e.style.display=(u.tables||3)>i?'block':'none';e.style.fontSize=(u.chairStyle==='luxury'?'60px':'48px');});const ov=room.querySelector('.oven3d');ov.textContent=(u.ovenStyle==='electric'?'♨️':'🔥');ov.insertAdjacentHTML('beforeend','<span>Steinofen</span>');window.dispatchEvent(new CustomEvent('pizza-room-upgrades',{detail:{upgrades:u,color:state.brandColor||'#b34c32'}}));}
-function openFurnitureShop(){const u=state.shop.upgrades=state.shop.upgrades||{};const items=[
+function openFurnitureShop(){const u=state.shop.upgrades=state.shop.upgrades||{};const roomLevel=u.roomLevel||1,kitchenLevel=u.kitchenLevel||1,storageLevel=u.storageLevel||1;
+const items=[
+{id:'roomExpand',name:'Gastraum erweitern',icon:'🏗️',price:roomLevel===1?1800:4200,desc:'Mehr Platz für zusätzliche Tische und Gäste',level:roomLevel,max:3,kind:'room'},
+{id:'kitchenExpand',name:'Küche vergrößern',icon:'👨‍🍳',price:kitchenLevel===1?1400:3200,desc:'Mehr Arbeitsfläche und ein zusätzlicher Pizzaofen',level:kitchenLevel,max:3,kind:'kitchen'},
+{id:'storageExpand',name:'Zutatenlager erweitern',icon:'📦',price:storageLevel===1?750:1800,desc:'Zusätzliche Regale und mehr Lagerkapazität',level:storageLevel,max:3,kind:'storage'},
 {id:'flag',name:'Italienische Flagge',icon:'🇮🇹',price:180,desc:'Ein sichtbares Zeichen italienischer Tradition'},
 {id:'italianPainting',name:'Italienisches Wandbild',icon:'🍇',price:260,desc:'Klassische italienische Motive für den Gastraum'},
 {id:'checkeredFloor',name:'Italienischer Fliesenboden',icon:'🏁',price:420,desc:'Schwarz-weiße Trattoria-Fliesen'},
@@ -795,9 +799,13 @@ function openFurnitureShop(){const u=state.shop.upgrades=state.shop.upgrades||{}
 {id:'oven',name:'Profi-Pizzaofen',icon:'🔥',price:900,desc:'Bessere Küchenausstattung'},
 {id:'counter',name:'Neue Verkaufstheke',icon:'🧾',price:500,desc:'Moderner Kassenbereich'},
 {id:'floor',name:'Holzboden',icon:'🪵',price:300,desc:'Neuer Bodenbelag'}];
-$('furnitureCatalog').innerHTML=items.map(it=>'<div class="shopCard"><div class="itemIcon">'+it.icon+'</div><div class="itemInfo"><b>'+it.name+'</b><br><small>'+it.desc+'</small><br><small>Besitz: '+(u.items&&u.items[it.id]||0)+'</small></div><button data-buy="'+it.id+'">'+it.price+' €</button></div>').join('');
-$('furnitureCatalog').querySelectorAll('[data-buy]').forEach(btn=>btn.onclick=()=>{const it=items.find(x=>x.id===btn.dataset.buy);if(state.money<it.price){toast('Nicht genug Geld!');return;}state.money-=it.price;u.items=u.items||{};u.items[it.id]=(u.items[it.id]||0)+1;
-if(it.id==='table')u.tables=Math.min(6,(u.tables||3)+1);
+$('furnitureCatalog').innerHTML=items.map(it=>{const level=it.kind==='room'?roomLevel:it.kind==='kitchen'?kitchenLevel:storageLevel,locked=!!it.kind&&level>=3,requires=it.kind==='kitchen'&&roomLevel<2;return '<div class="shopCard"><div class="itemIcon">'+it.icon+'</div><div class="itemInfo"><b>'+it.name+'</b><br><small>'+it.desc+'</small><br><small>'+(it.kind?'Ausbaustufe '+level+'/3':'Besitz: '+(u.items&&u.items[it.id]||0))+(requires?'<br>Benötigt: Gastraum Stufe 2':'')+'</small></div><button data-buy="'+it.id+'" '+(locked||requires?'disabled':'')+'>'+(locked?'Maximal':requires?'Gesperrt':'€ '+it.price)+'</button></div>';}).join('');
+$('furnitureCatalog').querySelectorAll('[data-buy]').forEach(btn=>btn.onclick=()=>{const it=items.find(x=>x.id===btn.dataset.buy);if(it.kind){const level=it.kind==='room'?roomLevel:it.kind==='kitchen'?kitchenLevel:storageLevel;if(level>=3){toast('Diese Erweiterung ist bereits vollständig ausgebaut.');return;}if(it.kind==='kitchen'&&roomLevel<2){toast('Vergrößere zuerst den Gastraum.');return;}}
+if(state.money<it.price){toast('Nicht genug Geld!');return;}state.money-=it.price;u.items=u.items||{};u.items[it.id]=(u.items[it.id]||0)+1;
+if(it.id==='roomExpand'){u.roomLevel=Math.min(3,roomLevel+1);u.tables=Math.max(u.tables||2,u.roomLevel===2?4:6);}
+if(it.id==='kitchenExpand')u.kitchenLevel=Math.min(3,kitchenLevel+1);
+if(it.id==='storageExpand')u.storageLevel=Math.min(3,storageLevel+1);
+if(it.id==='table')u.tables=Math.min(roomLevel===1?2:roomLevel===2?4:6,(u.tables||2)+1);
 if(it.id==='flag')u.flag=(u.flag||0)+1;
 if(it.id==='italianPainting')u.italianPainting=(u.italianPainting||0)+1;
 if(it.id==='checkeredFloor')u.checkeredFloor=(u.checkeredFloor||0)+1;
@@ -1051,6 +1059,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    if((currentUpgrades.sofas||0)>0){cube(room,2.0,.38,.72,mat2('#547a70'),-2.0,.35,4.0);cube(room,2.0,.68,.2,mat2('#547a70'),-2.0,.72,4.28);}
    cube(room,1.0,.8,.5,woodDark,5.6,.4,-4.5);cube(room,1.05,.08,.55,woodLight,5.6,.84,-4.5);
    for(let i=0;i<3;i++)cylinder(room,.12,.22,mat2('#c89c5b'),5.3+i*.28,.98,-4.5);
+   if((currentUpgrades.kitchenLevel||1)>=2){cube(room,2.2,.9,1.05,woodDark,4.35,.48,-3.85);cube(room,2.25,.13,1.12,steel,4.35,1.0,-3.85);cube(room,1.25,1.2,1.15,brick,5.65,.62,-3.85);mesh(room,new THREE.SphereGeometry(.62,16,10,0,Math.PI*2,0,Math.PI/2),mat2('#b85e43'),5.65,1.27,-3.85).scale.set(1,.78,.9);cube(room,.72,.7,.08,black,5.65,.65,-3.23);}
+   if((currentUpgrades.storageLevel||1)>=2){for(let i=0;i<3;i++){cube(room,.8,.08,.45,woodDark,3.5+i*1.0,1.55,-5.35);for(let j=0;j<3;j++)cylinder(room,.11,.2,[mat2('#d94f3d'),mat2('#e4c56b'),mat2('#6c9b55')][j],3.2+i*1.0+j*.25,1.7,-5.32);}}
    const chef=person(-3.4,-2.5,'#f4f0e8');chef.role='chef';people.push(chef);
    // Kochjacke, Schürze, Halstuch und Kochmütze als klar erkennbare Uniform.
    cube(chef.g,.29,.42,.035,mat2('#e4d6bd'),0,.91,.19);cube(chef.g,.32,.07,.045,mat2('#a84d3b'),0,1.17,.2);cube(chef.g,.12,.13,.045,mat2('#b9a27c'),-.08,.82,.22);
