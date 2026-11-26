@@ -744,6 +744,51 @@ function cityActors(time){
  return actors;
 }
 window.__pizzaCity={tiles,getActors:cityActors,selectTile,isInterior:()=>!!state.interior,getClockData:()=>({minute:state.clockMinute??480,day:state.day||1,weekday:((state.day||1)-1)%7}),getMafiaData:()=>({style:getItalianStyleScore(),influence:state.mafia?.influence||0,pressure:state.mafia?.pressure||0}),recordMafiaVisit};
+window.__pizzaDiagnostics=(()=>{
+ const runtimeErrors=[];
+ window.addEventListener('error',e=>runtimeErrors.push({type:'JavaScript',message:e.message||'Unbekannter Fehler',file:e.filename||'',line:e.lineno||0}));
+ window.addEventListener('unhandledrejection',e=>runtimeErrors.push({type:'Promise',message:String(e.reason?.message||e.reason||'Unbehandelte Promise-Ablehnung')}));
+ let lastReport=null;
+ const requiredIds=['game','city3d','top','money','gameClock','intro','panel','toast','quickMenu','quickItems','hamburger','quickClose','interior3d','threeRoom','room3d','interiorActionBtn'];
+ function run(){
+  const checks=[],add=(name,ok,detail)=>checks.push({name,ok:!!ok,detail:String(detail??'')});
+  const roads=tiles.filter(t=>t.road),buildingsOnRoad=tiles.filter(t=>t.road&&t.building),buildings=tiles.filter(t=>t.building),emptyPlots=tiles.filter(t=>!t.road&&!t.building&&t.x>0&&t.y>0&&t.x<N-1&&t.y<N-1);
+  add('Stadtgröße',tiles.length===N*N,tiles.length+' von '+(N*N)+' Feldern');
+  add('Straßennetz vorhanden',roads.length>0,roads.length+' Straßenfelder');
+  add('Gebäude nicht auf Straßen',buildingsOnRoad.length===0,buildingsOnRoad.length+' Gebäude auf Straßen');
+  add('Gebäude vorhanden',buildings.length>0,buildings.length+' Gebäude; '+emptyPlots.length+' freie Grundstücke');
+  const missing=requiredIds.filter(id=>!document.getElementById(id));
+  add('Wichtige UI-Elemente',missing.length===0,missing.length?'Fehlen: '+missing.join(', '):requiredIds.length+' Elemente gefunden');
+  const clock=window.__pizzaCity.getClockData();
+  add('Spielzeit gültig',Number.isFinite(Number(clock.minute))&&clock.minute>=0&&clock.minute<1440&&Number.isFinite(Number(clock.day))&&clock.day>=1,'Tag '+clock.day+', Minute '+clock.minute);
+  let actorCount=0,badActors=0,actorGroups=0;
+  try{const actors=window.__pizzaCity.getActors(performance.now());actorGroups=actors.size;for(const group of actors.values())for(const a of group){actorCount++;if(!Number.isFinite(a.x)||!Number.isFinite(a.y)||a.x<0||a.y<0||a.x>=N||a.y>=N)badActors++;}}
+  catch(e){badActors=1;add('Personen-/Autodaten',false,e.message);}
+  if(!checks.some(x=>x.name==='Personen-/Autodaten'))add('Personen-/Autodaten',badActors===0,actorCount+' Akteure in '+actorGroups+' Kartenfeldern; '+badActors+' ungültige Positionen');
+  let saveStatus='Kein Spielstand gespeichert';
+  try{const raw=localStorage.getItem(SAVE);if(raw){JSON.parse(raw);saveStatus='Spielstand vorhanden und JSON lesbar';}add('Speicherzugriff',true,saveStatus);}
+  catch(e){add('Speicherzugriff',false,e.message);}
+  const canvas=document.getElementById('city3d');
+  add('Stadt-Canvas',!!canvas&&canvas.tagName==='CANVAS',canvas?(canvas.width+' × '+canvas.height):'Canvas fehlt');
+  add('Laufzeitfehler seit Seitenaufruf',runtimeErrors.length===0,runtimeErrors.length?runtimeErrors.length+' Fehler':'Keine erfassten Fehler');
+  lastReport={time:new Date().toLocaleString('de-DE'),passed:checks.filter(x=>x.ok).length,total:checks.length,checks,errors:runtimeErrors.slice(-20)};
+  return lastReport;
+ }
+ function show(){
+  let root=document.getElementById('pizzaDiagRoot');
+  if(!root){root=document.createElement('div');root.id='pizzaDiagRoot';root.style.cssText='position:fixed;inset:0;z-index:99999;background:#07110ff2;color:#f4f5ed;font:14px system-ui;padding:calc(env(safe-area-inset-top) + 18px) 16px calc(env(safe-area-inset-bottom) + 18px);overflow:auto;display:none;';document.body.appendChild(root);}
+  root.style.display='block';
+  const render=()=>{const r=run();root.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><b style="font-size:20px">🔧 Pizza Tycoon · Diagnose</b><button id="pizzaDiagClose" style="padding:9px 13px">Schließen ✕</button></div><p style="color:#b8d9c4">Letzter Lauf: '+r.time+' · '+r.passed+'/'+r.total+' Prüfungen bestanden</p><div style="height:8px;background:#26352e;border-radius:8px;overflow:hidden"><div style="height:100%;width:'+(r.passed/r.total*100)+'%;background:#79c99a"></div></div><div style="margin-top:16px">'+r.checks.map(x=>'<div style="padding:10px 0;border-bottom:1px solid #ffffff20"><b>'+(x.ok?'✅':'❌')+' '+x.name+'</b><div style="color:#c2ccc5;font-size:12px;margin-top:3px">'+x.detail.replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]))+'</div></div>').join('')+'</div>'+(r.errors.length?'<h3>Letzte Laufzeitfehler</h3>'+r.errors.map(e=>'<p style="color:#ffb2a8">'+e.type+': '+e.message+'</p>').join(''):'')+'<p style="color:#aab9af;font-size:12px;margin-top:16px">Diese Diagnose prüft Daten und Laufzeit-Signale. Sie ersetzt keinen vollständigen visuellen Test in Safari.</p><div style="display:flex;gap:8px;position:sticky;bottom:0;background:#07110f;padding:12px 0"><button id="pizzaDiagRun" style="flex:1;padding:12px">Erneut testen</button><button id="pizzaDiagCopy" style="flex:1;padding:12px">Bericht kopieren</button></div>';
+   document.getElementById('pizzaDiagClose').onclick=()=>root.style.display='none';
+   document.getElementById('pizzaDiagRun').onclick=render;
+   document.getElementById('pizzaDiagCopy').onclick=()=>{const report=JSON.stringify(lastReport,null,2);if(navigator.clipboard?.writeText)navigator.clipboard.writeText(report).then(()=>alert('Diagnosebericht kopiert.')).catch(()=>alert('Kopieren nicht möglich.'));else alert('Kopieren wird von diesem Browser-Kontext nicht unterstützt.');};
+  };
+  render();
+ }
+ function installButton(){if(document.getElementById('pizzaDiagOpen'))return;const b=document.createElement('button');b.id='pizzaDiagOpen';b.textContent='🔧 Test';b.style.cssText='position:fixed;right:10px;top:calc(env(safe-area-inset-top) + 58px);z-index:9998;background:#193a2a;color:white;border:1px solid #7aa88c;border-radius:20px;padding:8px 12px;font:600 12px system-ui;box-shadow:0 3px 12px #0005';b.onclick=show;document.body.appendChild(b);}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installButton,{once:true});else installButton();
+ return {run,show,getErrors:()=>runtimeErrors.slice(),getLastReport:()=>lastReport};
+})();
 function shade(hex,amt){let n=parseInt(hex.slice(1),16),r=Math.max(0,Math.min(255,(n>>16)+amt)),g=Math.max(0,Math.min(255,((n>>8)&255)+amt)),b=Math.max(0,Math.min(255,(n&255)+amt));return'#'+(1<<24|r<<16|g<<8|b).toString(16).slice(1);}
 function drawSidewalk(t,p){
  if(!t.road||isRoundaboutRoad(t.x,t.y))return;
