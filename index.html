@@ -916,11 +916,11 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  function mesh(parent,geo,mat,x,y,z){const o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
  function cube(parent,w,h,d,mat,x,y,z){return mesh(parent,new THREE.BoxGeometry(w,h,d),mat,x,y,z);}
  function cylinder(parent,r,h,mat,x,y,z){return mesh(parent,new THREE.CylinderGeometry(r,r,h,18),mat,x,y,z);}
- function person(x,z,shirt){
+ function person(x,z,shirt,appearance='adult'){
   const g=new THREE.Group();g.position.set(x,0,z);room.add(g);
-  const body=M(shirt),skin=M('#d9aa83'),trouser=M('#35404b'),hair=M('#49372d'),shoe=M('#292d30');
+  const isChild=appearance==='Schulkind',isSenior=appearance==='Rentner',isMafia=appearance==='Mafioso';
+  const body=M(isMafia?'#252b31':isSenior?'#687b83':shirt),skin=M(isSenior?'#c99f82':'#d9aa83'),trouser=M(isMafia?'#20242b':isSenior?'#4b5154':'#35404b'),hair=M(isSenior?'#c5c8c5':isChild?'#75472e':isMafia?'#292725':'#49372d'),shoe=M('#292d30');
   cylinder(g,.2,.66,body,0,1.02,0);
-  // Kopf mit Haaransatz, Gesicht und klar erkennbaren Armen/Beinen.
   mesh(g,new THREE.SphereGeometry(.19,16,12),skin,0,1.57,0);
   mesh(g,new THREE.SphereGeometry(.195,16,10,0,Math.PI*2,0,Math.PI*.48),hair,0,1.66,-.015);
   cube(g,.035,.035,.025,dark,.07,1.59,.17);cube(g,.035,.035,.025,dark,-.07,1.59,.17);
@@ -928,7 +928,26 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   cube(g,.16,.08,.28,shoe,-.09,.06,.06);cube(g,.16,.08,.28,shoe,.09,.06,.06);
   const arm1=cube(g,.1,.48,.12,body,-.25,1.02,0),arm2=cube(g,.1,.48,.12,body,.25,1.02,0);
   cylinder(g,.055,.13,skin,-.25,.75,0);cylinder(g,.055,.13,skin,.25,.75,0);
-  return {g,arm1,arm2,homeX:x,homeZ:z};
+  if(isChild){
+   // Bunte Kinderkleidung, Rucksack und Kappe machen Schulkinder sofort erkennbar.
+   cube(g,.34,.38,.17,M('#b64d42'),0,1.02,-.19);cube(g,.34,.07,.12,M('#e5bd54'),0,1.19,-.18);
+   cylinder(g,.2,.055,M('#e1b64e'),0,1.79,0);cube(g,.22,.07,.2,M('#e1b64e'),0,1.82,-.035);
+  }
+  if(isSenior){
+   // Graue Frisur, Brille, Strickjacke und Gehstock.
+   cube(g,.14,.045,.035,M('#4a4d4d'),0,1.59,.19);cube(g,.035,.12,.035,M('#4a4d4d'),0,1.59,.19);
+   cube(g,.11,.055,.035,M('#4a4d4d'),-.07,1.6,.19);cube(g,.11,.055,.035,M('#4a4d4d'),.07,1.6,.19);
+   cylinder(g,.025,.78,M('#6b513d'),.34,.43,.02);
+   cube(g,.12,.1,.14,M('#b5b9b7'),0,1.28,.05);
+  }
+  if(isMafia){
+   // Dunkler Anzug mit weißem Hemd, Krawatte, Sonnenbrille und Hut.
+   cube(g,.17,.48,.035,M('#f1e9d8'),0,1.04,.19);cube(g,.055,.27,.045,M('#9b3431'),0,1.04,.22);
+   cube(g,.09,.15,.04,M('#d9d2c4'),-.1,1.2,.2);cube(g,.09,.15,.04,M('#d9d2c4'),.1,1.2,.2);
+   cube(g,.13,.045,.035,M('#17191b'),0,1.6,.2);cube(g,.09,.045,.035,M('#17191b'),-.09,1.6,.2);cube(g,.09,.045,.035,M('#17191b'),.09,1.6,.2);
+   cylinder(g,.25,.045,M('#17191b'),0,1.79,0);cylinder(g,.14,.19,M('#24272a'),0,1.88,0);
+  }
+  return {g,arm1,arm2,homeX:x,homeZ:z,appearance};
  }
  function seat(x,z,rot=0){
   const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;room.add(g);
@@ -1046,7 +1065,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   if(weekend&&h>=9&&h<12&&Math.random()<.55){type='Rentner';budget=15;taste='Klassiker';scale=.88;}
   // Mafiosi kommen nur bei erkennbarem italienischem Ambiente.
   if(mafia.style>=3&&Math.random()<.28){type='Mafioso';budget=48;taste='Hausgemachte italienische Spezialitäten';scale=1.04;colors=['#252b2b','#463c35','#343d42'];isMafia=true;}
-  const p=person((Math.random()-.5)*.35,5.3,colors[Math.floor(Math.random()*colors.length)]);
+  const p=person((Math.random()-.5)*.35,5.3,colors[Math.floor(Math.random()*colors.length)],type);
   p.g.scale.set(scale,scale,scale);p.phase=Math.random()*6;p.state='enter';p.timer=0;
   const routes=[[[0,4.15],[0,2.0],[.7,1.0],[.7,-.25]],[[0,4.15],[2.0,4.15],[3.4,3.7],[4.25,3.55]],[[0,4.15],[-1.0,3.9],[-1.35,2.8]],[[0,4.15],[0,1.0],[2.0,-.8],[2.8,-2.15]]];
   p.route=routes[customers.length%routes.length].map(q=>q.slice());p.routeIndex=0;p.target=p.route[p.route.length-1];p.tableIndex=customers.length%routes.length;p.customerType=type;p.budget=budget;p.taste=taste;p.mafiaVisit=isMafia;if(isMafia)window.__pizzaCity?.recordMafiaVisit?.();customers.push(p);
@@ -1075,7 +1094,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);const aspect=w/h;const viewWidth=18.5,viewHeight=viewWidth/Math.max(.55,aspect);camera.left=-viewWidth/2;camera.right=viewWidth/2;camera.top=viewHeight/2;camera.bottom=-viewHeight/2;camera.updateProjectionMatrix();}
  const activePointers=new Map();let pinchStart=0,pinchZoom=1;canvas.style.touchAction='none';
  canvas.addEventListener('pointerdown',e=>{activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.setPointerCapture?.(e.pointerId);if(activePointers.size===2){const a=[...activePointers.values()];pinchStart=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);pinchZoom=camera.zoom;}});
- canvas.addEventListener('pointermove',e=>{if(!activePointers.has(e.pointerId))return;const prev=activePointers.get(e.pointerId);activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(activePointers.size>=2){const a=[...activePointers.values()];const d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);if(pinchStart>0){camera.zoom=Math.max(.72,Math.min(2.65,pinchZoom*d/pinchStart));camera.updateProjectionMatrix();}}else{const dx=e.clientX-prev.x,dy=e.clientY-prev.y;cameraAzimuth-=dx*.008;cameraPolar=Math.max(.48,Math.min(1.22,cameraPolar+dy*.006));updateRoomCamera();}});
+ canvas.addEventListener('pointermove',e=>{if(!activePointers.has(e.pointerId))return;const prev=activePointers.get(e.pointerId);activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(activePointers.size>=2){const a=[...activePointers.values()];const d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);if(pinchStart>0){camera.zoom=Math.max(.72,Math.min(2.65,pinchZoom*d/pinchStart));camera.updateProjectionMatrix();}}else{const dx=e.clientX-prev.x,dy=e.clientY-prev.y;cameraAzimuth=Math.max(.12,Math.min(1.38,cameraAzimuth-dx*.006));cameraPolar=Math.max(.68,Math.min(1.12,cameraPolar+dy*.004));updateRoomCamera();}});
  const endPointer=e=>{activePointers.delete(e.pointerId);if(activePointers.size<2)pinchStart=0;};canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);updateRoomCamera();
  if(window.ResizeObserver)new ResizeObserver(resize).observe(canvas);else window.addEventListener('resize',resize);
  resize();window.addEventListener('pizza-room-change',e=>{build(e.detail?.kind||'pizza',e.detail?.color,currentUpgrades);nextGuest=1.5;});
