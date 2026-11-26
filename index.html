@@ -671,21 +671,34 @@ function cityActors(time){
    path=[];if(parent[to.id]!==-2){for(let id=to.id;id!==-1;id=parent[id])path.push({x:id%N,y:Math.floor(id/N)});path.reverse();}else path=[from];
    cityRoadPathCache.set(key,path);
   }
-  if(path.length<2)return{x:from.x,y:from.y,angle:0};
-  const distance=Math.max(0,Math.min(.999999,Number(progress)||0))*(path.length-1),index=Math.min(path.length-2,Math.floor(distance)),f=distance-index,a0=path[index],b0=path[index+1];
-  return{x:a0.x+(b0.x-a0.x)*f,y:a0.y+(b0.y-a0.y)*f,angle:Math.atan2(b0.x-a0.x,b0.y-a0.y)};
+  if(path.length<2){const a=path[0]||from;return{x:a.x,y:a.y,angle:0,sidewalk:true};}
+  // Durchgehende Parallelspur auf dem Gehweg: an Kurven wird der Versatz
+  // geometrisch um die Ecke geführt, statt bei jedem Richtungswechsel zu springen.
+  const side=Number(lane)||.62,offsetPath=path.map((p,i)=>{
+   const prev=path[Math.max(0,i-1)],next=path[Math.min(path.length-1,i+1)];
+   const dx1=p.x-prev.x,dy1=p.y-prev.y,dx2=next.x-p.x,dy2=next.y-p.y;
+   const n1=i===0?{x:dy2,y:-dx2}:{x:dy1,y:-dx1};
+   const n2=i===path.length-1?n1:{x:dy2,y:-dx2};
+   if(i===0||i===path.length-1)return{x:p.x+n1.x*side,y:p.y+n1.y*side};
+   let mx=n1.x+n2.x,my=n1.y+n2.y,ml=Math.hypot(mx,my);
+   if(ml<.001)return{x:p.x+n2.x*side,y:p.y+n2.y*side};
+   mx/=ml;my/=ml;const denom=mx*n2.x+my*n2.y,scale=Math.abs(denom)>.001?side/denom:side;
+   return{x:p.x+mx*scale,y:p.y+my*scale};
+  });
+  const distance=Math.max(0,Math.min(.999999,Number(progress)||0))*(offsetPath.length-1),index=Math.min(offsetPath.length-2,Math.floor(distance)),f=distance-index,a0=offsetPath[index],b0=offsetPath[index+1];
+  return{x:a0.x+(b0.x-a0.x)*f,y:a0.y+(b0.y-a0.y)*f,angle:Math.atan2(b0.x-a0.x,b0.y-a0.y),sidewalk:true};
  };
- const commute=(start,end,from,to)=>{if(minute<start||minute>=end)return{point:to,walking:false};return{point:routePoint(from,to,(minute-start)/(end-start)),walking:true};};
+ const commute=(start,end,from,to,lane)=>{if(minute<start||minute>=end)return{point:to,walking:false};return{point:routePoint(from,to,(minute-start)/(end-start),lane),walking:true};};
  const siteNode=(k,fallback)=>{const t=tiles.find(q=>q.building?.kind===k);if(!t)return nearestRoadNode(fallback);const entrance=roadFrontAt(t.x,t.y);return nearestRoadNode(entrance||{x:t.x,y:t.y});};
  const schoolNode=siteNode('school',{x:33,y:21}),parkNode=siteNode('park',{x:33,y:49}),cafeNode=siteNode('cafe',{x:48,y:35}),workNodes=[siteNode('office',{x:48,y:21}),siteNode('factory',{x:56,y:49})];
- for(let i=0;i<72;i++){const actorClass=i>=64?'mafia':i>=42?'retiree':i>=24?'child':'worker',home={x:ROAD_X[(i*3+1)%5],y:ROAD_Y[(i*2+1)%5]},work=workNodes[i%workNodes.length],school=schoolNode,park=parkNode,cafe=cafeNode;let from=home,to=home,walking=false,point={...home,angle:0};
- if(actorClass==='worker'){if(!weekend&&minute>=420&&minute<540){from=home;to=work;const q=commute(420,540,from,to);point=q.point;walking=q.walking;}else if(!weekend&&minute>=540&&minute<960)point={...work,angle:0};else if(!weekend&&minute>=960&&minute<1080){from=work;to=home;const q=commute(960,1080,from,to);point=q.point;walking=q.walking;}else{const phase=(((Number(time)||0)*(.000007+(i%9)*.0000011)+i*.173)%2+2)%2;const outbound=phase<=1;const q=routePoint(home,work,outbound?phase:2-phase);point={...q,angle:q.angle+(outbound?0:Math.PI)};walking=true;}}
- else if(actorClass==='child'){if(weekend||minute<450||minute>=840){point={...home,angle:0};}else if(minute<510){from=home;to=school;const q=commute(450,510,from,to);point=q.point;walking=q.walking;}else if(minute<780)point={...school,angle:0};else{from=school;to=home;const q=commute(780,840,from,to);point=q.point;walking=q.walking;}}
- else if(actorClass==='retiree'){if(minute>=570&&minute<630){from=home;to=park;const q=commute(570,630,from,to);point=q.point;walking=q.walking;}else if(minute>=630&&minute<780)point={...park,angle:0};else if(minute>=780&&minute<840){from=park;to=cafe;const q=commute(780,840,from,to);point=q.point;walking=q.walking;}else if(minute>=840&&minute<930)point={...cafe,angle:0};else if(minute>=930&&minute<990){from=cafe;to=home;const q=commute(930,990,from,to);point=q.point;walking=q.walking;}else point={...home,angle:0};}
- else{if(minute>=1140&&minute<1260){from=home;to=work;const q=commute(1140,1260,from,to);point=q.point;walking=q.walking;}else if(minute>=1260||minute<180){point={...work,angle:0};}else if(minute>=180&&minute<300){from=work;to=home;const q=commute(180,300,from,to);point=q.point;walking=q.walking;}else point={...home,angle:0};}
+ for(let i=0;i<72;i++){const actorClass=i>=64?'mafia':i>=42?'retiree':i>=24?'child':'worker',home={x:ROAD_X[(i*3+1)%5],y:ROAD_Y[(i*2+1)%5]},work=workNodes[i%workNodes.length],school=schoolNode,park=parkNode,cafe=cafeNode;const lane=(i%2===0?1:-1)*.62;let from=home,to=home,walking=false,point={...home,angle:0};
+ if(actorClass==='worker'){if(!weekend&&minute>=420&&minute<540){from=home;to=work;const q=commute(420,540,from,to,lane);point=q.point;walking=q.walking;}else if(!weekend&&minute>=540&&minute<960)point={...work,angle:0};else if(!weekend&&minute>=960&&minute<1080){from=work;to=home;const q=commute(960,1080,from,to,lane);point=q.point;walking=q.walking;}else{const phase=(((Number(time)||0)*(.000007+(i%9)*.0000011)+i*.173)%2+2)%2;const outbound=phase<=1;const q=routePoint(home,work,outbound?phase:2-phase,lane);point={...q,angle:q.angle+(outbound?0:Math.PI)};walking=true;}}
+ else if(actorClass==='child'){if(weekend||minute<450||minute>=840){point={...home,angle:0};}else if(minute<510){from=home;to=school;const q=commute(450,510,from,to,lane);point=q.point;walking=q.walking;}else if(minute<780)point={...school,angle:0};else{from=school;to=home;const q=commute(780,840,from,to,lane);point=q.point;walking=q.walking;}}
+ else if(actorClass==='retiree'){if(minute>=570&&minute<630){from=home;to=park;const q=commute(570,630,from,to,lane);point=q.point;walking=q.walking;}else if(minute>=630&&minute<780)point={...park,angle:0};else if(minute>=780&&minute<840){from=park;to=cafe;const q=commute(780,840,from,to);point=q.point;walking=q.walking;}else if(minute>=840&&minute<930)point={...cafe,angle:0};else if(minute>=930&&minute<990){from=cafe;to=home;const q=commute(930,990,from,to,lane);point=q.point;walking=q.walking;}else point={...home,angle:0};}
+ else{if(minute>=1140&&minute<1260){from=home;to=work;const q=commute(1140,1260,from,to,lane);point=q.point;walking=q.walking;}else if(minute>=1260||minute<180){point={...work,angle:0};}else if(minute>=180&&minute<300){from=work;to=home;const q=commute(180,300,from,to,lane);point=q.point;walking=q.walking;}else point={...home,angle:0};}
  // Außerhalb ihrer Wege bleiben Personen wirklich stehen. Die frühere
  // Ersatzbewegung ließ alle Figuren auf der Stelle laufen und wirkte wie Breakdance.
- const actorAngle=point.angle||0;let x=point.x,y=point.y;/* Personen laufen auf einer festen Gehwegspur statt auf der Straßenmitte. Der seitliche Abstand bleibt auch an Kurven senkrecht zur Laufrichtung. */const lane=(i%2===0?1:-1)*.62;x+=Math.cos(actorAngle)*lane;y-=Math.sin(actorAngle)*lane;const pedColor=actorClass==='mafia'?'#24282c':actorClass==='retiree'?'#788b91':actorClass==='child'?['#e4a34c','#5d91b4','#bd6c68'][i%3]:colors[i%colors.length];add(x,y,'ped',pedColor,actorAngle,!walking,'ped-'+i,actorClass);}
+ const actorAngle=point.angle||0;let x=point.x,y=point.y;/* Bewegte Personen erhalten ihre durchgehende Gehwegspur direkt aus der Kurvenroute; stehende Personen werden seitlich vom Straßenmittelpunkt platziert. */if(!point.sidewalk){x+=Math.cos(actorAngle)*lane;y-=Math.sin(actorAngle)*lane;}const pedColor=actorClass==='mafia'?'#24282c':actorClass==='retiree'?'#788b91':actorClass==='child'?['#e4a34c','#5d91b4','#bd6c68'][i%3]:colors[i%colors.length];add(x,y,'ped',pedColor,actorAngle,!walking,'ped-'+i,actorClass);}
  return actors;
 }
 window.__pizzaCity={tiles,getActors:cityActors,selectTile,isInterior:()=>!!state.interior,getClockData:()=>({minute:state.clockMinute||480,day:state.day||1,weekday:((state.day||1)-1)%7}),getMafiaData:()=>({style:getItalianStyleScore(),influence:state.mafia?.influence||0,pressure:state.mafia?.pressure||0}),recordMafiaVisit};
