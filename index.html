@@ -1141,6 +1141,29 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    }
    box(g,.44,.23,.035,mat('#d9d2bb'),-w*.58,.78,d*.58);
    box(g,.12,.04,.12,schoolAccent,0,h+.74,-d*.08);
+ }else if(kind==='landmark'){
+   // Rathaus: repräsentativer Mittelbau mit Säulen, Stufen und eigenem Uhrturm.
+   const civicStone=mat('#d8c9a8'),civicGold=mat('#c3a66d');
+   box(g,w*.72,.22,d*.72,mat('#8a7358'),0,h+.24,0);
+   const dome=new THREE.Mesh(new THREE.SphereGeometry(.62,16,10,0,Math.PI*2,0,Math.PI/2),civicStone);dome.position.set(0,h+.34,0);g.add(dome);
+   box(g,.72,.95,.72,civicStone,0,h+.82,-d*.2);
+   const clock=new THREE.Mesh(new THREE.CircleGeometry(.2,24),mat('#f3e7c9'));clock.position.set(0,h+.88,d*.17);g.add(clock);
+   for(const px of [-.55,-.18,.18,.55]){
+    const pillar=new THREE.Mesh(new THREE.CylinderGeometry(.055,.07,.88,10),trim);pillar.position.set(px,.52,d/2+.16);g.add(pillar);
+   }
+   box(g,1.55,.14,.32,civicStone,0,.08,d/2+.18);
+   box(g,1.38,.12,.26,civicGold,0,.19,d/2+.2);
+ }else if(kind==='shop'){
+   // Kleiner Stadtladen: eigenes Vordach, Schaufenster und seitlicher Warenaussteller.
+   const shopAwning=mat(seed>.5?'#527c83':'#a65d49');
+   box(g,1.18,.14,.42,shopAwning,0,h*.77,d/2+.23);
+   for(let stripe=-2;stripe<=2;stripe++){
+    box(g,.16,.14,.025,stripe%2?trim:mat('#e8c77c'),stripe*.22,h*.77-.12,d/2+.45);
+   }
+   box(g,.42,.54,.045,glassLit,-.48,.48,d/2+.12);
+   box(g,.42,.54,.045,glassLit,.48,.48,d/2+.12);
+   box(g,.28,.3,.12,mat('#b78d5b'),-.68,.18,d/2+.2);
+   box(g,.32,.08,.16,trim,-.68,.37,d/2+.2);
  }else if(kind==='factory'){
    // Fabrik: Sheddach, hohe Lüftungsrohre und breites Industrietor.
    for(const x of [-.42,0,.42]){
