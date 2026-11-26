@@ -717,14 +717,16 @@ function cityActors(time){
   const parkVisitor=i%3===0,poolVisitor=i%5===0;
   if(parkVisitor&&minute>=570&&minute<630){
    from=home;to=park;const q=commute(570,630,from,to,lane);point=q.point;walking=q.walking;action=walking?'walk':'';
-  }else if(parkVisitor&&minute>=630&&minute<780){
+  }else if(parkVisitor&&minute>=630&&minute<640){
+   const seats=[{x:22.2,y:24},{x:23.2,y:27},{x:24,y:22.4},{x:25.1,y:22.4},{x:22.3,y:26.8}],target=i%5===0?seats[Math.floor(i/5)%seats.length]:i%5===1?{x:25.7,y:26}: {x:22.8+2.5*(2/3),y:24.2+((i%2)?-.42:.42)};const f=(minute-630)/10;point={x:park.x+(target.x-park.x)*f,y:park.y+(target.y-park.y)*f,angle:Math.PI/2,sidewalk:true};action='walk';walking=true;
+  }else if(parkVisitor&&minute>=640&&minute<780){
    if(i%5===0){const seats=[{x:22.2,y:24},{x:23.2,y:27},{x:24,y:22.4},{x:25.1,y:22.4},{x:22.3,y:26.8}];point={...seats[Math.floor(i/5)%seats.length],angle:Math.PI,sidewalk:true};action='sit';walking=false;}
    else if(i%5===1){point={x:25.7,y:26,angle:Math.PI/2,sidewalk:true};action='stand';walking=false;}
    else if(minute<645){const f=Math.max(0,Math.min(1,(minute-630)/15));point={x:22.8+f*2.5,y:24.2+((i%2)?-.42:.42),angle:Math.PI/2,sidewalk:true};walking=true;action='stroll';}
    else{point={x:25.3+((i%3)-1)*.28,y:24.2+((i%2)?-.42:.42),angle:(i%2)?Math.PI:0,sidewalk:true};action='stand';walking=false;}
-  }else if(parkVisitor&&minute>=780&&minute<840){from=park;to=cafe;const q=commute(780,840,from,to,lane);point=q.point;walking=q.walking;action=walking?'walk':'';}
-  else if(!parkVisitor&&minute>=600&&minute<660){from=home;to=cafe;const q=commute(600,660,from,to,lane);point=q.point;walking=q.walking;action=walking?'walk':'';}
-  else if((parkVisitor&&minute>=840&&minute<930)||(!parkVisitor&&minute>=660&&minute<750)){point=cafeInside;action='cafe';walking=false;}
+  }else if(parkVisitor&&minute>=780&&minute<840){from=park;to=cafe;const q=commute(780,840,from,to,lane);point=q.point;walking=q.walking;action=walking?'walk':'';}else if(parkVisitor&&minute>=840&&minute<845){const f=(minute-840)/5;point={x:cafe.x+(cafeInside.x-cafe.x)*f,y:cafe.y+(cafeInside.y-cafe.y)*f,angle:Math.PI/2,sidewalk:true};walking=true;action='walk';}
+  else if(!parkVisitor&&minute>=600&&minute<660){from=home;to=cafe;const q=commute(600,660,from,to,lane);point=q.point;walking=q.walking;action=walking?'walk':'';}else if(!parkVisitor&&minute>=660&&minute<665){const f=(minute-660)/5;point={x:cafe.x+(cafeInside.x-cafe.x)*f,y:cafe.y+(cafeInside.y-cafe.y)*f,angle:Math.PI/2,sidewalk:true};walking=true;action='walk';}
+  else if((parkVisitor&&minute>=845&&minute<930)||(!parkVisitor&&minute>=665&&minute<750)){point=cafeInside;action='cafe';walking=false;}
   else if(poolVisitor&&minute>=930&&minute<990){from=cafe;to=poolNode;const q=commute(930,990,from,to,lane);point=q.point;walking=q.walking;action=walking?'walk':'';}
   else if(poolVisitor&&minute>=990&&minute<1110){point={x:44+Math.sin((minute-990)*.045+i)*.92,y:32+Math.cos((minute-990)*.035+i)*.48,angle:Math.PI/2};action='swim';walking=false;}
   else if(minute>=930&&minute<990){from=cafe;to=home;const q=commute(930,990,from,to,lane);point=q.point;walking=q.walking;action=walking?'walk':'';}
