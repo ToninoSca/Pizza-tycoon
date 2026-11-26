@@ -136,8 +136,8 @@ function makeCity(){
   const nearby=placed.filter(p=>Math.abs(p.x-t.x)<=2&&Math.abs(p.y-t.y)<=2);
   // Schulen brauchen wegen ihrer breiten Campus-Anlage deutlich mehr Abstand.
   // Auch spätere Gebäude dürfen nicht in den reservierten Schulbereich hineinragen.
-  const nearSchool=placed.some(p=>p.kind===4&&Math.hypot(p.x-t.x,p.y-t.y)<5.5);
-  const schoolCrowded=kind===4&&placed.some(p=>Math.hypot(p.x-t.x,p.y-t.y)<5.5);
+  const nearSchool=placed.some(p=>p.kind===4&&Math.hypot(p.x-t.x,p.y-t.y)<3.2);
+  const schoolCrowded=kind===4&&placed.some(p=>Math.hypot(p.x-t.x,p.y-t.y)<3.2);
   if(nearSchool)continue;
   if(schoolCrowded){
    const alternatives=t.district==='civic'?[3,0,1,2,6]:[0,1,2,3,6,9];
@@ -165,7 +165,7 @@ function reserveRivalLocations(){
  const used=new Set();if(state.owned)used.add(state.owned.id);
  for(const r of state.rivals||[]){r.locations=Array.isArray(r.locations)?r.locations:[];const wanted=Math.max(1,Math.min(5,r.outlets||1));
   for(const id of r.locations)used.add(id);
-  while(r.locations.length<wanted){const options=tiles.filter(t=>t.plot&&!t.space&&!t.building&&!t.forSale&&!used.has(t.id)&&BUILDING_X.includes(t.x)&&BUILDING_Y.includes(t.y)&&(isRoad(t.x-1,t.y)||isRoad(t.x+1,t.y)||isRoad(t.x,t.y-1)||isRoad(t.x,t.y+1)));if(!options.length)break;options.sort((a,b)=>((a.id*31+r.seed*17)%997)-((b.id*31+r.seed*17)%997));const t=options[0];r.locations.push(t.id);used.add(t.id);}
+  while(r.locations.length<wanted){const options=tiles.filter(t=>t.plot&&!t.space&&!t.building&&!t.forSale&&!used.has(t.id)&&!tiles.some(s=>s.building?.kind==='school'&&Math.hypot(s.x-t.x,s.y-t.y)<3.2)&&BUILDING_X.includes(t.x)&&BUILDING_Y.includes(t.y)&&(isRoad(t.x-1,t.y)||isRoad(t.x+1,t.y)||isRoad(t.x,t.y-1)||isRoad(t.x,t.y+1)));if(!options.length)break;options.sort((a,b)=>((a.id*31+r.seed*17)%997)-((b.id*31+r.seed*17)%997));const t=options[0];r.locations.push(t.id);used.add(t.id);}
  }
  for(const t of tiles){if(t.building?.rivalId){t.building=null;}}
  for(const r of state.rivals||[]){(r.locations||[]).forEach((id,index)=>{const t=tiles.find(q=>q.id===id);if(!t)return;t.plot=true;t.space=null;t.forSale=false;t.building={name:r.brand,brand:r.brand,emoji:r.emoji,color:r.color,kind:'pizza',rivalId:r.id,rivalOwner:r.name,branch:index+1};});}
@@ -992,7 +992,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   // Die Eingangsseite zeigt immer zur nächstgelegenen Straße.
   const fronts=[{x:t.x,y:t.y-1,a:Math.PI},{x:t.x+1,y:t.y,a:Math.PI/2},{x:t.x,y:t.y+1,a:0},{x:t.x-1,y:t.y,a:-Math.PI/2}];
   const front=fronts.find(p=>tiles.some(q=>q.x===p.x&&q.y===p.y&&q.road));
-  if(front){g.rotation.y=front.a;const setback=kind==='school'?3.0:.56;g.position.set(t.x+(t.x-front.x)*setback,0,t.y+(t.y-front.y)*setback);}else g.position.set(t.x,0,t.y);
+  if(front){g.rotation.y=front.a;const setback=.56;g.position.set(t.x+(t.x-front.x)*setback,0,t.y+(t.y-front.y)*setback);}else g.position.set(t.x,0,t.y);
   const baseProfile=buildingProfiles[kind]||null,profile=baseProfile&&kind==='pizza'?{...baseProfile,sign:b.brand||b.name||baseProfile.sign,logo:b.emoji||baseProfile.logo,signColor:b.color||baseProfile.signColor}:baseProfile,seed=((t.x*37+t.y*71)%11)/10,seed2=((t.x*13+t.y*29)%13)/12;
   // Normale Gebäude variieren in Breite, Tiefe und Höhe; Marken-Gebäude behalten ihre feste Silhouette.
   const heightRange={home:.88,oldhome:.9,apartments:.84,office:.86,school:.9,factory:.88,shop:.86,cafe:.9,market:.92};
@@ -1245,7 +1245,16 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
 
  // Bäume in Parks, Gärten und auf freien Grünflächen
  function tree(x,z,s=1){const g=new THREE.Group();g.position.set(x,0,z);city.add(g);box(g,.16,.72,.16,trunk,0,.36,0);const crown=new THREE.Mesh(new THREE.IcosahedronGeometry(.48*s,1),leaf);crown.position.y=.95*s;crown.castShadow=true;g.add(crown);}
- for(const t of tiles){if(t.building?.kind==='park'||t.space==='garden'){tree(t.x-.2,t.y-.15,.95);tree(t.x+.22,t.y+.2,.72);}else if(!t.road&&!t.building&&!t.space&&((t.x*17+t.y*31)%13===0)){tree(t.x,t.y,.55);}}
+ for(const t of tiles){
+  const noise=(x,y,n=0)=>{const v=Math.sin(x*127.1+y*311.7+n*74.7)*43758.5453;return v-Math.floor(v);};
+  const nearSchool=tiles.some(s=>s.building?.kind==='school'&&Math.hypot(s.x-t.x,s.y-t.y)<2.5);
+  if(t.building?.kind==='park'||t.space==='garden'){
+   tree(t.x-.2+(noise(t.x,t.y,1)-.5)*.22,t.y-.15+(noise(t.x,t.y,2)-.5)*.22,.82+noise(t.x,t.y,3)*.22);
+   tree(t.x+.22+(noise(t.x,t.y,4)-.5)*.28,t.y+.2+(noise(t.x,t.y,5)-.5)*.28,.58+noise(t.x,t.y,6)*.24);
+  }else if(!nearSchool&&!t.road&&!t.building&&!t.space&&noise(t.x,t.y,7)<.115){
+   tree(t.x+(noise(t.x,t.y,8)-.5)*.72,t.y+(noise(t.x,t.y,9)-.5)*.72,.42+noise(t.x,t.y,10)*.26);
+  }
+ }
  // Plätze und Kreisverkehr
  const round=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.1,.12,32),mat('#7eaa72'));round.position.set(33,.08,35);city.add(round);
  const plaza=tiles.filter(t=>t.space==='plaza'||t.space==='parking');for(const t of plaza){slab(t.x,t.y,.95,.95,mat(t.space==='plaza'?'#b9ad91':'#9a9d96'),.03);}
