@@ -1244,9 +1244,9 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
     if(storageStockGroup)room.remove(storageStockGroup);
     storageStockGroup=new THREE.Group();room.add(storageStockGroup);
     const ids=['mehl','tomate','kaese','thunfisch','salz','pfeffer'],colors={mehl:'#d7bd83',tomate:'#bd5141',kaese:'#e5c96b',thunfisch:'#6e91a5',salz:'#eee9d9',pfeffer:'#45413c'};
-    const total=ids.reduce((sum,id)=>sum+Math.max(0,Number(ingredients[id])||0),0),capacity=level>=3?150:level>=2?100:60,slots=level>=3?24:level>=2?16:8;
-    const filled=Math.min(slots,Math.ceil(total/capacity*slots)),crateTypes=[];
+    const slots=level>=3?24:level>=2?16:8,crateTypes=[];
     ids.forEach(id=>{for(let n=0;n<Math.ceil(Math.max(0,Number(ingredients[id])||0)/10);n++)crateTypes.push(id);});
+    const filled=Math.min(slots,crateTypes.length);
     for(let i=0;i<filled;i++){const row=Math.floor(i/8),col=i%8,rack=Math.floor(col/4),slot=col%4,sx=3.85+rack*2.25,x=sx-.63+slot*.42,y=row===0?.88:row===1?1.66:2.42,id=crateTypes[i]||ids[i%ids.length],m=M(colors[id]);cube(storageStockGroup,.36,.38,.38,m,x,y,-5.12);cube(storageStockGroup,.25,.035,.035,M('#f1e5ca'),x,y+.205,-4.92);}
    };
    refreshStorageStock(currentUpgrades.ingredients||{},storageLevel);
