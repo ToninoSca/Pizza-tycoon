@@ -1010,6 +1010,22 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    else slab(sx,sz,1.025,.26,sidewalk,.065);
   }
  }
+ // Dezente 3D-Straßenlaternen auf freien Gehwegseiten – nicht auf Fahrbahnen oder Kreuzungen.
+ const footyLampMetal=mat('#46504d'),footyLampGlow=new THREE.MeshStandardMaterial({color:'#ffe7a5',emissive:'#ffcf72',emissiveIntensity:.75,roughness:.35});
+ for(const t of tiles){
+  if(!t.road||((t.x*7+t.y*11)%17)!==0)continue;
+  const lampSides=[[-1,0],[1,0],[0,-1],[0,1]],lampStart=((t.x+t.y)%4+4)%4;
+  for(let n=0;n<4;n++){
+   const [dx,dz]=lampSides[(lampStart+n)%4],nx=t.x+dx,nz=t.y+dz;
+   if(nx<0||nz<0||nx>=61||nz>=61||roadTiles.has(nz*61+nx))continue;
+   const lampGroup=new THREE.Group();lampGroup.position.set(t.x+dx*.78,.11,t.y+dz*.78);city.add(lampGroup);
+   const pole=new THREE.Mesh(new THREE.CylinderGeometry(.035,.055,1.48,8),footyLampMetal);pole.position.y=.74;pole.castShadow=true;lampGroup.add(pole);
+   const arm=new THREE.Mesh(new THREE.CylinderGeometry(.025,.03,.38,7),footyLampMetal);arm.rotation.z=Math.PI/2;arm.position.set(dx===0?.15:0,1.43,dz===0?.15:0);lampGroup.add(arm);
+   const head=new THREE.Mesh(new THREE.BoxGeometry(.2,.09,.16),footyLampMetal);head.position.set(dx===0?.31:0,1.39,dz===0?.31:0);lampGroup.add(head);
+   const bulb=new THREE.Mesh(new THREE.SphereGeometry(.075,10,8),footyLampGlow);bulb.position.set(dx===0?.31:0,1.32,dz===0?.31:0);lampGroup.add(bulb);
+   break;
+  }
+ }
  const typeHeight={home:1.8,oldhome:2.1,apartments:3.3,office:4.8,school:3.65,cinema:3.2,pool:.2,market:2.3,park:.2,shop:2.0,cafe:2.0,factory:1.8,landmark:4.0,wholesale:2.65,deli:1.95,hardware:2.2,pizza:2.45};
  // Zentrale Gebäudesteckbriefe: neue Gebäudetypen bekommen hier später ihre eigene Silhouette.
  const buildingProfiles={pizza:{width:1.42,depth:1.2,roof:'#9d4938',sign:'PIZZERIA',logo:'🍕',signColor:'#b83e2d',style:'pizza'},wholesale:{width:1.5,depth:1.42,roof:'#526b75',sign:'GROSSHANDEL',logo:'📦',signColor:'#27677d',style:'warehouse'},deli:{width:1.28,depth:1.16,roof:'#87563e',sign:'FEINKOST',logo:'🥫',signColor:'#8b4d32',style:'deli'},hardware:{width:1.42,depth:1.22,roof:'#a38b3e',sign:'BAUMARKT',logo:'🔨',signColor:'#987b27',style:'hardware'},cafe:{width:1.3,depth:1.12,roof:'#89583c',sign:'CAFÉ',logo:'☕',signColor:'#8d4e31',style:'cafe'},market:{width:1.42,depth:1.25,roof:'#73864d',sign:'MARKT',logo:'🛒',signColor:'#617d3d',style:'market'},school:{width:2.05,depth:1.35,roof:'#b5a45f',sign:'GRUNDSCHULE',logo:'🏫',signColor:'#b39a42',style:'school'},cinema:{width:1.72,depth:1.42,roof:'#40364f',sign:'KINO',logo:'🎬',signColor:'#59416f',style:'cinema'}};
