@@ -1609,6 +1609,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  function pickBuilding(e){
   const r=canvas.getBoundingClientRect();mouse.x=((e.clientX-r.left)/r.width)*2-1;mouse.y=-((e.clientY-r.top)/r.height)*2+1;ray.setFromCamera(mouse,camera);
   // Zuerst die vergrößerten unsichtbaren Touch-Flächen prüfen, damit kleine Gebäude leichter getroffen werden.
+  const ownedTile=window.__pizzaCity?.tiles?.find(t=>t.building?.kind==='pizza'&&!t.building?.rivalId);const ownedGroup=ownedTile&&city.children.find(g=>g.userData?.tile?.id===ownedTile.id);const ownedHit=ownedGroup?.children.find(o=>o.userData?.buildingHitArea);if(ownedHit&&ray.intersectObject(ownedHit,false).length)return ownedTile;
   const hitAreas=[];for(const g of city.children)if(g.userData?.tile?.building){const h=g.children.find(o=>o.userData?.buildingHitArea);if(h)hitAreas.push(h);}
   const touchHits=ray.intersectObjects(hitAreas,false);
   if(touchHits.length){let o=touchHits[0].object;while(o&&o!==city){if(o.userData?.tile?.building)return o.userData.tile;o=o.parent;}}
