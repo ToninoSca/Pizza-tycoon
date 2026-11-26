@@ -1317,7 +1317,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   // lassen benachbarte Gebäude ineinander rutschen.
   // Das Grundstückszentrum ist die feste Position. Ein zusätzlicher Versatz
   // verschiebt das Gebäude um mehrere Meter und lässt es auf Nachbargrundstücke rutschen.
-  g.position.set(t.x,0,t.y);
+  g.position.set(t.x+(front?(t.x-front.x)*.38:0),0,t.y+(front?(t.y-front.y)*.38:0));
   const base=mat(b.color||'#c78c69'),side=mat(shadeFacade(b.color||'#c78c69',-22)),roof=mat(profile?.roof||(kind==='oldhome'||t.district==='oldtown'?'#a85a48':kind==='factory'?'#687579':'#655b52'));
   const trim=mat('#e9dfcb'),foundation=mat('#655b52'),frame=mat('#493f37'),glassLit=mat('#a9d9e8',.18),doorGlass=mat('#8fc5d4',.2);
   // Vorderseite heller, Seiten und Rückseite mit eigener Fassadenfarbe.
