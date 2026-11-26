@@ -938,40 +938,84 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
  function wallPanel(x,y,z,w,h,d,color){cube(room,w,h,d,M(color),x,y,z);}
  function build(kind,color,upgrades={}){
   room.clear();people=[];customers=[];activeKind=kind||'pizza';currentUpgrades=upgrades||{};accent=M(color||'#b94f35');
-  // Boden und umlaufende Fliesen
-  cube(room,14,.24,12,M('#b99d7a'),0,-.14,0);
-  const tileA=M(currentUpgrades.floorColor||'#e2d0b0'),tileB=M(currentUpgrades.floorColor||'#d5c09d');
-  for(let x=-6.5;x<=6.5;x+=1)for(let z=-5.5;z<=5.5;z+=1)cube(room,.96,.018,.96,((Math.round(x+z)&1)?tileA:tileB),x,.005,z);
-  // Wände niedrig gehalten, damit der gesamte Raum sichtbar bleibt
-  wallPanel(0,1.25,-5.85,14,2.5,.22,'#e7d6bb');
-  wallPanel(-6.85,1.25,0,.22,2.5,12,'#d2b998');
-  wallPanel(6.85,1.25,0,.22,2.5,12,'#d2b998');
-  // Fenster, Rahmen, Eingang
-  for(const x of [-4.5,-2.3,2.3,4.5]){cube(room,1.35,1.15,.08,glass,x,1.65,-5.7);cube(room,1.48,.09,.14,wood,x,1.05,-5.62);cube(room,.08,1.25,.14,wood,x,1.65,-5.62);}
-  cube(room,1.5,2.15,.18,wood,0,1.05,5.85);cube(room,1.25,1.9,.08,glass,0,1.05,5.73);
-  cube(room,3.2,.42,.2,accent,0,2.55,-5.68);
+  const mat2=(c,r=.82)=>M(c,r),creamWall=mat2('#f0dfc4'),plaster=mat2('#ead9bd'),plasterSide=mat2('#d9c3a2'),tileDark=mat2('#b77d55'),tileLight=mat2('#ead9bd'),brass=mat2('#b58a4e',.38),woodDark=mat2('#60402e'),woodMid=mat2('#91603e'),woodLight=mat2('#bd8b5a'),steel=mat2('#68777a',.35),black=mat2('#252b2b',.4),leafMat=mat2('#39784c'),glassPane=new THREE.MeshStandardMaterial({color:'#9ccbd0',roughness:.18,metalness:.12});
+  // Solider Boden mit sichtbaren Fugen, umlaufendem Sockel und warmem Holzbereich.
+  cube(room,14,.25,12,mat2('#aa8b68'),0,-.15,0);
+  for(let x=-6.5;x<=6.5;x+=1)for(let z=-5.5;z<=5.5;z+=1){
+   const checker=((Math.round(x+z)&1)===0),floorMat=currentUpgrades.floorColor?mat2(currentUpgrades.floorColor):((activeKind==='pizza'&&currentUpgrades.checkeredFloor)?(checker?mat2('#f0e9d9'):mat2('#333b38')):(checker?tileLight:mat2('#ddc9aa')));
+   cube(room,.975,.025,.975,floorMat,x,.005,z);
+  }
+  // Drei Wände – die Vorderseite bleibt offen, damit der komplette Gastraum sichtbar ist.
+  cube(room,14,2.65,.24,plaster,0,1.25,-5.88);
+  cube(room,.24,2.65,12,plasterSide,-6.88,1.25,0);cube(room,.24,2.65,12,plasterSide,6.88,1.25,0);
+  cube(room,14,.22,.32,woodDark,0,.18,-5.7);cube(room,.32,.22,12,woodDark,-6.7,.18,0);cube(room,.32,.22,12,woodDark,6.7,.18,0);
+  // Holzvertäfelung und Zierleisten an den Wänden.
+  cube(room,13.7,.72,.07,woodMid,0,.55,-5.72);cube(room,13.7,.09,.1,woodLight,0,.94,-5.66);
+  cube(room,.07,.72,11.7,woodMid,-6.72,.55,0);cube(room,.07,.72,11.7,woodMid,6.72,.55,0);
+  // Große Fenster mit Rahmen und Fensterbänken.
+  for(const x of [-4.7,-2.2,2.2,4.7]){
+   cube(room,1.52,1.18,.09,glassPane,x,1.72,-5.68);
+   cube(room,1.65,.09,.16,woodDark,x,1.1,-5.59);cube(room,.09,1.28,.16,woodDark,x-.78,1.72,-5.59);cube(room,.09,1.28,.16,woodDark,x+.78,1.72,-5.59);cube(room,1.58,.07,.15,woodLight,x,2.34,-5.59);
+   cube(room,.055,1.12,.17,woodDark,x,1.72,-5.57);
+  }
+  // Offener Eingang vorne mit Türflügel, Griff und kleiner Fußmatte.
+  cube(room,2.5,2.22,.16,woodDark,0,1.08,5.86);cube(room,2.22,2.02,.07,glassPane,0,1.08,5.76);
+  cube(room,.07,2.16,.16,woodLight,-1.24,1.08,5.72);cube(room,.07,2.16,.16,woodLight,1.24,1.08,5.72);
+  cylinder(room,.055,.06,brass, .88,1.05,5.65);
+  cube(room,3.6,.12,.9,mat2('#493c32'),0,.02,5.15);
+  // Leuchtschild, Logo und warme Wandgestaltung.
+  cube(room,4.2,.62,.22,woodDark,0,2.45,-5.68);cube(room,3.95,.42,.08,accent,0,2.45,-5.54);
+  const letters=mat2('#fff0d2');for(let i=0;i<5;i++)cube(room,.12,.12,.05,letters,-1.15+i*.58,2.45,-5.48);
   if(activeKind==='pizza'){
-   // Italienische Flagge und Trattoria-Motive werden nach dem Kauf sichtbar.
+   // Italienische Trattoria-Küche mit gemauertem Steinofen.
    const italianItems=currentUpgrades.items||{};
-   if((currentUpgrades.flag||italianItems.flag||0)>0){const fx=-2.65,fy=2.05,fz=-5.68;cube(room,.78,.48,.055,M('#f4eee0'),fx,fy,fz);cube(room,.26,.48,.065,M('#31945b'),fx-.26,fy,fz-.01);cube(room,.26,.48,.065,M('#ffffff'),fx,fy,fz-.012);cube(room,.26,.48,.065,M('#d94c43'),fx+.26,fy,fz-.01);}
-   if((currentUpgrades.italianPainting||italianItems.italianPainting||0)>0){cube(room,.92,.66,.08,wood,-4.85,1.95,-5.68);cube(room,.76,.5,.035,M('#c98d53'),-4.85,1.95,-5.62);cube(room,.12,.34,.04,M('#4c7b4d'),-5.02,1.95,-5.59);cube(room,.12,.34,.04,M('#9c4c39'),-4.68,1.95,-5.59);}
-   // Offene Küche hinten links
-   cube(room,4.2,.95,1.15,wood,-3.8,.48,-3.6);cube(room,4.25,.12,1.2,metal,-3.8,1.02,-3.6);
-   cube(room,1.45,1.65,1.35,brick,-1.5,.83,-3.7);cube(room,1.02,.9,.12,dark,-1.5,.9,-3.0);cylinder(room,.36,.12,accent,-1.5,1.0,-2.92);
-   cube(room,2.5,.85,.85,wood2,1.4,.42,-3.65);cube(room,2.6,.1,.9,cream,1.4,.9,-3.65);
-   // Theke vorne links
-   cube(room,3.6,1.05,.95,dark,-3.9,.52,-.6);cube(room,3.7,.12,1.0,wood2,-3.9,1.1,-.6);
-   // Gastraum mit Abstand und Laufwegen
-   const tableSpots=[[1.7,-.2],[4.3,2.8],[-.5,3.0],[-3.0,3.1],[3.5,-2.0],[0,1.8]];const tableCount=Math.max(3,Math.min(6,currentUpgrades.tables||3));for(let ti=0;ti<tableCount;ti++)table(tableSpots[ti][0],tableSpots[ti][1]);
-   for(let i=0;i<Math.min(5,currentUpgrades.plants||0);i++){const x=-5.8+(i%3)*5.8,z=4.6-Math.floor(i/3)*2.2;cylinder(room,.28,.5,wood,x,.25,z);mesh(room,new THREE.SphereGeometry(.62,12,10),green,x,.9,z);}
-   for(let i=0;i<Math.min(5,currentUpgrades.paintings||0);i++){const x=-5+i*2.4;cube(room,.9,.65,.09,wood,x,2.0,-5.68);cube(room,.72,.48,.04,M(['#b86d4e','#789a91','#d5b66e'][i%3]),x,2.0,-5.61);}
-   for(let i=0;i<Math.min(4,currentUpgrades.lamps||0);i++){const x=-4.5+i*3; cylinder(room,.07,.08,metal,x,2.65,0);cylinder(room,.3,.12,M('#f2d58a'),x,2.48,0);}
-   if((currentUpgrades.sofas||0)>0){cube(room,1.8,.35,.7,M('#547a70'),-2.1,.35,3.8);cube(room,1.8,.65,.18,M('#547a70'),-2.1,.72,4.05);}
-   const chef=person(-3.3,-2.4,'#f5f0e7');chef.role='chef';people.push(chef);
-   const cashier=person(-4.1,.65,'#314c62');cashier.role='cashier';people.push(cashier);
-   for(const x of [-5.7,5.7]){cylinder(room,.32,.55,wood,x,.27,4.7);const plant=mesh(room,new THREE.SphereGeometry(.65,12,10),green,x,.95,4.7);plant.scale.set(1,.9,1);}
-   // Speisenregal und Licht
-   cube(room,1.5,.12,.65,wood2,2.2,-4.6,0);for(let j=0;j<3;j++)cylinder(room,.12,.18,cream,1.7+j*.5,-4.48,0);
+   if((currentUpgrades.flag||italianItems.flag||0)>0){
+    cube(room,.88,.55,.06,mat2('#f7f0e4'),-2.8,2.0,-5.65);cube(room,.29,.55,.07,mat2('#31945b'),-3.095,2,-5.62);cube(room,.29,.55,.07,mat2('#ffffff'),-2.8,2,-5.62);cube(room,.29,.55,.07,mat2('#d94c43'),-2.505,2,-5.62);
+   }
+   if((currentUpgrades.italianPainting||italianItems.italianPainting||0)>0){
+    cube(room,1.05,.78,.12,woodDark,-5.25,1.92,-5.62);cube(room,.86,.58,.05,mat2('#d4a76c'),-5.25,1.92,-5.53);cylinder(room,.19,.05,mat2('#527b50'),-5.43,1.93,-5.48);cylinder(room,.19,.05,mat2('#a84d3b'),-5.06,1.93,-5.48);
+   }
+   // Küchenzeile: Edelstahl-Arbeitsflächen, Schränke, Spüle und Regale.
+   cube(room,4.8,.9,1.25,woodDark,-3.65,.48,-3.85);cube(room,4.9,.13,1.34,steel,-3.65,1.0,-3.85);
+   for(let i=0;i<4;i++){cube(room,.035,.78,.04,woodLight,-5.55+i*1.25,.48,-3.19);cube(room,1.05,.055,.08,woodLight,-4.95+i*1.25,.25,-3.18);}
+   cube(room,1.3,.12,.82,mat2('#d8d7cf'),-4.65,1.1,-3.78);cube(room,.75,.08,.58,steel,-4.65,1.2,-3.78);
+   // Pizzaofen mit Kuppel, dunkler Ofenöffnung und sichtbarem Feuer.
+   cube(room,1.85,1.25,1.5,brick,-1.45,.66,-3.82);mesh(room,new THREE.SphereGeometry(1,20,12,0,Math.PI*2,0,Math.PI/2),mat2('#b85e43'),-1.45,1.27,-3.82).scale.set(1.05,.78,.9);
+   cube(room,1.05,.76,.08,black,-1.45,.65,-3.02);mesh(room,new THREE.TorusGeometry(.48,.09,8,20,Math.PI),woodLight,-1.45,1.03,-2.96).rotation.z=Math.PI;
+   cube(room,.78,.12,.08,mat2('#f28b39'),-1.45,.58,-2.94);
+   cylinder(room,.23,.18,steel,-1.45,2.12,-3.82);cube(room,.42,.12,.42,brick,-1.45,2.28,-3.82);
+   // Zutatenstation und Wandregal.
+   cube(room,2.65,.88,.92,woodMid,1.55,.46,-3.8);cube(room,2.75,.14,1.02,steel,1.55,.98,-3.8);
+   for(let i=0;i<4;i++){cylinder(room,.19,.16,[mat2('#d94f3d'),mat2('#e4c56b'),mat2('#6c9b55'),mat2('#f1e7d0')][i],.65+i*.58,1.14,-3.8);}
+   cube(room,3.5,.12,.42,woodDark,1.35,1.85,-5.55);cube(room,3.5,.07,.08,woodLight,1.35,1.76,-5.3);
+   for(let i=0;i<5;i++)cylinder(room,.11,.25,[mat2('#c5a05b'),mat2('#b54c3c'),mat2('#78935d')][i%3],-.05+i*.65,2.0,-5.3);
+   // Theke mit Frontpaneelen, Kasse, Kaffeemaschine und Kuchenvitrine.
+   cube(room,3.65,1.05,1.02,woodDark,-4.0,.53,-.45);cube(room,3.72,.16,1.1,woodLight,-4,.99,-.45);
+   for(let i=0;i<5;i++)cube(room,.04,.7,.06,brass,-5.65+i*.78,.5,.08);
+   cube(room,.55,.2,.42,black,-4.85,1.16,-.42);cube(room,.48,.12,.08,mat2('#b8c6c3'),-4.85,1.3,-.2);
+   cube(room,.8,.42,.48,glassPane,-3.25,1.27,-.42);cube(room,.82,.06,.5,woodLight,-3.25,1.04,-.42);
+   // Wandmenü und dekorative Speisekarte.
+   cube(room,1.65,1.0,.08,black,-4.1,2.0,-5.55);cube(room,1.48,.82,.035,mat2('#283b32'),-4.1,2,-5.49);
+   for(let i=0;i<4;i++)cube(room,.8,.025,.025,mat2('#f0d7a5'),-4.1,2.27-i*.18,-5.45);
+   // Gastraum: unterschiedliche Tischgruppen, vier Stühle, Teller und kleine Vasen.
+   const tableSpots=[[1.7,-.25],[4.25,2.55],[-.35,2.8],[3.8,-2.15]];
+   const tableCount=Math.max(3,Math.min(6,currentUpgrades.tables||4));
+   for(let ti=0;ti<tableCount;ti++){
+    const [x,z]=tableSpots[ti%tableSpots.length];table(x,z);
+    for(const [dx,dz] of [[-.3,-.2],[.3,.2]]){cylinder(room,.13,.025,mat2('#f5ead7'),x+dx,.91,z+dz);cylinder(room,.035,.12,accent,x+dx,.98,z+dz);}
+   }
+   // Pflanzen in Terrakotta-Töpfen und Wandbilder.
+   for(let i=0;i<Math.min(5,Math.max(2,currentUpgrades.plants||0));i++){const x=-5.9+(i%3)*5.8,z=4.35-Math.floor(i/3)*2.0;cylinder(room,.34,.48,mat2('#a85f43'),x,.24,z);mesh(room,new THREE.SphereGeometry(.65,14,12),leafMat,x,.82,z).scale.set(.9,1.15,.9);}
+   for(let i=0;i<Math.min(5,currentUpgrades.paintings||0);i++){const x=-5+i*2.4;cube(room,1.0,.76,.1,woodDark,x,2.0,-5.58);cube(room,.8,.56,.04,mat2(['#b86d4e','#789a91','#d5b66e'][i%3]),x,2.0,-5.5);}
+   // Hängelampen mit warm leuchtenden Schirmen.
+   const lampMat=new THREE.MeshStandardMaterial({color:'#ffe0a0',emissive:'#ffbd55',emissiveIntensity:.7,roughness:.35});
+   for(const [x,z] of [[-2.5,0],[1.8,0],[4.4,1.2],[0,3.6]]){cylinder(room,.035,.72,steel,x,2.35,z);cylinder(room,.28,.12,brass,x,1.98,z);mesh(room,new THREE.SphereGeometry(.19,12,10),lampMat,x,1.84,z);}
+   // Sitzbank und Garderoben-/Servierdetails.
+   if((currentUpgrades.sofas||0)>0){cube(room,2.0,.38,.72,mat2('#547a70'),-2.0,.35,4.0);cube(room,2.0,.68,.2,mat2('#547a70'),-2.0,.72,4.28);}
+   cube(room,1.0,.8,.5,woodDark,5.6,.4,-4.5);cube(room,1.05,.08,.55,woodLight,5.6,.84,-4.5);
+   for(let i=0;i<3;i++)cylinder(room,.12,.22,mat2('#c89c5b'),5.3+i*.28,.98,-4.5);
+   const chef=person(-3.4,-2.5,'#f4f0e8');chef.role='chef';people.push(chef);
+   const cashier=person(-4.1,.8,'#314c62');cashier.role='cashier';people.push(cashier);
   }else{
    for(const x of [-4.5,-1.5,1.5,4.5]){
     cube(room,1.15,2.3,.55,dark,x,1.15,-4.65);
@@ -979,8 +1023,9 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
    }
    cube(room,3.4,.95,.9,wood,0,.48,-1);cube(room,3.5,.12,.95,accent,0,1,-1);const worker=person(0,0,'#314c62');people.push(worker);
   }
- }
- function spawnCustomer(){
+  // Dezente Deckenbalken geben dem Raum Tiefe, ohne den Blick zu versperren.
+  for(const x of [-6,0,6])cube(room,.12,.12,11.5,woodDark,x,2.72,0);
+ } function spawnCustomer(){
   if(activeKind!=='pizza'||customers.length>=4)return;
   const data=window.__pizzaCity?.getClockData?.()||{minute:480,weekday:0};const h=data.minute/60,weekend=data.weekday>=5;const mafia=window.__pizzaCity?.getMafiaData?.()||{style:0};let isMafia=false;
   let type='Berufstätige',budget=18,taste='Klassiker',scale=.9,colors=['#52758e','#9b5961','#5d8b75'];
@@ -1011,7 +1056,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   }
   if(activeKind==='pizza'){const data=window.__pizzaCity?.getClockData?.()||{minute:480};const h=data.minute/60;const night=h<7||h>=23;const rush=(h>=7&&h<9)||(h>=12&&h<14)||(h>=17&&h<20);nextGuest-=dt*(night?.15:rush?1.55:1);if(nextGuest<=0){spawnCustomer();nextGuest=(night?28: rush?3.2:7)+Math.random()*(night?18: rush?2:5);}}
  }
- function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);const aspect=w/h,span=8.4;if(aspect>1){camera.left=-span*aspect/1.35;camera.right=span*aspect/1.35;camera.top=span;camera.bottom=-span;}else{camera.left=-span*.62;camera.right=span*.62;camera.top=span;camera.bottom=-span;}camera.updateProjectionMatrix();}
+ function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);const aspect=w/h;const viewWidth=18.5,viewHeight=viewWidth/Math.max(.55,aspect);camera.left=-viewWidth/2;camera.right=viewWidth/2;camera.top=viewHeight/2;camera.bottom=-viewHeight/2;camera.updateProjectionMatrix();}
  if(window.ResizeObserver)new ResizeObserver(resize).observe(canvas);else window.addEventListener('resize',resize);
  resize();window.addEventListener('pizza-room-change',e=>{build(e.detail?.kind||'pizza',e.detail?.color,currentUpgrades);nextGuest=1.5;});
  window.addEventListener('pizza-room-upgrades',e=>{const d=e.detail||{};build(activeKind,d.color||'#b94f35',d.upgrades||{});});
