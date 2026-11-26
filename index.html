@@ -1232,6 +1232,27 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
     const badge=new THREE.Mesh(new THREE.CylinderGeometry(.25,.25,.1,24),mat('#e6c46f'));badge.rotation.x=Math.PI/2;badge.position.set(.56,h+.55,.12);g.add(badge);
     const slice=new THREE.Mesh(new THREE.ConeGeometry(.16,.12,3),mat('#bd4936'));slice.rotation.x=Math.PI/2;slice.position.set(.56,h+.56,.19);g.add(slice);
     box(g,w+.22,.12,.12,mat('#a94432'),0,h+.12,0);
+    // Kleiner gemauerter Pizzaofen-Schornstein mit dunkler Öffnung.
+    box(g,.28,.62,.28,mat('#a64a39'),-.48,h+.38,-.28);
+    box(g,.34,.1,.34,mat('#6f5145'),-.48,h+.72,-.28);
+    box(g,.19,.18,.035,mat('#382f2b'),-.48,h+.4,-.125);
+    // Zwei runde Außenleuchten neben dem Eingang.
+    for(const px of [-.68,.68]){
+     const lamp=new THREE.Mesh(new THREE.SphereGeometry(.075,10,8),mat('#ffe0a0',.08));lamp.position.set(px,.92,d/2+.2);g.add(lamp);
+    }
+    // Kleine, echte Restaurantterrasse mit Tischen, Stühlen und Pflanzkübeln.
+    for(const px of [-.72,.72]){
+     const table=new THREE.Group();table.position.set(px,.08,d/2+.78);g.add(table);
+     const top=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.055,16),mat('#d8c19a'));top.position.y=.48;table.add(top);
+     const leg=new THREE.Mesh(new THREE.CylinderGeometry(.035,.045,.46,8),mat('#594638'));leg.position.y=.23;table.add(leg);
+     for(const side of [-1,1]){
+      const chair=new THREE.Group();chair.position.set(side*.29,.05,0);table.add(chair);
+      box(chair,.22,.055,.22,mat('#9b5944'),0,.25,0);box(chair,.22,.27,.045,mat('#9b5944'),0,.39,-.09);
+      for(const lx of [-.08,.08])for(const lz of [-.07,.07])box(chair,.025,.23,.025,mat('#594638'),lx,.12,lz);
+     }
+     const planter=new THREE.Mesh(new THREE.CylinderGeometry(.13,.16,.22,10),mat('#a66c4e'));planter.position.set(px*1.45,.19,d/2+.76);g.add(planter);
+     const shrub=new THREE.Mesh(new THREE.SphereGeometry(.19,10,8),mat('#568354'));shrub.position.set(px*1.45,.43,d/2+.76);g.add(shrub);
+    }
    }else if(profile.style==='warehouse'){
     // Großhandelslager: hohe Dachkante, markante Ladebucht und Rolltor.
     box(g,w+.18,.18,.16,mat('#3e5964'),0,h+.12,-d*.12);
@@ -1253,6 +1274,23 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
     for(let k=0;k<6;k++)box(g,.16,.12,.035,k%2?trim:mat('#f0d9b6'),-.5+k*.2,h*.8-.13,d/2+.49);
     for(const px of [-.45,.45])box(g,.07,.52,.07,mat('#60402f'),px,h*.48,d/2+.14);
     box(g,.28,.32,.035,mat('#a9d3d8'),-.48,h*.48,d/2+.13);
+    // Café-/Restaurantfassade mit gemütlichem Eingangsportal und Außengastronomie.
+    box(g,.62,.72,.055,mat('#6c4938'),0,.46,d/2+.13);
+    box(g,.48,.56,.025,mat('#a9d3d8',.12),0,.48,d/2+.17);
+    for(const px of [-.72,.72]){
+     const lamp=new THREE.Mesh(new THREE.SphereGeometry(.07,10,8),mat('#ffe0a0',.08));lamp.position.set(px,.92,d/2+.18);g.add(lamp);
+     const pot=new THREE.Mesh(new THREE.CylinderGeometry(.13,.16,.22,10),mat('#a66c4e'));pot.position.set(px,.18,d/2+.72);g.add(pot);
+     const plant=new THREE.Mesh(new THREE.SphereGeometry(.18,10,8),mat('#568354'));plant.position.set(px,.4,d/2+.72);g.add(plant);
+    }
+    for(const px of [-.48,.48]){
+     const table=new THREE.Group();table.position.set(px,.08,d/2+.82);g.add(table);
+     const top=new THREE.Mesh(new THREE.CylinderGeometry(.19,.19,.05,14),mat('#d8c19a'));top.position.y=.44;table.add(top);
+     const leg=new THREE.Mesh(new THREE.CylinderGeometry(.03,.04,.4,8),frame);leg.position.y=.22;table.add(leg);
+     for(const side of [-1,1]){
+      box(table,.2,.05,.2,mat('#a56b4c'),side*.26,.24,0);
+      box(table,.2,.22,.04,mat('#a56b4c'),side*.26,.36,-.08);
+     }
+    }
    }else if(profile.style==='market'){
     box(g,w+.08,.16,.12,mat('#617d3d'),0,h+.12,0);
     box(g,.78,.12,.12,mat('#d5c69a'),0,h*.86,d/2+.1);
