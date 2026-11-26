@@ -1278,7 +1278,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   const fronts=[{x:t.x,y:t.y-1,a:Math.PI},{x:t.x+1,y:t.y,a:Math.PI/2},{x:t.x,y:t.y+1,a:0},{x:t.x-1,y:t.y,a:-Math.PI/2}];
   const roadSides=fronts.filter(p=>tiles.some(q=>q.x===p.x&&q.y===p.y&&q.road));
   const front=roadSides.sort((a,b)=>Math.hypot(t.x-a.x,t.y-a.y)-Math.hypot(t.x-b.x,t.y-b.y))[0];
-  if(front){g.rotation.y=front.a;const setback=.68;g.position.set(t.x+(t.x-front.x)*setback,0,t.y+(t.y-front.y)*setback);}else g.position.set(t.x,0,t.y);
+  if(front)g.rotation.y=front.a;
   const baseProfile=buildingProfiles[kind]||null,profile=baseProfile&&kind==='pizza'?{...baseProfile,sign:b.brand||b.name||baseProfile.sign,logo:b.emoji||baseProfile.logo,signColor:b.color||baseProfile.signColor}:baseProfile,seed=((t.x*37+t.y*71)%11)/10,seed2=((t.x*13+t.y*29)%13)/12;
   // Normale Gebäude variieren in Breite, Tiefe und Höhe; Marken-Gebäude behalten ihre feste Silhouette.
   const heightRange={home:.88,oldhome:.9,apartments:.84,office:.86,school:.9,factory:.88,shop:.86,cafe:.9,market:.92};
@@ -1288,6 +1288,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
   const baseDepth=kind==='factory'?1.28:kind==='apartments'?1.18:kind==='school'?1.12:1.08;
   const w=profile?profile.width:baseWidth*(.82+seed*.34);
   const d=profile?profile.depth:baseDepth*(.82+seed2*.34);
+  // Gebäude anhand ihrer tatsächlichen Grundfläche an die Straße setzen: Die straßenseitige Kante bleibt knapp innerhalb des Grundstücks.
+  if(front){const depthTowardRoad=Math.abs(front.x-t.x)>.5?w:d;const setback=Math.max(0,depthTowardRoad*.5-.46);g.position.set(t.x+(t.x-front.x)*setback,0,t.y+(t.y-front.y)*setback);}else g.position.set(t.x,0,t.y);
   const base=mat(b.color||'#c78c69'),side=mat(shadeFacade(b.color||'#c78c69',-22)),roof=mat(profile?.roof||(kind==='oldhome'||t.district==='oldtown'?'#a85a48':kind==='factory'?'#687579':'#655b52'));
   const trim=mat('#e9dfcb'),foundation=mat('#655b52'),frame=mat('#493f37'),glassLit=mat('#a9d9e8',.18),doorGlass=mat('#8fc5d4',.2);
   // Vorderseite heller, Seiten und Rückseite mit eigener Fassadenfarbe.
