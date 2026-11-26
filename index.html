@@ -671,7 +671,7 @@ function cityActors(time){
  else{if(minute>=1140&&minute<1260){from=home;to=work;const q=commute(1140,1260,from,to);point=q.point;walking=q.walking;}else if(minute>=1260||minute<180){point={...work,angle:0};}else if(minute>=180&&minute<300){from=work;to=home;const q=commute(180,300,from,to);point=q.point;walking=q.walking;}else point={...home,angle:0};}
  // Außerhalb ihrer Wege bleiben Personen wirklich stehen. Die frühere
  // Ersatzbewegung ließ alle Figuren auf der Stelle laufen und wirkte wie Breakdance.
- const side=i%2===0?1:-1,offset=.48*side,actorAngle=point.angle||0;let x=point.x+Math.cos(actorAngle)*offset,y=point.y-Math.sin(actorAngle)*offset;const crowdX=((i%3)-1)*.08,crowdY=((Math.floor(i/3)%3)-1)*.08;x+=crowdX;y+=crowdY;const pedColor=actorClass==='mafia'?'#24282c':actorClass==='retiree'?'#788b91':actorClass==='child'?['#e4a34c','#5d91b4','#bd6c68'][i%3]:colors[i%colors.length];add(x,y,'ped',pedColor,actorAngle,!walking,'ped-'+i,actorClass);}
+ const actorAngle=point.angle||0;let x=point.x,y=point.y;const crowdX=((i%3)-1)*.055,crowdY=((Math.floor(i/3)%3)-1)*.055;x+=crowdX;y+=crowdY;const pedColor=actorClass==='mafia'?'#24282c':actorClass==='retiree'?'#788b91':actorClass==='child'?['#e4a34c','#5d91b4','#bd6c68'][i%3]:colors[i%colors.length];add(x,y,'ped',pedColor,actorAngle,!walking,'ped-'+i,actorClass);}
  return actors;
 }
 window.__pizzaCity={tiles,getActors:cityActors,selectTile,isInterior:()=>!!state.interior,getClockData:()=>({minute:state.clockMinute||480,day:state.day||1,weekday:((state.day||1)-1)%7}),getMafiaData:()=>({style:getItalianStyleScore(),influence:state.mafia?.influence||0,pressure:state.mafia?.pressure||0}),recordMafiaVisit};
